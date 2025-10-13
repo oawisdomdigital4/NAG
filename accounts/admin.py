@@ -1,0 +1,67 @@
+from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.utils.translation import gettext_lazy as _
+from .models import (
+    User,
+    UserProfile,
+    UserToken,
+)
+
+
+# -----------------------------
+# Custom UserAdmin
+# -----------------------------
+@admin.register(User)
+class UserAdmin(BaseUserAdmin):
+    model = User
+    list_display = ("email", "username", "role", "is_active", "is_staff", "date_joined")
+    list_filter = ("role", "is_staff", "is_active")
+    search_fields = ("email", "username")
+    ordering = ("email",)
+    fieldsets = (
+        (None, {"fields": ("email", "username", "password")}),
+        (_("Personal info"), {"fields": ("first_name", "last_name", "role", "subscription_status", "subscription_type")}),
+        (_("Permissions"), {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
+        (_("Important dates"), {"fields": ("last_login", "date_joined")}),
+    )
+    add_fieldsets = (
+        (None, {
+            "classes": ("wide",),
+            "fields": ("email", "username", "password1", "password2", "role", "is_active", "is_staff"),
+        }),
+    )
+
+
+# -----------------------------
+# UserProfile Admin
+# -----------------------------
+@admin.register(UserProfile)
+class UserProfileAdmin(admin.ModelAdmin):
+    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved")
+    search_fields = ("user__email", "full_name", "phone", "country", "company_name")
+    actions = ("approve_community_access", "revoke_community_access")
+
+    @admin.action(description="Approve community access")
+    def approve_community_access(self, request, queryset):
+        updated = queryset.update(community_approved=True)
+        self.message_user(request, f"Approved community access for {updated} profiles")
+
+    @admin.action(description="Revoke community access")
+    def revoke_community_access(self, request, queryset):
+        updated = queryset.update(community_approved=False)
+        self.message_user(request, f"Revoked community access for {updated} profiles")
+
+
+# -----------------------------
+# UserToken Admin
+# -----------------------------
+@admin.register(UserToken)
+class UserTokenAdmin(admin.ModelAdmin):
+    list_display = ("user", "token", "created_at", "expires_at", "is_expired")
+    search_fields = ("user__email", "token")
+    readonly_fields = ("token", "created_at", "expires_at")
+
+    def is_expired(self, obj):
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = "Expired?"
