@@ -47,7 +47,7 @@ class User(AbstractUser):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     full_name = models.CharField(max_length=255, blank=True)
-    phone = models.CharField(max_length=30, blank=True)
+    phone = models.CharField(max_length=30, blank=True, default='1')
     country = models.CharField(max_length=100, blank=True)
     bio = models.TextField(blank=True)
     expertise_areas = models.JSONField(default=list, blank=True)
@@ -55,5 +55,29 @@ class UserProfile(models.Model):
     industry = models.CharField(max_length=255, blank=True)
     # Flag set when a user is approved to access community features
     community_approved = models.BooleanField(default=False)
+    # Public avatar URL for the user (can be blank). Use a URL field to avoid
+    # Support both a stored ImageField (server-side upload) and an external URL.
+    # ImageField will store uploaded avatars under MEDIA_ROOT/avatars/.
+    avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    # Backwards-compatible public avatar URL for external hosts
+    avatar_url = models.CharField(max_length=512, blank=True, default='')
+    
+class Follow(models.Model):
+    """Simple follower relationship model: follower -> followed
+
+    We keep this lightweight and explicit so we can count followers efficiently.
+    """
+    follower = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='following_set')
+    followed = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='followers_set')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed')
+        indexes = [models.Index(fields=['followed']), models.Index(fields=['follower'])]
+
+    def __str__(self):
+        return f"{self.follower} -> {self.followed}"
+
+
 
 

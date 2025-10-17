@@ -11,18 +11,19 @@ except Exception:
 User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    avatar = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = UserProfile
         fields = [
             'full_name', 'phone', 'country', 'bio',
-            'expertise_areas', 'company_name', 'industry', 'community_approved'
+            'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar'
         ]
 
 class UserSerializer(serializers.ModelSerializer):
-    profile = UserProfileSerializer(read_only=True)
+    profile = UserProfileSerializer()
     class Meta:
         model = User
-        fields = ['id', 'email', 'role', 'profile']
+        fields = ['id', 'email', 'role', 'profile', 'first_name', 'last_name']
 
 class SignupSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(required=False)

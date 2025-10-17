@@ -47,7 +47,7 @@ ROOT_URLCONF = 'myproject.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,6 +97,7 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATICFILES_DIRS = [BASE_DIR / 'static']
 
 # ----------------------------
 # Custom User Model
@@ -148,3 +149,38 @@ if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('django.server').setLevel(logging.DEBUG)
     print("✅ Django is running in DEBUG mode with CSRF & session debugging enabled.")
+
+# Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
+# characters instead of raising UnicodeDecodeError. This prevents 500s when
+# corrupted binary data slips into serializer output. We still keep serializer
+# sanitizers and a DB scan command; this is a last-resort safety net.
+try:
+    from rest_framework.utils import encoders as _drf_encoders
+    import json as _json
+
+    class SafeDRFJSONEncoder(_drf_encoders.JSONEncoder):
+        def default(self, obj):
+            # Handle raw byte-like objects safely by decoding with replacement
+            try:
+                if isinstance(obj, (bytes, bytearray, memoryview)):
+                    try:
+                        return bytes(obj).decode('utf-8', errors='replace')
+                    except Exception:
+                        return bytes(obj).decode('latin-1', errors='replace')
+            except Exception:
+                pass
+            # Fallback to parent implementation; if it raises UnicodeDecodeError,
+            # coerce to string to avoid blowing up the whole response.
+            try:
+                return super().default(obj)
+            except UnicodeDecodeError:
+                try:
+                    return str(obj)
+                except Exception:
+                    return ''
+
+    # Monkeypatch DRF's encoder used by JSONRenderer
+    _drf_encoders.JSONEncoder = SafeDRFJSONEncoder
+except Exception:
+    # If DRF isn't importable in this environment, skip the patch silently.
+    pass

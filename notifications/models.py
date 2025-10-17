@@ -25,6 +25,20 @@ class Notification(models.Model):
 	archived_at = models.DateTimeField(null=True, blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
 
+	def save(self, *args, **kwargs):
+		# When creating a new notification, respect the user's NotificationPreference for this category.
+		# If the user has explicitly disabled in-app notifications for this category, skip saving.
+		if getattr(self, '_state', None) and getattr(self._state, 'adding', False):
+			try:
+				pref = NotificationPreference.objects.filter(user=self.user, notification_type=self.category).first()
+				if pref is not None and not pref.in_app_enabled:
+					# Do not create an in-app notification when user opted out
+					return
+			except Exception:
+				# On any error (DB uninitialized, migrations not run), fall back to creating the notification
+				pass
+		super().save(*args, **kwargs)
+
 class NotificationPreference(models.Model):
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notification_preferences')
 	notification_type = models.CharField(max_length=50)

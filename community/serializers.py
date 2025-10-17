@@ -2,6 +2,8 @@ from .models import Organizer, FeaturedSpeaker
 from rest_framework import serializers
 from django.db import models
 import json
+import logging
+from typing import Any
 from .models import Group, GroupMembership, Post, Comment, Partner
 
 class OrganizerSerializer(serializers.ModelSerializer):
@@ -92,10 +94,84 @@ class GroupSerializer(serializers.ModelSerializer):
         except Exception:
             return 0
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        try:
+            # Attach creator name for frontend convenience
+            if obj.created_by:
+                creator = obj.created_by
+                name = None
+                for attr in ('profile', 'community_profile', 'userprofile'):
+                    profile = getattr(creator, attr, None)
+                    if profile:
+                        name = getattr(profile, 'full_name', None)
+                        if name:
+                            break
+                if not name:
+                    name = getattr(creator, 'first_name', '') + ' ' + getattr(creator, 'last_name', '')
+                data['creator_name'] = (name or getattr(creator, 'email', None) or str(creator)).strip()
+            else:
+                data['creator_name'] = ''
+        except Exception:
+            data['creator_name'] = ''
+        return data
+
+class SimpleUserSerializer(serializers.ModelSerializer):
+    profile = serializers.SerializerMethodField()
+
+    class Meta:
+        model = None  # set at runtime
+        fields = ['id', 'email', 'first_name', 'last_name', 'profile']
+
+    def get_profile(self, obj):
+        try:
+            profile = getattr(obj, 'profile', None) or getattr(obj, 'community_profile', None) or None
+            if not profile:
+                return None
+            avatar = getattr(profile, 'avatar_url', None) or getattr(profile, 'avatar', None) or None
+
+            # simple binary-like heuristic to avoid returning raw binary blobs
+            def _is_binary_like(v):
+                if v is None:
+                    return False
+                if isinstance(v, (bytes, bytearray, memoryview)):
+                    return True
+                if not isinstance(v, str):
+                    return False
+                if '\u0000' in v or 'JFIF' in v or 'ICC_PROFILE' in v:
+                    return True
+                non_print = sum(1 for ch in v if ord(ch) < 32 or ord(ch) > 126)
+                try:
+                    ratio = non_print / max(1, len(v))
+                except Exception:
+                    ratio = 0
+                return ratio > 0.3
+
+            if _is_binary_like(avatar):
+                avatar = None
+
+            return {
+                'full_name': getattr(profile, 'full_name', None),
+                'avatar_url': avatar,
+            }
+        except Exception:
+            return None
+
+
 class GroupMembershipSerializer(serializers.ModelSerializer):
+    user_detail = serializers.SerializerMethodField()
+
     class Meta:
         model = GroupMembership
         fields = '__all__'
+
+    def get_user_detail(self, obj):
+        try:
+            user = obj.user
+            serializer = SimpleUserSerializer(user)
+            return serializer.data
+        except Exception:
+            return None
 
 class PostSerializer(serializers.ModelSerializer):
     # Author is set server-side from the authenticated user
@@ -172,7 +248,84 @@ class PostSerializer(serializers.ModelSerializer):
         except Exception:
             pass
 
-        return data
+        # Sanitize any binary blobs that may have accidentally been stored
+        # in JSONFields (e.g. raw bytes). JSON encoding in DRF will attempt
+        # to decode bytes as utf-8 which can raise UnicodeDecodeError. Convert
+        # bytes to safe unicode using UTF-8 with replacement to avoid 500s.
+        logger = logging.getLogger(__name__)
+
+        def _sanitize(value: Any, path: str = '') -> Any:
+            # Recursively convert bytes and other binary-like objects to strings
+            # and sanitize container types. This prevents the JSON encoder from
+            # attempting to decode raw binary data which can raise UnicodeDecodeError.
+            try:
+                # handle raw bytes, bytearray, memoryview
+                if isinstance(value, (bytes, bytearray, memoryview)):
+                    post_id = getattr(obj, 'id', None)
+                    logger.warning('Sanitizing binary blob in serializer output for post=%s path=%s', post_id, path)
+                    try:
+                        b = bytes(value)
+                        return b.decode('utf-8', errors='replace')
+                    except Exception:
+                        try:
+                            return bytes(value).decode('latin-1', errors='replace')
+                        except Exception:
+                            logger.warning('Dropping non-decodable binary in serializer output for post=%s path=%s', post_id, path)
+                            return ''
+
+                # dicts and lists: recurse
+                if isinstance(value, dict):
+                    cleaned = {}
+                    for k, v in value.items():
+                        try:
+                            key_str = str(k)
+                        except Exception:
+                            key_str = repr(k)
+                        cleaned[key_str] = _sanitize(v, path=f"{path}.{key_str}" if path else key_str)
+                    return cleaned
+                if isinstance(value, list):
+                    return [_sanitize(v, path=f"{path}[{i}]") for i, v in enumerate(value)]
+
+                # Some unexpected objects (e.g. BytesIO, File-like) may still appear.
+                # If they expose a buffer or tobytes, attempt to convert; otherwise
+                # fall back to their string representation which is safe for JSON.
+                if hasattr(value, 'tobytes') and not isinstance(value, str):
+                    try:
+                        return _sanitize(value.tobytes(), path=path)
+                    except Exception:
+                        pass
+                if hasattr(value, 'read') and callable(getattr(value, 'read')):
+                    try:
+                        # attempt to read a small chunk (non-destructive if possible)
+                        chunk = value.read() if callable(value.read) else None
+                        # reset if object supports seek
+                        if hasattr(value, 'seek'):
+                            try:
+                                value.seek(0)
+                            except Exception:
+                                pass
+                        return _sanitize(chunk, path=path)
+                    except Exception:
+                        pass
+
+                # primitives (str, int, float, bool, None) and Django/DRF handled types
+                # are left as-is. As a last resort convert unknown objects to string
+                # so the JSON renderer does not attempt raw binary decoding.
+                return value
+            except Exception:
+                # on any sanitizer error, return a safe string fallback
+                try:
+                    return str(value)
+                except Exception:
+                    return ''
+
+        try:
+            cleaned = _sanitize(data)
+            return cleaned
+        except Exception:
+            logger.exception('Failed to sanitize serializer output for post=%s', getattr(obj, 'id', None))
+            # If sanitization fails for any reason, return the original data
+            return data
 
     def get_bookmarks_count(self, obj):
         try:
@@ -277,6 +430,8 @@ class CommentSerializer(serializers.ModelSerializer):
     replied_to_name = serializers.SerializerMethodField()
     likes_count = serializers.SerializerMethodField()
     user_has_liked = serializers.SerializerMethodField()
+    # include nested replies under a comment for easier rendering on the frontend
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
@@ -316,6 +471,48 @@ class CommentSerializer(serializers.ModelSerializer):
             return getattr(user, 'avatar_url', None) or getattr(user, 'avatar', None) or None
         except Exception:
             return None
+
+    def to_representation(self, obj):
+        """Return sanitized representation for Comment to avoid leaking binary blobs.
+
+        Some profile avatar fields have contained raw binary (JFIF/ICC) in the DB which
+        previously made it into API JSON. Defensive sanitization mirrors PostSerializer's
+        approach but is scoped to fields commonly used by the frontend (author_avatar,
+        replied_to_name, etc.).
+        """
+        data = super().to_representation(obj)
+        logger = logging.getLogger(__name__)
+
+        def _is_binary_like(v: Any) -> bool:
+            # heuristic: presence of non-printable characters typical of binary blobs
+            if v is None:
+                return False
+            if isinstance(v, (bytes, bytearray, memoryview)):
+                return True
+            if not isinstance(v, str):
+                return False
+            # if the string contains many non-printable chars or the JFIF/ICC markers,
+            # treat it as binary-like
+            if '\u0000' in v or 'JFIF' in v or 'ICC_PROFILE' in v:
+                return True
+            # if more than 30% of chars are non-printable, consider it binary
+            non_print = sum(1 for ch in v if ord(ch) < 32 or ord(ch) > 126)
+            try:
+                ratio = non_print / max(1, len(v))
+            except Exception:
+                ratio = 0
+            return ratio > 0.3
+
+        try:
+            avat = data.get('author_avatar')
+            if _is_binary_like(avat):
+                post_id = getattr(obj, 'id', None)
+                logger.warning('Dropping binary-like author_avatar for comment=%s', post_id)
+                data['author_avatar'] = None
+        except Exception:
+            pass
+
+        return data
 
     def get_author_verified(self, obj):
         try:
@@ -374,6 +571,27 @@ class CommentSerializer(serializers.ModelSerializer):
         except Exception:
             return False
 
+    def get_replies(self, obj):
+        """Return serialized replies for this comment.
+
+        We respect private-reply visibility the same way the view does: only
+        include private replies when the requesting user is either the reply
+        author or the parent post author.
+        """
+        try:
+            request = self.context.get('request')
+            user = getattr(request, 'user', None)
+            qs = obj.replies.all().order_by('created_at')
+            # apply same visibility rules as PostViewSet.comments
+            if user and user.is_authenticated:
+                qs = qs.filter(models.Q(is_private_reply=False) | models.Q(author=user) | models.Q(post__author=user))
+            else:
+                qs = qs.filter(is_private_reply=False)
+            serializer = CommentSerializer(qs, many=True, context=self.context)
+            return serializer.data
+        except Exception:
+            return []
+
 
 class ChatRoomSerializer(serializers.ModelSerializer):
     class Meta:
@@ -394,5 +612,12 @@ try:
     from .models import ChatRoom, Message
     ChatRoomSerializer.Meta.model = ChatRoom
     MessageSerializer.Meta.model = Message
+except Exception:
+    pass
+
+# Resolve runtime model for user serializer helper
+try:
+    from django.contrib.auth import get_user_model
+    SimpleUserSerializer.Meta.model = get_user_model()
 except Exception:
     pass

@@ -23,6 +23,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
+    # Backwards-compatible endpoint used by frontend for member lookups
+    path('api/accounts/', include('accounts.urls')),
     path('api/community/', include('community.urls')),
     path('api/utils/', include('utils.urls')),
     path('api/courses/', include('courses.urls')),

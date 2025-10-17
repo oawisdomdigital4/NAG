@@ -37,9 +37,24 @@ class UserAdmin(BaseUserAdmin):
 # -----------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved")
+    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar")
     search_fields = ("user__email", "full_name", "phone", "country", "company_name")
     actions = ("approve_community_access", "revoke_community_access")
+    readonly_fields = ("avatar_preview",)
+
+    def avatar_preview(self, obj):
+        if obj.avatar:
+            return f"<img src='{obj.avatar.url}' style='max-height:50px' />"
+        if obj.avatar_url:
+            return f"<img src='{obj.avatar_url}' style='max-height:50px' />"
+        return "-"
+    avatar_preview.allow_tags = True
+    avatar_preview.short_description = "Avatar"
+
+    def has_avatar(self, obj):
+        return bool(obj.avatar or obj.avatar_url)
+    has_avatar.boolean = True
+    has_avatar.short_description = "Has Avatar?"
 
     @admin.action(description="Approve community access")
     def approve_community_access(self, request, queryset):

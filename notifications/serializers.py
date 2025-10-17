@@ -17,6 +17,16 @@ class NotificationSerializer(serializers.ModelSerializer):
 
 
 class NotificationPreferenceSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+
     class Meta:
         model = NotificationPreference
-        fields = '__all__'
+        fields = [
+            'id', 'user_id', 'notification_type', 'in_app_enabled', 'email_enabled', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user_id', 'created_at', 'updated_at']
+
+    def validate_notification_type(self, value):
+        if not value or not value.strip():
+            raise serializers.ValidationError('notification_type is required')
+        return value.strip()

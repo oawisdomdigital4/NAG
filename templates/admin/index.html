@@ -1,0 +1,42 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="dashboard">
+    <div class="dashboard-cards">
+      <div class="card">
+        <h3>Users</h3>
+        <p class="card-value">{{ app_list|length }}</p>
+        <p class="card-sub">Active users, signups</p>
+      </div>
+      <div class="card">
+        <h3>Courses</h3>
+        <p class="card-value">—</p>
+        <p class="card-sub">Total courses</p>
+      </div>
+      <div class="card">
+        <h3>Partners</h3>
+        <p class="card-value">—</p>
+        <p class="card-sub">Partners listed</p>
+      </div>
+      <div class="card">
+        <h3>Community</h3>
+        <p class="card-value">—</p>
+        <p class="card-sub">Recent activity</p>
+      </div>
+    </div>
+
+    <section class="dashboard-main">
+      <div class="module">
+        <h2>Recent Models</h2>
+        <div class="quick-links">
+          {% for app in app_list %}
+            {% for model in app.models %}
+              <a class="quick-link" href="{{ model.admin_url }}">{{ model.name }}</a>
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% endblock %}

@@ -1,0 +1,42 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Admin | {{ site_title|default:_('Django site admin') }}{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'admin-theme/admin.css' %}">
+    <script src="{% static 'admin-theme/admin.js' %}" defer></script>
+    {% block extrahead %}{% endblock %}
+  </head>
+  <body class="admin-root">
+    <aside class="sidebar">
+      <div class="sidebar-brand">NAG Admin</div>
+      <nav class="sidebar-nav">
+        <ul>
+          <li><a href="/admin/">Dashboard</a></li>
+          <li><a href="/admin/auth/user/">Users</a></li>
+          <li><a href="/admin/community/partner/">Partners</a></li>
+          <li><a href="/admin/courses/course/">Courses</a></li>
+          <li><a href="/admin/utils/faqs/">FAQ</a></li>
+        </ul>
+      </nav>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button id="sidebarToggle" class="btn">☰</button>
+          <h1 class="site-title">{{ site_header|default:_('NAG Admin') }}</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="user-info">{{ user.get_username }}</div>
+        </div>
+      </header>
+
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </body>
+  </html>

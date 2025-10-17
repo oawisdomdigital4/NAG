@@ -99,6 +99,38 @@ class PostViewSet(viewsets.ModelViewSet):
 	authentication_classes = [DatabaseTokenAuthentication, SessionAuthentication]
 	permission_classes = [IsAuthenticated, IsCommunityMember]
 
+	def list(self, request, *args, **kwargs):
+		"""
+		Allow filtering posts list by query params:
+		- author_id or author: numeric user id (returns posts by that user)
+		- group: group id to filter by group
+		Falls back to default queryset if no filters provided.
+		"""
+		qs = self.queryset
+		author_id = request.query_params.get('author_id') or request.query_params.get('author')
+		group_id = request.query_params.get('group')
+		try:
+			if author_id:
+				# try numeric match first
+				if str(author_id).isdigit():
+					qs = qs.filter(author__id=int(author_id))
+				else:
+					# try matching username/email fallback
+					qs = qs.filter(Q(author__username=author_id) | Q(author__email=author_id))
+			if group_id:
+				qs = qs.filter(group__id=group_id)
+		except Exception:
+			# ignore filter errors and use base queryset
+			qs = self.queryset
+
+		page = self.paginate_queryset(qs)
+		if page is not None:
+			serializer = self.get_serializer(page, many=True, context={'request': request})
+			return self.get_paginated_response(serializer.data)
+
+		serializer = self.get_serializer(qs, many=True, context={'request': request})
+		return Response(serializer.data)
+
 	def create(self, request, *args, **kwargs):
 		# Allow file uploads under 'media' key as multiple files
 		# We'll create the Post first, then attach uploaded files and update media_urls
@@ -309,13 +341,20 @@ class PostViewSet(viewsets.ModelViewSet):
 	def comments(self, request, pk=None):
 		post = self.get_object()
 		# Hide private replies unless requester is the post author or the comment author
+		# Return only top-level comments; nested replies will be serialized by
+		# CommentSerializer.get_replies so the frontend receives a nested structure
 		if request.user.is_authenticated:
-			comments = post.comments.filter(
+			qs = post.comments.filter(parent_comment__isnull=True).filter(
 				Q(is_private_reply=False) | Q(author=request.user) | Q(post__author=request.user)
 			).order_by('created_at')
 		else:
-			comments = post.comments.filter(is_private_reply=False).order_by('created_at')
-		serializer = self.get_serializer(comments, many=True, context={'request': request})
+			qs = post.comments.filter(parent_comment__isnull=True, is_private_reply=False).order_by('created_at')
+		# Use CommentSerializer explicitly so nested replies (SerializerMethodField
+		# `replies`) and comment-specific SerializerMethodFields are included in the
+		# response. Using self.get_serializer here would select PostSerializer which
+		# is not suitable for serializing Comment instances.
+		from .serializers import CommentSerializer as _CommentSerializer
+		serializer = _CommentSerializer(qs, many=True, context={'request': request})
 		return Response(serializer.data)
 
 class CommentViewSet(viewsets.ModelViewSet):

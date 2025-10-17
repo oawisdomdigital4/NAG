@@ -131,3 +131,48 @@ class NotificationPreferenceViewSet(viewsets.ModelViewSet):
 	serializer_class = NotificationPreferenceSerializer
 	authentication_classes = [DatabaseTokenAuthentication, SessionAuthentication]
 	permission_classes = [permissions.IsAuthenticated]
+
+	def get_queryset(self):
+		# Users can only see their own notification preferences
+		user = self.request.user
+		if user and user.is_authenticated:
+			return self.queryset.filter(user=user)
+		return self.queryset.none()
+
+	def perform_create(self, serializer):
+		# Ensure the created preference belongs to the authenticated user
+		serializer.save(user=self.request.user)
+
+	def perform_update(self, serializer):
+		# Prevent changing the owner
+		serializer.save(user=self.request.user)
+
+	def create(self, request, *args, **kwargs):
+		# Idempotent create: if a preference for this user+notification_type exists, update it
+		data = request.data or {}
+		notif_type = (data.get('notification_type') or '').strip().lower()
+		if not notif_type:
+			return Response({'notification_type': ['This field is required.']}, status=400)
+
+		# Look up existing pref for this user and type
+		pref = NotificationPreference.objects.filter(user=request.user, notification_type__iexact=notif_type).first()
+		if pref:
+			serializer = self.get_serializer(pref, data={
+				'notification_type': notif_type,
+				'in_app_enabled': data.get('in_app_enabled', pref.in_app_enabled),
+				'email_enabled': data.get('email_enabled', pref.email_enabled),
+			}, partial=True)
+			serializer.is_valid(raise_exception=True)
+			self.perform_update(serializer)
+			return Response(serializer.data, status=200)
+
+		# Otherwise create new
+		serializer = self.get_serializer(data={
+			'notification_type': notif_type,
+			'in_app_enabled': data.get('in_app_enabled', True),
+			'email_enabled': data.get('email_enabled', False),
+		})
+		serializer.is_valid(raise_exception=True)
+		self.perform_create(serializer)
+		headers = self.get_success_headers(serializer.data)
+		return Response(serializer.data, status=201, headers=headers)
