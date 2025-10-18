@@ -31,31 +31,6 @@ else
     exit 1
 fi
 
-# Step 3: Activate virtual environment
-if [ -f ".venv/bin/activate" ]; then
-    echo -e "${YELLOW}🧠 Activating virtual environment...${NC}"
-    source /home/newafricagroup/.venv/bin/activate
-    echo -e "${RED}❌ Virtual environment not found at .venv/bin/activate${NC}"
-    exit 1
-fi
-
-# Step 5: Make and apply migrations
-echo -e "${YELLOW}🛠️  Making migrations...${NC}"
-if python manage.py makemigrations; then
-    echo -e "${GREEN}✅ Makemigrations complete.${NC}"
-else
-    echo -e "${RED}❌ Makemigrations failed!${NC}"
-    exit 1
-fi
-
-echo -e "${YELLOW}🗃️  Applying migrations...${NC}"
-if python manage.py migrate --noinput; then
-    echo -e "${GREEN}✅ Migrations applied successfully.${NC}"
-else
-    echo -e "${RED}❌ Migration failed!${NC}"
-    exit 1
-fi
-
 # Step 6: Collect static files
 echo -e "${YELLOW}🎨 Collecting static files...${NC}"
 if python manage.py collectstatic --noinput; then

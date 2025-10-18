@@ -204,6 +204,8 @@ JAZZMIN_SETTINGS = {
     "site_title": "New Africa Group Admin",
     "site_header": "New Africa Group",
     "site_brand": "NAG",
+    "site_logo": "admin/img/logo.png",
+    "site_logo_classes": "img-fluid nag-logo", 
     "welcome_sign": "Welcome to New Africa Group Admin",
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
