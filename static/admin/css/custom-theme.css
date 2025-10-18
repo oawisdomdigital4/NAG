@@ -1,43 +1,96 @@
-/* === Custom Admin Theme for New Africa Group === */
+/* === New Africa Group | Modern Admin Theme === */
+/* --- Designed for a clean, elegant, and premium feel --- */
 
-/* Primary Colors */
+/* ===== PRIMARY COLORS ===== */
 :root {
-  --color-primary: #0D1B52;  /* Deep Royal Blue */
-  --color-accent: #E3212D;   /* Vibrant Red */
-  --color-gold: #D4A63E;     /* Bright Gold */
+  --color-primary: #0D1B52;   /* Deep Royal Blue */
+  --color-accent: #E3212D;    /* Vibrant Red */
+  --color-gold: #D4A63E;      /* Bright Gold */
   --color-lightblue: #4169E1; /* Cool Light Blue */
-  --color-dark: #1A1A1A;     /* Charcoal Black */
-  --color-white: #FFFFFF;
+  --color-dark: #1A1A1A;      /* Charcoal Black */
+  --color-white: #FFFFFF;     /* White */
 }
 
-/* Sidebar */
+/* ===== GLOBAL STYLING ===== */
+body, html {
+  background-color: var(--color-white);
+  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
+  color: var(--color-dark);
+  letter-spacing: 0.2px;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* Subtle shadow for modern depth */
+.card, .box, .module {
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(13, 27, 82, 0.08);
+  border: 1px solid #e0e0e0;
+}
+
+/* ===== SIDEBAR ===== */
 #jazzy-sidebar {
   background-color: var(--color-primary) !important;
+  color: var(--color-white);
 }
 
 #jazzy-sidebar .nav-item a {
   color: var(--color-white) !important;
+  transition: background 0.3s ease, padding-left 0.2s ease;
+}
+
+#jazzy-sidebar .nav-item a:hover {
+  background-color: var(--color-lightblue) !important;
+  padding-left: 18px;
 }
 
 #jazzy-sidebar .nav-item.active a {
-  background-color: var(--color-lightblue) !important;
+  background-color: var(--color-gold) !important;
+  color: var(--color-dark) !important;
+  font-weight: 600;
+}
+
+/* ===== HEADER / TOP NAVBAR ===== */
+.navbar.navbar-expand.navbar-dark.bg-primary {
+  background-color: var(--color-primary) !important;
+  border-bottom: 3px solid var(--color-gold);
+}
+
+.navbar .navbar-nav .nav-link {
   color: var(--color-white) !important;
 }
 
-/* Header */
-.navbar.navbar-expand.navbar-dark.bg-primary {
-  background-color: var(--color-primary) !important;
+.navbar .navbar-nav .nav-link:hover {
+  color: var(--color-gold) !important;
 }
 
-/* Buttons */
+/* ===== BUTTONS ===== */
+.btn {
+  border-radius: 6px !important;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
 .btn-primary {
   background-color: var(--color-primary) !important;
   border-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-lightblue) !important;
 }
 
 .btn-danger {
   background-color: var(--color-accent) !important;
   border-color: var(--color-accent) !important;
+}
+
+.btn-danger:hover {
+  background-color: #b9161f !important;
 }
 
 .btn-warning {
@@ -46,48 +99,106 @@
   color: var(--color-dark) !important;
 }
 
-/* Table headers */
+.btn-warning:hover {
+  background-color: #f5c85c !important;
+}
+
+.btn-outline-primary {
+  color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-outline-primary:hover {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+/* ===== TABLES ===== */
+.table {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
 .table thead th {
   background-color: var(--color-primary) !important;
   color: var(--color-white) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: none;
 }
 
-/* Links */
+.table-hover tbody tr:hover {
+  background-color: rgba(65, 105, 225, 0.08) !important;
+}
+
+/* ===== LINKS ===== */
 a {
-  color: var(--color-lightblue) !important;
+  color: var(--color-lightblue);
+  transition: color 0.2s ease;
 }
 
-/* Login Page */
+a:hover {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+/* ===== FORMS ===== */
+input, select, textarea {
+  border-radius: 6px !important;
+  border: 1px solid #ccc !important;
+  padding: 6px 10px !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-lightblue) !important;
+  box-shadow: 0 0 4px rgba(65, 105, 225, 0.4) !important;
+}
+
+/* ===== LOGIN PAGE ===== */
 body.login {
-  background-color: var(--color-primary) !important;
-  color: var(--color-white) !important;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-dark));
+  color: var(--color-white);
 }
 
 body.login #content {
-  background-color: var(--color-dark) !important;
-  border-radius: 10px;
-  padding: 30px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 35px;
+  backdrop-filter: blur(10px);
 }
 
 body.login .form-row label {
-  color: var(--color-gold) !important;
+  color: var(--color-gold);
+  font-weight: 500;
+}
+
+body.login input[type="text"],
+body.login input[type="password"] {
+  border-radius: 6px;
+  border: none;
+  padding: 10px;
 }
 
 body.login input[type="submit"] {
-  background-color: var(--color-gold) !important;
-  color: var(--color-dark) !important;
+  background-color: var(--color-gold);
+  color: var(--color-dark);
+  font-weight: 600;
   border: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
 }
 
-/* Table Hover */
-.table-hover tbody tr:hover {
-  background-color: rgba(65, 105, 225, 0.1) !important;
+body.login input[type="submit"]:hover {
+  background-color: var(--color-accent);
+  color: var(--color-white);
 }
 
-/* Cards and content background */
-.content-wrapper,
-.card,
-.box {
-  background-color: var(--color-white) !important;
-  border-radius: 10px;
+/* ===== FOOTER ===== */
+footer {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border-top: 2px solid var(--color-gold);
+  text-align: center;
+  padding: 10px 0;
+  font-size: 13px;
 }

@@ -103,6 +103,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Ensure Font Awesome and other Jazzmin assets load properly
+JAZZMIN_UI_TWEAKS = {
+    "theme": "cosmo",
+}
+
 
 if ON_PYTHONANYWHERE:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -196,19 +201,28 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "NewAfrica Group Admin",
-    "site_header": "NewAfrica Group",
-    "site_brand": "NewAfrica",
-    "logo": "images/logo.png",       # your static file path
-    "welcome_sign": "Welcome to NewAfrica Dashboard",
-    "copyright": "NewAfrica Group Ltd",
-    "user_avatar": None,
-    "topmenu_links": [
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"model": "auth.User"},
-    ],
-    "show_sidebar": True,
-    "navigation_expanded": True,
-    # other customization...
-}
+    "site_title": "New Africa Group Admin",
+    "site_header": "New Africa Group",
+    "site_brand": "NAG",
+    "site_logo": "admin/img/logo.png",  # ✅ path to your static logo
+    "welcome_sign": "Welcome to New Africa Group Admin",
+    "copyright": "© 2025 New Africa Group",
+    "show_ui_builder": False,
 
+    "theme": "cosmo",
+    "custom_css": "admin/css/custom-theme.css",
+
+    "navigation_expanded": True,
+    "topmenu_links": [
+        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+    ],
+
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "accounts": "fas fa-user",
+        "community": "fas fa-users",
+        "courses": "fas fa-book",
+        "payments": "fas fa-credit-card",
+        "notifications": "fas fa-bell",
+    },
+}

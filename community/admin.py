@@ -7,27 +7,35 @@ from .models import (
 	ChatRoom,
 	Message,
 )
+from admin_mixins import IconAdminMixin
 
 
 @admin.register(Organizer)
-class OrganizerAdmin(admin.ModelAdmin):
-	list_display = ("name", "title", "link")
+class OrganizerAdmin(IconAdminMixin, admin.ModelAdmin):
+	list_display = ("name", "title", "link", "icon_preview")
+	readonly_fields = ("icon_preview",)
+	icon_field = 'image'
 
 
 @admin.register(FeaturedSpeaker)
-class FeaturedSpeakerAdmin(admin.ModelAdmin):
-	list_display = ("name", "title", "link")
+class FeaturedSpeakerAdmin(IconAdminMixin, admin.ModelAdmin):
+	list_display = ("name", "title", "link", "icon_preview")
+	readonly_fields = ("icon_preview",)
+	icon_field = 'image'
 
 
 @admin.register(Partner)
-class PartnerAdmin(admin.ModelAdmin):
-	list_display = ("id", "logo")
+class PartnerAdmin(IconAdminMixin, admin.ModelAdmin):
+	list_display = ("id", "icon_preview")
+	readonly_fields = ("icon_preview",)
+	icon_field = 'logo'
 
 
 @admin.register(PastEdition)
-class PastEditionAdmin(admin.ModelAdmin):
-	list_display = ("year", "location", "theme")
-	readonly_fields = ()
+class PastEditionAdmin(IconAdminMixin, admin.ModelAdmin):
+	list_display = ("year", "location", "theme", "icon_preview")
+	readonly_fields = ("icon_preview",)
+	icon_field = 'image'
 
 
 @admin.action(description="Set subscription status to active")
