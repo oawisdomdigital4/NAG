@@ -103,6 +103,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Ensure Font Awesome and other Jazzmin assets load properly
+JAZZMIN_UI_TWEAKS = {
+    "theme": "cosmo",
+}
+
 
 if ON_PYTHONANYWHERE:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -199,15 +204,14 @@ JAZZMIN_SETTINGS = {
     "site_title": "New Africa Group Admin",
     "site_header": "New Africa Group",
     "site_brand": "NAG",
+    "site_logo": "admin/img/logo.png",  # ✅ path to your static logo
     "welcome_sign": "Welcome to New Africa Group Admin",
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
-    # === COLOR THEME ===
-    "theme": "cosmo",  # base theme; you can use 'flatly' or 'litera' if you prefer lighter layouts
-    "custom_css": "admin/css/custom-theme.css",  # <-- we'll create this next
+    "theme": "cosmo",
+    "custom_css": "admin/css/custom-theme.css",
 
-    # === SIDEBAR ===
     "navigation_expanded": True,
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
@@ -222,4 +226,3 @@ JAZZMIN_SETTINGS = {
         "notifications": "fas fa-bell",
     },
 }
-
