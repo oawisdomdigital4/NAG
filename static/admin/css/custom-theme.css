@@ -104,18 +104,18 @@ body {
 }
 
 /* Map specific icons used in JAZZMIN_SETTINGS to local SVGs using mask so they inherit currentColor */
-.bi-clock-history { -webkit-mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); background-image: url('/static/admin/icons/bootstrap/clock-history.svg'); }
-.bi-people { -webkit-mask-image: url('/static/admin/icons/bootstrap/people.svg'); mask-image: url('/static/admin/icons/bootstrap/people.svg'); background-image: url('/static/admin/icons/bootstrap/people.svg'); }
-.bi-person { -webkit-mask-image: url('/static/admin/icons/bootstrap/person.svg'); mask-image: url('/static/admin/icons/bootstrap/person.svg'); background-image: url('/static/admin/icons/bootstrap/person.svg'); }
-.bi-people-fill { -webkit-mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); background-image: url('/static/admin/icons/bootstrap/people-fill.svg'); }
-.bi-person-badge { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); background-image: url('/static/admin/icons/bootstrap/person-badge.svg'); }
-.bi-person-circle { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); background-image: url('/static/admin/icons/bootstrap/person-circle.svg'); }
-.bi-journal-bookmark { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); background-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); }
-.bi-journal-richtext { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); background-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); }
-.bi-credit-card { -webkit-mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); background-image: url('/static/admin/icons/bootstrap/credit-card.svg'); }
-.bi-cash-stack { -webkit-mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); background-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); }
-.bi-bell { -webkit-mask-image: url('/static/admin/icons/bootstrap/bell.svg'); mask-image: url('/static/admin/icons/bootstrap/bell.svg'); background-image: url('/static/admin/icons/bootstrap/bell.svg'); }
-.bi-globe { -webkit-mask-image: url('/static/admin/icons/bootstrap/globe.svg'); mask-image: url('/static/admin/icons/bootstrap/globe.svg'); background-image: url('/static/admin/icons/bootstrap/globe.svg'); }
+.bi-clock-history { background-image: url('/static/admin/icons/png/clock-history.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); }
+.bi-people { background-image: url('/static/admin/icons/png/people.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/people.svg'); mask-image: url('/static/admin/icons/bootstrap/people.svg'); }
+.bi-person { background-image: url('/static/admin/icons/png/person.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person.svg'); mask-image: url('/static/admin/icons/bootstrap/person.svg'); }
+.bi-people-fill { background-image: url('/static/admin/icons/png/people-fill.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); }
+.bi-person-badge { background-image: url('/static/admin/icons/png/person-badge.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); }
+.bi-person-circle { background-image: url('/static/admin/icons/png/person-circle.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); }
+.bi-journal-bookmark { background-image: url('/static/admin/icons/png/journal-bookmark.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); }
+.bi-journal-richtext { background-image: url('/static/admin/icons/png/journal-richtext.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); }
+.bi-credit-card { background-image: url('/static/admin/icons/png/credit-card.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); }
+.bi-cash-stack { background-image: url('/static/admin/icons/png/cash-stack.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); }
+.bi-bell { background-image: url('/static/admin/icons/png/bell.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/bell.svg'); mask-image: url('/static/admin/icons/bootstrap/bell.svg'); }
+.bi-globe { background-image: url('/static/admin/icons/png/globe.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/globe.svg'); mask-image: url('/static/admin/icons/bootstrap/globe.svg'); }
 
 /* Hide any inline svg/img children (we use the element as a mask target) */
 .bi svg, .bi img { display: none; }
