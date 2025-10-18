@@ -1,8 +1,7 @@
 /* === Custom Admin Theme for New Africa Group === */
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
 
-
-/* Backgrounds and headers */
+/* --- Global Variables --- */
 :root {
   --primary-color: #0D1B52;
   --accent-color: #E3212D;
@@ -12,34 +11,36 @@
   --white: #FFFFFF;
 }
 
-/* Header bar */
+/* --- Header Bar --- */
 .navbar.navbar-inverse {
   background-color: var(--primary-color) !important;
   border-color: var(--primary-color);
 }
 
-/* Sidebar */
+/* --- Sidebar --- */
 .main-sidebar {
   background-color: var(--primary-color) !important;
 }
 .sidebar a {
   color: var(--white) !important;
+  transition: background-color 0.3s ease;
 }
 .sidebar a:hover {
   background-color: var(--accent-color) !important;
 }
 
-/* Buttons */
+/* --- Buttons --- */
 .btn-primary {
   background-color: var(--primary-color);
   border-color: var(--primary-color);
   color: var(--white);
+  transition: background-color 0.3s ease;
 }
 .btn-primary:hover {
   background-color: var(--light-blue);
 }
 
-/* Accents and highlights */
+/* --- Accents & Highlights --- */
 .text-danger,
 .text-red {
   color: var(--accent-color) !important;
@@ -48,8 +49,28 @@
   color: var(--highlight-color) !important;
 }
 
-/* Page background */
+/* --- Page Background --- */
 body {
   background-color: var(--white);
   color: var(--text-color);
+}
+
+/* --- Logo Styling --- */
+.nag-logo {
+  background-color: #ffffff !important;
+  border-radius: 10px;
+  padding: 6px;
+  max-height: 45px;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Font Awesome Sync (CDN) --- */
+[class^="fa-"], [class*=" fa-"],
+[class^="fas"], [class*=" fas"],
+[class^="far"], [class*=" far"],
+[class^="fab"], [class*=" fab"] {
+  font-family: "Font Awesome 5 Free" !important;
+  font-weight: 900 !important;
+  display: inline-block;
 }
