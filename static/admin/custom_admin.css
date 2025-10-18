@@ -1,0 +1,53 @@
+/* NAG Custom Admin Theme */
+
+/* Backgrounds and headers */
+:root {
+  --primary-color: #0D1B52;
+  --accent-color: #E3212D;
+  --highlight-color: #D4A63E;
+  --light-blue: #4169E1;
+  --text-color: #1A1A1A;
+  --white: #FFFFFF;
+}
+
+/* Header bar */
+.navbar.navbar-inverse {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color);
+}
+
+/* Sidebar */
+.main-sidebar {
+  background-color: var(--primary-color) !important;
+}
+.sidebar a {
+  color: var(--white) !important;
+}
+.sidebar a:hover {
+  background-color: var(--accent-color) !important;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--white);
+}
+.btn-primary:hover {
+  background-color: var(--light-blue);
+}
+
+/* Accents and highlights */
+.text-danger,
+.text-red {
+  color: var(--accent-color) !important;
+}
+.text-warning {
+  color: var(--highlight-color) !important;
+}
+
+/* Page background */
+body {
+  background-color: var(--white);
+  color: var(--text-color);
+}

@@ -196,19 +196,44 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "NewAfrica Group Admin",
-    "site_header": "NewAfrica Group",
-    "site_brand": "NewAfrica",
-    "logo": "images/logo.png",       # your static file path
-    "welcome_sign": "Welcome to NewAfrica Dashboard",
-    "copyright": "NewAfrica Group Ltd",
-    "user_avatar": None,
+    "site_title": "NAG Admin",
+    "site_header": "New Africa Group",
+    "site_brand": "NAG Admin",
+    "welcome_sign": "Welcome to NAG Admin Dashboard",
+    "copyright": "New Africa Group © 2025",
+    "show_ui_builder": False,
+
+    # --- Main UI Colors ---
+    "primary_color": "#0D1B52",  # Deep Royal Blue
+    "accent": "#E3212D",         # Vibrant Red
+    "button_classes": {
+        "primary": "btn btn-primary text-white",
+        "secondary": "btn btn-outline-light",
+        "success": "btn btn-success",
+        "danger": "btn btn-danger",
+        "info": "btn btn-info",
+        "warning": "btn btn-warning",
+    },
+
+    # --- Topbar and Sidebar ---
     "topmenu_links": [
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Visit Site", "url": "/", "new_window": True},
         {"model": "auth.User"},
+        {"app": "community"},
     ],
+
+    "usermenu_links": [
+        {"name": "Profile", "url": "admin:auth_user_change", "new_window": False},
+        {"name": "Support", "url": "https://newafricagroup.pythonanywhere.com", "new_window": True},
+    ],
+
     "show_sidebar": True,
     "navigation_expanded": True,
-    # other customization...
+
+    # --- Custom Colors ---
+    "dark_mode_theme": None,
+    "theme": "cyborg",  # Optional: a base dark theme
+    "custom_css": "admin/custom_admin.css",  # We'll create this next
 }
 
