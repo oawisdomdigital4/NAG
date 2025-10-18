@@ -1,6 +1,5 @@
 /* === Custom Admin Theme for New Africa Group === */
-/* Use Font Awesome 6 (free) CDN for broader icon coverage and newer icons */
-@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
 
 /* --- Global Variables --- */
 :root {
@@ -61,121 +60,27 @@ body {
 [class^="fas"], [class*=" fas"],
 [class^="far"], [class*=" far"],
 [class^="fab"], [class*=" fab"] {
-  /* Allow the CDN-provided Font Awesome to control the font-family and weights.
-     Forcing a specific Font Awesome 5 font-family caused many newer icons to
-     not render. Keep display inline-block for alignment. */
+  font-family: "Font Awesome 5 Free" !important;
+  font-weight: 900 !important;
   display: inline-block;
-}
-
-/* Lightweight SVG icon mapping for admin icons (falls back from FA classes) */
-/* These rules use small inline-block pseudo-elements so admin labels remain accessible */
-.icon-svg {
-  display: inline-block;
-  width: 1.05rem;
-  height: 1.05rem;
-  background-repeat: no-repeat;
-  background-size: contain;
-  vertical-align: middle;
-  margin-right: 0.45rem;
-  /* White pill background for better contrast in dark sidebar */
-  background-color: #fff;
-  padding: 2px;
-  border-radius: 6px;
-}
-
-/* Map common FA class names to static SVGs (adjust paths if your STATIC_URL differs) */
-.fa-dashboard::before, .fa-tachometer-alt::before, .icon-dashboard::before {
-  content: "";
-  display: inline-block;
-  width: 1.05rem;
-  height: 1.05rem;
-  background-image: url('/static/admin/icons/icon-dashboard.svg');
-  background-size: contain;
-  margin-right: 0.45rem;
-  background-color: #fff;
-  padding: 2px;
-  border-radius: 6px;
-}
-.fa-user::before, .icon-user::before {
-  content: "";
-  display: inline-block;
-  width: 1.05rem;
-  height: 1.05rem;
-  background-image: url('/static/admin/icons/icon-user.svg');
-  background-size: contain;
-  margin-right: 0.45rem;
-  background-color: #fff;
-  padding: 2px;
-  border-radius: 6px;
-}
-.fa-users::before, .icon-groups::before {
-  content: "";
-  display: inline-block;
-  width: 1.05rem;
-  height: 1.05rem;
-  background-image: url('/static/admin/icons/icon-groups.svg');
-  background-size: contain;
-  margin-right: 0.45rem;
-  background-color: #fff;
-  padding: 2px;
-  border-radius: 6px;
-}
-.fa-shield-alt::before, .fa-shield::before, .icon-shield::before {
-  content: "";
-  display: inline-block;
-  width: 1.05rem;
-  height: 1.05rem;
-  background-image: url('/static/admin/icons/icon-shield.svg');
-  background-size: contain;
-  margin-right: 0.45rem;
-  background-color: #fff;
-  padding: 2px;
-  border-radius: 6px;
 }
 
 
 /* === Logo Styling === */
 .nag-logo {
   background-color: #ffffff !important;
-  border-radius: 8px;
-  padding: 4px 6px;
-  height: 44px !important; /* Fit the admin sidebar comfortably */
-  max-height: 56px !important;
+  border-radius: 12px;
+  padding: 8px;
+  height: 60px !important;       /* Larger size */
   width: auto;
   object-fit: contain;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
 }
 
-/* Responsive adjustments: keep logo reasonable on small screens */
-@media (max-width: 768px) {
-  .nag-logo {
-    height: 40px !important;
-    max-height: 48px !important;
-    padding: 3px 6px;
-  }
-}
-
-/* Hide logo entirely when sidebar is collapsed/minified to avoid bulging */
-/* Only hide when the admin explicitly uses the mini collapsed state */
-body.sidebar-mini .nag-logo,
-.sidebar-collapse .brand-link .nag-logo {
-  opacity: 0 !important;
-  transform: scale(0.6);
+/* Hide logo when sidebar is collapsed */
+body.sidebar-collapse .nag-logo {
+  opacity: 0;
+  transform: scale(0.9);
   pointer-events: none;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Ensure logo is visible by default */
-.brand-link .nag-logo,
-.main-header .brand-link .nag-logo,
-.navbar .brand-link .nag-logo {
-  display: inline-block !important;
-  opacity: 1 !important;
-  width: auto !important;
-  height: 44px !important;
 }

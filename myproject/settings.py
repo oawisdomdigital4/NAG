@@ -1,78 +1,56 @@
-import os
-import socket
 from pathlib import Path
+import logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-=h5qyq6ims%&1xawe!c(m99n=ns!pql1cuxpij3w+vqpcdh$#_'
+DEBUG = True
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 
-HOSTNAME = socket.gethostname()
-ON_PYTHONANYWHERE = "pythonanywhere" in HOSTNAME or "newafricagroup" in HOSTNAME
-
-DEBUG = not ON_PYTHONANYWHERE
-
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
-    'newafricagroup.pythonanywhere.com',
-]
-
+# ----------------------------
+# Application Definition
+# ----------------------------
 INSTALLED_APPS = [
-    'jazzmin',
-    'corsheaders',  # ← add this line (must come before others that use it)
-    'rest_framework',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    # Your custom apps
+    'rest_framework',
+    'corsheaders',
     'accounts',
     'community',
     'courses',
     'notifications',
     'payments',
     'utils',
+    'django_filters',
 ]
 
-
+# ----------------------------
+# Middleware
+# ----------------------------
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # ← add this line here
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "corsheaders.middleware.CorsMiddleware",  # Must come first for CORS
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",  # Required for CSRF
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
 
 ROOT_URLCONF = 'myproject.urls'
-WSGI_APPLICATION = 'myproject.wsgi.application'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'newafricagroup$nag2',
-        'USER': 'newafricagroup',
-        'PASSWORD': '@Nag123456',
-        'HOST': 'newafricagroup.mysql.pythonanywhere-services.com',
-        'PORT': '3306',
-    }
-}
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
+        'DIRS': [],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
-                'django.template.context_processors.debug',
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -81,6 +59,21 @@ TEMPLATES = [
     },
 ]
 
+WSGI_APPLICATION = 'myproject.wsgi.application'
+
+# ----------------------------
+# Database
+# ----------------------------
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+# ----------------------------
+# Password Validation
+# ----------------------------
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -88,59 +81,36 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-WSGI_APPLICATION = 'myproject.wsgi.application'
-ASGI_APPLICATION = 'myproject.asgi.application'
-
+# ----------------------------
+# Internationalization
+# ----------------------------
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Africa/Lagos'
+TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
+
+# ----------------------------
+# Static & Media Files
+# ----------------------------
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Ensure Font Awesome and other Jazzmin assets load properly
-JAZZMIN_UI_TWEAKS = {
-    "theme": "cosmo",
-}
 
-
-if ON_PYTHONANYWHERE:
-    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SESSION_COOKIE_SECURE = True
-    CSRF_COOKIE_SECURE = True
-    SECURE_HSTS_SECONDS = 31536000
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
-else:
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
-
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://newafricagroup.pythonanywhere.com',
-    'https://myproject-zeta-indol.vercel.app',
-]
-
-CORS_ALLOW_CREDENTIALS = True
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://newafricagroup.pythonanywhere.com',
-    'http://localhost:5173',
-    'http://127.0.0.1:5173',
-    'https://myproject-zeta-indol.vercel.app',
-]
-
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# ----------------------------
+# Custom User Model
+# ----------------------------
 AUTH_USER_MODEL = 'accounts.User'
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+]
 
-# Django REST Framework config: Browsable API only in DEBUG, JSON in prod
+# Prevent Django’s default redirect-to-login on 401 responses
+LOGIN_URL = None
+
+
+# --- REST Framework: Allow any for API, use Session for browsable API only
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "accounts.authentication.DatabaseTokenAuthentication",
@@ -152,15 +122,32 @@ REST_FRAMEWORK = {
     ],
 }
 
+# --- CORS: Allow local dev frontend
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+CSRF_COOKIE_SECURE = False  # Dev only
+SESSION_COOKIE_SECURE = False  # Dev only
+
+# ----------------------------
+# Frontend Base URL
+# ----------------------------
+FRONTEND_BASE_URL = "http://localhost:5173"
+
+# ----------------------------
+# Debug Logging
+# ----------------------------
 if DEBUG:
-    REST_FRAMEWORK.setdefault("DEFAULT_RENDERER_CLASSES", [
-        "rest_framework.renderers.JSONRenderer",
-        "rest_framework.renderers.BrowsableAPIRenderer",
-    ])
-else:
-    REST_FRAMEWORK.setdefault("DEFAULT_RENDERER_CLASSES", [
-        "rest_framework.renderers.JSONRenderer",
-    ])
+    logging.basicConfig(level=logging.DEBUG)
+    logging.getLogger('django.server').setLevel(logging.DEBUG)
+    print("✅ Django is running in DEBUG mode with CSRF & session debugging enabled.")
 
 # Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
 # characters instead of raising UnicodeDecodeError. This prevents 500s when
@@ -195,75 +182,4 @@ try:
     _drf_encoders.JSONEncoder = SafeDRFJSONEncoder
 except Exception:
     # If DRF isn't importable in this environment, skip the patch silently.
-    pass
-
-
-
-
-JAZZMIN_SETTINGS = {
-    "site_title": "New Africa Group Admin",
-    "site_header": "New Africa Group",
-    "site_brand": "NAG",
-    "site_logo": "admin/img/logo.png",
-    "site_logo_classes": "img-fluid nag-logo", 
-    "welcome_sign": "Welcome to New Africa Group Admin",
-    "copyright": "© 2025 New Africa Group",
-    "show_ui_builder": False,
-
-    # === COLOR THEME ===
-    "theme": "cosmo",
-    "custom_css": "admin/css/custom-theme.css",
-
-    # === SIDEBAR ===
-    "navigation_expanded": True,
-    "topmenu_links": [
-        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
-    ],
-
-    # === ICONS ===
-    "icons": {
-        "admin.LogEntry": "fas fa-history",
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "accounts": "fas fa-user-circle",
-        "accounts.profile": "fas fa-id-card",
-        "community": "fas fa-users",
-        "courses": "fas fa-book",
-        "courses.course": "fas fa-book-open",
-        "payments": "fas fa-credit-card",
-        "payments.transaction": "fas fa-money-bill-wave",
-        "notifications": "fas fa-bell",
-        "sites": "fas fa-globe",
-    },
-}
-
-# Replace certain Font Awesome classes with our lightweight SVG-based icon classes
-# so the admin uses local SVGs where available. This scans the `icons` mapping and
-# swaps values that contain recognizable keywords (e.g., 'user', 'users', 'group', 'shield').
-try:
-    _svg_map_keywords = {
-        'user': 'icon-user',
-        'users': 'icon-groups',
-        'group': 'icon-groups',
-        'shield': 'icon-shield',
-    }
-
-    def _map_icon_value(val: str) -> str:
-        if not isinstance(val, str):
-            return val
-        low = val.lower()
-        # If already using our icon- prefix, leave it
-        if low.startswith('icon-'):
-            return val
-        for kw, icon_name in _svg_map_keywords.items():
-            if kw in low:
-                return icon_name
-        return val
-
-    if isinstance(JAZZMIN_SETTINGS, dict) and 'icons' in JAZZMIN_SETTINGS:
-        for k, v in list(JAZZMIN_SETTINGS['icons'].items()):
-            JAZZMIN_SETTINGS['icons'][k] = _map_icon_value(v)
-except Exception:
-    # Non-critical: If something goes wrong here, fall back to the original icons.
     pass
