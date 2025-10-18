@@ -2,27 +2,28 @@
 {% load i18n %}
 
 {% block content %}
+  {% load admin_extras %}
   <div class="dashboard">
     <div class="dashboard-cards">
       <div class="card">
         <h3>Users</h3>
-        <p class="card-value">{{ app_list|length }}</p>
+        <p class="card-value">{% model_count 'accounts' 'User' %}</p>
         <p class="card-sub">Active users, signups</p>
       </div>
       <div class="card">
         <h3>Courses</h3>
-        <p class="card-value">—</p>
+        <p class="card-value">{% model_count 'community' 'Course' %}</p>
         <p class="card-sub">Total courses</p>
       </div>
       <div class="card">
         <h3>Partners</h3>
-        <p class="card-value">—</p>
+        <p class="card-value">{% model_count 'community' 'Partner' %}</p>
         <p class="card-sub">Partners listed</p>
       </div>
       <div class="card">
-        <h3>Community</h3>
-        <p class="card-value">—</p>
-        <p class="card-sub">Recent activity</p>
+        <h3>Payments</h3>
+        <p class="card-value">{% model_count 'payments' 'Payment' %}</p>
+        <p class="card-sub">Transaction records</p>
       </div>
     </div>
 

@@ -31,6 +31,14 @@ else
     exit 1
 fi
 
+# Step 3: Activate virtual environment
+if [ -f ".venv/bin/activate" ]; then
+    echo -e "${YELLOW}🧠 Activating virtual environment...${NC}"
+    source /home/newafricagroup/.venv/bin/activate
+    echo -e "${RED}❌ Virtual environment not found at .venv/bin/activate${NC}"
+    exit 1
+fi
+
 # Step 5: Make and apply migrations
 echo -e "${YELLOW}🛠️  Making migrations...${NC}"
 if python manage.py makemigrations; then

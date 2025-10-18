@@ -5,6 +5,7 @@ from .models import (
     User,
     UserProfile,
     UserToken,
+    Follow,
 )
 
 
@@ -80,3 +81,10 @@ class UserTokenAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired.boolean = True
     is_expired.short_description = "Expired?"
+
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ("id", "follower", "followed", "created_at")
+    search_fields = ("follower__email", "followed__email")
+    list_filter = ("created_at",)
