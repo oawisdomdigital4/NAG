@@ -1,28 +1,17 @@
 #!/bin/bash
-
-# Navigate to your project folder
-cd ~/NAG || exit
-
-echo "🚀 Starting deployment to PythonAnywhere..."
-
-# Pull latest code from GitHub
-echo "📦 Pulling latest code from GitHub..."
+echo "🚀 Pulling latest code from GitHub..."
 git pull origin main
 
-# Activate your virtual environment
-echo "🧠 Activating virtual environment..."
-source .venv/bin/activate
+echo "📦 Activating virtual environment..."
+source /home/newafricagroup/.venv/bin/activate
 
-# Apply database migrations
-echo "🗃️ Applying migrations..."
-python manage.py migrate --noinput
+echo "🛠️  Applying migrations..."
+python manage.py migrate
 
-# Collect static files
-echo "🎨 Collecting static files..."
+echo "🧹 Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Reload the web app on PythonAnywhere
 echo "🔄 Reloading web app..."
-pa_reload_webapp newafricagroup.pythonanywhere.com
+/home/newafricagroup/.venv/bin/pa_reload_webapp newafricagroup.pythonanywhere.com
 
 echo "✅ Deployment complete!"
