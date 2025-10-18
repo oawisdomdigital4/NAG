@@ -6,7 +6,6 @@ from .models import (
     UserProfile,
     UserToken,
 )
-from admin_mixins import IconAdminMixin
 
 
 # -----------------------------
@@ -38,14 +37,19 @@ class UserAdmin(BaseUserAdmin):
 # -----------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar", "icon_preview")
+    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar")
     search_fields = ("user__email", "full_name", "phone", "country", "company_name")
     actions = ("approve_community_access", "revoke_community_access")
-    readonly_fields = ("icon_preview",)
-    icon_field = 'avatar'
-    # include admin CSS via mixin
-    class Media(IconAdminMixin.Media):
-        pass
+    readonly_fields = ("avatar_preview",)
+
+    def avatar_preview(self, obj):
+        if obj.avatar:
+            return f"<img src='{obj.avatar.url}' style='max-height:50px' />"
+        if obj.avatar_url:
+            return f"<img src='{obj.avatar_url}' style='max-height:50px' />"
+        return "-"
+    avatar_preview.allow_tags = True
+    avatar_preview.short_description = "Avatar"
 
     def has_avatar(self, obj):
         return bool(obj.avatar or obj.avatar_url)

@@ -1,204 +1,76 @@
-/* === New Africa Group | Modern Admin Theme === */
-/* --- Designed for a clean, elegant, and premium feel --- */
+/* === Custom Admin Theme for New Africa Group === */
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
 
-/* ===== PRIMARY COLORS ===== */
+/* --- Global Variables --- */
 :root {
-  --color-primary: #0D1B52;   /* Deep Royal Blue */
-  --color-accent: #E3212D;    /* Vibrant Red */
-  --color-gold: #D4A63E;      /* Bright Gold */
-  --color-lightblue: #4169E1; /* Cool Light Blue */
-  --color-dark: #1A1A1A;      /* Charcoal Black */
-  --color-white: #FFFFFF;     /* White */
+  --primary-color: #0D1B52;
+  --accent-color: #E3212D;
+  --highlight-color: #D4A63E;
+  --light-blue: #4169E1;
+  --text-color: #1A1A1A;
+  --white: #FFFFFF;
 }
 
-/* ===== GLOBAL STYLING ===== */
-body, html {
-  background-color: var(--color-white);
-  font-family: "Inter", "Segoe UI", Roboto, sans-serif;
-  color: var(--color-dark);
-  letter-spacing: 0.2px;
+/* --- Header Bar --- */
+.navbar.navbar-inverse {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color);
 }
 
-h1, h2, h3, h4, h5, h6 {
-  color: var(--color-primary);
-  font-weight: 600;
+/* --- Sidebar --- */
+.main-sidebar {
+  background-color: var(--primary-color) !important;
+}
+.sidebar a {
+  color: var(--white) !important;
+  transition: background-color 0.3s ease;
+}
+.sidebar a:hover {
+  background-color: var(--accent-color) !important;
 }
 
-/* Subtle shadow for modern depth */
-.card, .box, .module {
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(13, 27, 82, 0.08);
-  border: 1px solid #e0e0e0;
-}
-
-/* ===== SIDEBAR ===== */
-#jazzy-sidebar {
-  background-color: var(--color-primary) !important;
-  color: var(--color-white);
-}
-
-#jazzy-sidebar .nav-item a {
-  color: var(--color-white) !important;
-  transition: background 0.3s ease, padding-left 0.2s ease;
-}
-
-#jazzy-sidebar .nav-item a:hover {
-  background-color: var(--color-lightblue) !important;
-  padding-left: 18px;
-}
-
-#jazzy-sidebar .nav-item.active a {
-  background-color: var(--color-gold) !important;
-  color: var(--color-dark) !important;
-  font-weight: 600;
-}
-
-/* ===== HEADER / TOP NAVBAR ===== */
-.navbar.navbar-expand.navbar-dark.bg-primary {
-  background-color: var(--color-primary) !important;
-  border-bottom: 3px solid var(--color-gold);
-}
-
-.navbar .navbar-nav .nav-link {
-  color: var(--color-white) !important;
-}
-
-.navbar .navbar-nav .nav-link:hover {
-  color: var(--color-gold) !important;
-}
-
-/* ===== BUTTONS ===== */
-.btn {
-  border-radius: 6px !important;
-  transition: all 0.2s ease;
-  font-weight: 500;
-}
-
+/* --- Buttons --- */
 .btn-primary {
-  background-color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-  color: var(--color-white) !important;
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+  color: var(--white);
+  transition: background-color 0.3s ease;
 }
-
 .btn-primary:hover {
-  background-color: var(--color-lightblue) !important;
+  background-color: var(--light-blue);
 }
 
-.btn-danger {
-  background-color: var(--color-accent) !important;
-  border-color: var(--color-accent) !important;
+/* --- Accents & Highlights --- */
+.text-danger,
+.text-red {
+  color: var(--accent-color) !important;
+}
+.text-warning {
+  color: var(--highlight-color) !important;
 }
 
-.btn-danger:hover {
-  background-color: #b9161f !important;
+/* --- Page Background --- */
+body {
+  background-color: var(--white);
+  color: var(--text-color);
 }
 
-.btn-warning {
-  background-color: var(--color-gold) !important;
-  border-color: var(--color-gold) !important;
-  color: var(--color-dark) !important;
+/* --- Logo Styling --- */
+.nag-logo {
+  background-color: #ffffff !important;
+  border-radius: 10px;
+  padding: 6px;
+  max-height: 45px;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.btn-warning:hover {
-  background-color: #f5c85c !important;
-}
-
-.btn-outline-primary {
-  color: var(--color-primary) !important;
-  border-color: var(--color-primary) !important;
-}
-
-.btn-outline-primary:hover {
-  background-color: var(--color-primary) !important;
-  color: var(--color-white) !important;
-}
-
-/* ===== TABLES ===== */
-.table {
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.table thead th {
-  background-color: var(--color-primary) !important;
-  color: var(--color-white) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: none;
-}
-
-.table-hover tbody tr:hover {
-  background-color: rgba(65, 105, 225, 0.08) !important;
-}
-
-/* ===== LINKS ===== */
-a {
-  color: var(--color-lightblue);
-  transition: color 0.2s ease;
-}
-
-a:hover {
-  color: var(--color-accent);
-  text-decoration: none;
-}
-
-/* ===== FORMS ===== */
-input, select, textarea {
-  border-radius: 6px !important;
-  border: 1px solid #ccc !important;
-  padding: 6px 10px !important;
-}
-
-input:focus, select:focus, textarea:focus {
-  border-color: var(--color-lightblue) !important;
-  box-shadow: 0 0 4px rgba(65, 105, 225, 0.4) !important;
-}
-
-/* ===== LOGIN PAGE ===== */
-body.login {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-dark));
-  color: var(--color-white);
-}
-
-body.login #content {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 35px;
-  backdrop-filter: blur(10px);
-}
-
-body.login .form-row label {
-  color: var(--color-gold);
-  font-weight: 500;
-}
-
-body.login input[type="text"],
-body.login input[type="password"] {
-  border-radius: 6px;
-  border: none;
-  padding: 10px;
-}
-
-body.login input[type="submit"] {
-  background-color: var(--color-gold);
-  color: var(--color-dark);
-  font-weight: 600;
-  border: none;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-}
-
-body.login input[type="submit"]:hover {
-  background-color: var(--color-accent);
-  color: var(--color-white);
-}
-
-/* ===== FOOTER ===== */
-footer {
-  background-color: var(--color-primary);
-  color: var(--color-white);
-  border-top: 2px solid var(--color-gold);
-  text-align: center;
-  padding: 10px 0;
-  font-size: 13px;
+/* --- Font Awesome Sync (CDN) --- */
+[class^="fa-"], [class*=" fa-"],
+[class^="fas"], [class*=" fas"],
+[class^="far"], [class*=" far"],
+[class^="fab"], [class*=" fab"] {
+  font-family: "Font Awesome 5 Free" !important;
+  font-weight: 900 !important;
+  display: inline-block;
 }
