@@ -18,6 +18,7 @@ ALLOWED_HOSTS = [
 ]
 
 INSTALLED_APPS = [
+    'jazzmin',
     'corsheaders',  # ← add this line (must come before others that use it)
     'rest_framework',
     'django.contrib.admin',
@@ -191,4 +192,27 @@ except Exception:
     # If DRF isn't importable in this environment, skip the patch silently.
     pass
 
+
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "NewAfrica Group Admin",
+    "site_header": "NewAfrica Group",
+    "site_brand": "NewAfrica",
+    "logo": "images/logo.png",       # your static file path
+    "welcome_sign": "Welcome to NewAfrica Dashboard",
+    "copyright": "NewAfrica Group Ltd",
+    "user_avatar": None,
+    "topmenu_links": [
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "auth.User"},
+    ],
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    # other customization...
+
+    "custom_css": "css/custom_admin.css",
+    "custom_js": "js/custom_admin.js",
+
+}
 
