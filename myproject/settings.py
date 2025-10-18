@@ -210,9 +210,5 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     # other customization...
-
-    "custom_css": "css/custom_admin.css",
-    "custom_js": "js/custom_admin.js",
-
 }
 
