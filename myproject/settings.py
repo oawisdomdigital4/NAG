@@ -240,7 +240,12 @@ JAZZMIN_SETTINGS = {
     },
 
     "custom_css": "admin/css/custom-theme.css",
-    "custom_js": ["admin/js/remove-bullets.js"],
+    # Ensure the helper that adds the `bi` base class runs first,
+    # so the remove-bullets script doesn't mistake icons for decorative bullets.
+    "custom_js": [
+        "admin/js/ensure_bi_class.js",
+        "admin/js/remove-bullets.js",
+    ],
     "icons_html": True,
 }
 
