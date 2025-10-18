@@ -110,3 +110,23 @@ body.sidebar-collapse .nag-logo {
   transform: scale(0.9);
   pointer-events: none;
 }
+
+
+/* === Sidebar Icon Fix === */
+.sidebar .nav-sidebar > li > a > i {
+  font-size: 1.2rem;
+  margin-right: 10px;
+  color: var(--highlight-color) !important;
+  vertical-align: middle;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar .nav-sidebar > li > a:hover > i {
+  color: var(--white) !important;
+  transform: scale(1.1);
+}
+
+/* Remove the white bullet circles */
+.sidebar .nav-sidebar > li > a::before {
+  display: none !important;
+}

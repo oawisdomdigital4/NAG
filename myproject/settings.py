@@ -210,18 +210,16 @@ JAZZMIN_SETTINGS = {
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
-    # === THEME & CUSTOM FILES ===
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
 
-    # === SIDEBAR ===
     "navigation_expanded": True,
 
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
 
-    # === ICONS (Using Bootstrap Icons) ===
+    # === Replace app bullets with Bootstrap Icons ===
     "icons": {
         "admin.LogEntry": "bi bi-clock-history",
         "auth": "bi bi-people",
@@ -229,7 +227,10 @@ JAZZMIN_SETTINGS = {
         "auth.Group": "bi bi-people-fill",
         "accounts": "bi bi-person-badge",
         "accounts.profile": "bi bi-person-circle",
-        "community": "bi bi-people",
+        "community": "bi bi-chat-dots",
+        "community.featuredspeaker": "bi bi-megaphone",
+        "community.organizer": "bi bi-person-workspace",
+        "community.partner": "bi bi-briefcase",
         "courses": "bi bi-journal-bookmark",
         "courses.course": "bi bi-journal-richtext",
         "payments": "bi bi-credit-card",
@@ -238,7 +239,7 @@ JAZZMIN_SETTINGS = {
         "sites": "bi bi-globe",
     },
 
-    # Allow HTML rendering for icons
+    # Important: Allow HTML icons to render
     "icons_html": True,
 }
 
