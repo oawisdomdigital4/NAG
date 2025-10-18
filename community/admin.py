@@ -134,9 +134,16 @@ class CommentReactionAdmin(admin.ModelAdmin):
 
 @admin.register(Notification)
 class CommunityNotificationAdmin(admin.ModelAdmin):
-	list_display = ('id', 'user', 'category', 'title', 'read', 'created_at')
+	list_display = ('id', 'user', 'category', 'short_content', 'read', 'created_at')
 	list_filter = ('category', 'read')
-	search_fields = ('title', 'message', 'user__email')
+	search_fields = ('content', 'user__email')
+
+	def short_content(self, obj):
+		if not obj.content:
+			return ""
+		return (obj.content[:75] + "...") if len(obj.content) > 75 else obj.content
+
+	short_content.short_description = 'Content'
 
 
 @admin.register(Plan)
