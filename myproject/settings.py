@@ -203,7 +203,6 @@ except Exception:
 JAZZMIN_SETTINGS = {
     "site_title": "New Africa Group Admin",
     "site_header": "New Africa Group",
-    "site_brand": "NAG",
     "site_logo": "admin/img/logo.png",
     "site_logo_classes": "img-fluid nag-logo",  # 👈 Add custom class for styling
     "welcome_sign": "Welcome to New Africa Group Admin",
