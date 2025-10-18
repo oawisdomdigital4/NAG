@@ -40,7 +40,7 @@
   transform: translateX(3px);
 }
 
-/* Active link */
+/* --- Active Link --- */
 .sidebar .active > a,
 .sidebar a.active {
   background-color: var(--accent-color) !important;
@@ -48,7 +48,7 @@
   box-shadow: 0 2px 8px rgba(227, 33, 45, 0.25);
 }
 
-/* Sidebar headings */
+/* --- Sidebar Headings --- */
 .sidebar .nav-header {
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
@@ -78,6 +78,7 @@
   color: var(--white);
   transition: background-color 0.2s ease;
 }
+
 .btn-primary:hover {
   background-color: var(--light-blue);
 }
@@ -111,7 +112,6 @@ body.sidebar-collapse .nag-logo {
   pointer-events: none;
 }
 
-
 /* === Sidebar Icon Fix === */
 .sidebar .nav-sidebar > li > a > i {
   font-size: 1.2rem;
@@ -126,7 +126,12 @@ body.sidebar-collapse .nag-logo {
   transform: scale(1.1);
 }
 
-/* Remove the white bullet circles */
-.sidebar .nav-sidebar > li > a::before {
+/* === Remove Jazzmin Sidebar Bullets Completely === */
+.sidebar .nav-sidebar > li > a::before,
+.sidebar .nav-sidebar .nav-item > a::before,
+.sidebar .nav-item > a::before {
+  content: none !important;
   display: none !important;
+  background: none !important;
+  box-shadow: none !important;
 }
