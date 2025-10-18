@@ -219,11 +219,30 @@ JAZZMIN_SETTINGS = {
     ],
 
     "icons": {
+        # app-level icons
         "auth": "fas fa-users-cog",
         "accounts": "fas fa-user",
         "community": "fas fa-users",
         "courses": "fas fa-book",
         "payments": "fas fa-credit-card",
         "notifications": "fas fa-bell",
+
+        # model-level icons (app_label.modelname). Use lowercase model names.
+        "accounts.user": "fas fa-user-circle",
+        "accounts.userprofile": "fas fa-id-badge",
+        "accounts.usertoken": "fas fa-key",
+
+        "community.organizer": "fas fa-user-tie",
+        "community.featuredspeaker": "fas fa-microphone",
+        "community.partner": "fas fa-handshake",
+        "community.pastedition": "fas fa-history",
+        "community.chatroom": "fas fa-comments",
+        "community.message": "fas fa-comment-dots",
+
+        "courses.course": "fas fa-book-open",
+        "courses.coursemodule": "fas fa-layer-group",
+
+        "payments.payment": "fas fa-credit-card",
+        "notifications.notification": "fas fa-envelope",
     },
 }
