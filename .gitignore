@@ -14,8 +14,6 @@ db.sqlite3
 media/
 staticfiles/
 
-myproject/settings.py
-
 # Frontend
 frontend/
 
