@@ -86,11 +86,7 @@ body.sidebar-collapse .nag-logo {
   pointer-events: none;
 }
 
-/* Responsiveness: ensure logo doesn't overflow header on small screens */
-@media (max-width: 768px) {
-  .nag-logo {
-    height: 56px !important;
-    max-height: 56px !important;
-    padding: 6px 8px;
-  }
+
+.nag{
+  display: none;
 }
