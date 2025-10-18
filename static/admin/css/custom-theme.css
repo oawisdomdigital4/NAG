@@ -55,16 +55,6 @@ body {
   color: var(--text-color);
 }
 
-/* --- Logo Styling --- */
-.nag-logo {
-  background-color: #ffffff !important;
-  border-radius: 10px;
-  padding: 6px;
-  max-height: 45px;
-  object-fit: contain;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
 /* --- Font Awesome Sync (CDN) --- */
 [class^="fa-"], [class*=" fa-"],
 [class^="fas"], [class*=" fas"],
@@ -73,4 +63,24 @@ body {
   font-family: "Font Awesome 5 Free" !important;
   font-weight: 900 !important;
   display: inline-block;
+}
+
+
+/* === Logo Styling === */
+.nag-logo {
+  background-color: #ffffff !important;
+  border-radius: 12px;
+  padding: 8px;
+  height: 60px !important;       /* Larger size */
+  width: auto;
+  object-fit: contain;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
+}
+
+/* Hide logo when sidebar is collapsed */
+body.sidebar-collapse .nag-logo {
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
 }
