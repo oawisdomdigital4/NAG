@@ -64,3 +64,13 @@
 
 /* ensure collapsed state still hides logo smoothly */
 body.sidebar-collapse .nag-logo { opacity: 0; transform: scale(0.9); pointer-events: none; }
+
+/* Styling for inline admin images injected via JAZZMIN_SETTINGS icons_html */
+.nag-admin-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 10px;
+  object-fit: contain;
+}
