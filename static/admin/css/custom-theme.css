@@ -1,137 +1,66 @@
-/* === Bootstrap Icons === */
-@import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css");
+/* === FORCE REMOVE ANY SIDEBAR/BULLET MARKERS (comprehensive) === */
 
-/* --- Root Theme Variables --- */
-:root {
-  --primary-color: #0D1B52;
-  --accent-color: #E3212D;
-  --highlight-color: #D4A63E;
-  --light-blue: #4169E1;
-  --text-color: #1A1A1A;
-  --white: #FFFFFF;
+/* remove list-style markers on common admin lists */
+.sidebar, .nav-sidebar, .app-list, .module, .model-list, .model-links, .modules, .app-list ul, .app-list li, .nav {
+  list-style: none !important;
+  -webkit-margin-before: 0 !important;
+  -webkit-margin-after: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* --- Header --- */
-.navbar.navbar-inverse {
-  background-color: var(--primary-color) !important;
-  border-color: var(--primary-color);
-  color: var(--white);
-}
-
-/* --- Sidebar --- */
-.main-sidebar {
-  background-color: var(--primary-color) !important;
-  color: var(--white);
-  box-shadow: inset -2px 0 6px rgba(0, 0, 0, 0.2);
-}
-
-.sidebar a {
-  color: var(--white) !important;
-  padding: 0.6rem 1rem;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-}
-
-.sidebar a:hover {
-  background-color: var(--accent-color) !important;
-  transform: translateX(3px);
-}
-
-/* --- Active Link --- */
-.sidebar .active > a,
-.sidebar a.active {
-  background-color: var(--accent-color) !important;
-  color: var(--white) !important;
-  box-shadow: 0 2px 8px rgba(227, 33, 45, 0.25);
-}
-
-/* --- Sidebar Headings --- */
-.sidebar .nav-header {
-  color: rgba(255, 255, 255, 0.7);
-  text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  margin-top: 8px;
-}
-
-/* --- Bootstrap Icons Styling --- */
-.sidebar i.bi {
-  font-size: 1.2rem;
-  color: var(--highlight-color);
-  transition: color 0.2s ease, transform 0.2s ease;
-  min-width: 20px;
-  text-align: center;
-}
-
-.sidebar a:hover i.bi {
-  color: var(--white);
-  transform: scale(1.1);
-}
-
-/* --- Buttons --- */
-.btn-primary {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
-  color: var(--white);
-  transition: background-color 0.2s ease;
-}
-
-.btn-primary:hover {
-  background-color: var(--light-blue);
-}
-
-/* --- Text Colors --- */
-.text-danger { color: var(--accent-color) !important; }
-.text-warning { color: var(--highlight-color) !important; }
-
-/* --- Page Background --- */
-body {
-  background-color: var(--white);
-  color: var(--text-color);
-}
-
-/* --- Logo Styling --- */
-.nag-logo {
-  background-color: #ffffff !important;
-  border-radius: 12px;
-  padding: 8px;
-  height: 78px !important;
-  width: auto;
-  object-fit: contain;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
-}
-
-/* Hide logo when sidebar collapses */
-body.sidebar-collapse .nag-logo {
-  opacity: 0;
-  transform: scale(0.9);
-  pointer-events: none;
-}
-
-/* === Sidebar Icon Fix === */
-.sidebar .nav-sidebar > li > a > i {
-  font-size: 1.2rem;
-  margin-right: 10px;
-  color: var(--highlight-color) !important;
-  vertical-align: middle;
-  transition: color 0.3s ease, transform 0.2s ease;
-}
-
-.sidebar .nav-sidebar > li > a:hover > i {
-  color: var(--white) !important;
-  transform: scale(1.1);
-}
-
-/* === Remove Jazzmin Sidebar Bullets Completely === */
+/* hide pseudo-elements that render bullets on many templates */
 .sidebar .nav-sidebar > li > a::before,
-.sidebar .nav-sidebar .nav-item > a::before,
-.sidebar .nav-item > a::before {
+.sidebar .nav-sidebar > li::before,
+.sidebar .nav-sidebar li::marker,
+.sidebar .nav-item > a::before,
+.app-list .module li::before,
+.app-list .module li > a::before,
+.app-list .module li::marker,
+.model-list li::before,
+.model-list li::marker,
+.module li::before,
+.module li::marker,
+.module .model-links li::before,
+.module .model-links li::marker {
   content: none !important;
   display: none !important;
-  background: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+  border: none !important;
   box-shadow: none !important;
 }
+
+/* extra: remove pseudo arrow / dot classes some themes use */
+.sidebar .nav-sidebar > li .fa-circle,
+.sidebar .nav-sidebar > li .fa-dot-circle,
+.sidebar .nav-sidebar > li .dot-indicator,
+.sidebar .nav-sidebar > li .sidebar-dot,
+.sidebar .nav-list .bullet {
+  display: none !important;
+  visibility: hidden !important;
+  height: 0 !important;
+  width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* adjust spacing after removal to keep alignment */
+.sidebar .nav-sidebar > li > a,
+.sidebar .nav-sidebar .nav-item > a {
+  padding-left: 14px !important;   /* tighten left padding if needed */
+  align-items: center;
+}
+
+/* ensure icons align after removing bullets */
+.sidebar .nav-sidebar > li > a > i,
+.sidebar .nav-sidebar > li > a .bi {
+  margin-left: 0 !important;
+  margin-right: 10px !important;
+  min-width: 22px !important;
+  text-align: center !important;
+}
+
+/* ensure collapsed state still hides logo smoothly */
+body.sidebar-collapse .nag-logo { opacity: 0; transform: scale(0.9); pointer-events: none; }

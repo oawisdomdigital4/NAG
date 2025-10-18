@@ -239,7 +239,8 @@ JAZZMIN_SETTINGS = {
         "sites": "bi bi-globe",
     },
 
-    # Important: Allow HTML icons to render
+    "custom_css": "admin/css/custom-theme.css",
+    "custom_js": ["admin/js/remove-bullets.js"],
     "icons_html": True,
 }
 
