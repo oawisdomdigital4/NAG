@@ -67,32 +67,89 @@ body {
   display: inline-block;
 }
 
+/* Lightweight SVG icon mapping for admin icons (falls back from FA classes) */
+/* These rules use small inline-block pseudo-elements so admin labels remain accessible */
+.icon-svg {
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-repeat: no-repeat;
+  background-size: contain;
+  vertical-align: middle;
+  margin-right: 0.45rem;
+}
+
+/* Map common FA class names to static SVGs (adjust paths if your STATIC_URL differs) */
+.fa-dashboard::before, .fa-tachometer-alt::before, .icon-dashboard::before {
+  content: "";
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-image: url('/static/admin/icons/icon-dashboard.svg');
+  background-size: contain;
+  margin-right: 0.45rem;
+}
+.fa-user::before, .icon-user::before {
+  content: "";
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-image: url('/static/admin/icons/icon-user.svg');
+  background-size: contain;
+  margin-right: 0.45rem;
+}
+.fa-users::before, .icon-groups::before {
+  content: "";
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-image: url('/static/admin/icons/icon-groups.svg');
+  background-size: contain;
+  margin-right: 0.45rem;
+}
+.fa-shield-alt::before, .fa-shield::before, .icon-shield::before {
+  content: "";
+  display: inline-block;
+  width: 1.05rem;
+  height: 1.05rem;
+  background-image: url('/static/admin/icons/icon-shield.svg');
+  background-size: contain;
+  margin-right: 0.45rem;
+}
+
 
 /* === Logo Styling === */
 .nag-logo {
   background-color: #ffffff !important;
-  border-radius: 12px;
-  padding: 6px 10px;
-  height: 120px !important; /* Increased logo height */
-  max-height: 140px !important;
+  border-radius: 8px;
+  padding: 4px 6px;
+  height: 44px !important; /* Fit the admin sidebar comfortably */
+  max-height: 56px !important;
   width: auto;
   object-fit: contain;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
-  transition: all 0.25s ease-in-out;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
 }
 
 /* Responsive adjustments: keep logo reasonable on small screens */
 @media (max-width: 768px) {
   .nag-logo {
-    height: 84px !important;
-    max-height: 96px !important;
-    padding: 4px 8px;
+    height: 40px !important;
+    max-height: 48px !important;
+    padding: 3px 6px;
   }
 }
 
-/* Hide logo when sidebar is collapsed but allow a small pill to remain visible */
-body.sidebar-collapse .nag-logo {
-  opacity: 0.9;
-  transform: scale(0.85);
-  pointer-events: auto;
+/* Hide logo entirely when sidebar is collapsed/minified to avoid bulging */
+body.sidebar-collapse .nag-logo,
+body.sidebar-mini .nag-logo,
+.sidebar-collapse .brand-link .nag-logo {
+  opacity: 0 !important;
+  transform: scale(0.6);
+  pointer-events: none;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
 }
