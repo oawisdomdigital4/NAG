@@ -221,7 +221,7 @@ JAZZMIN_SETTINGS = {
     "icons": {
         # app-level icons
         "auth": "fas fa-users-cog",
-    "auth.group": "fas fa-users",
+        "auth.group": "fas fa-users",
         "accounts": "fas fa-user",
         "community": "fas fa-users",
         "courses": "fas fa-book",

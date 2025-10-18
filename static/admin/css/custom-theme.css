@@ -71,8 +71,8 @@ body {
   background-color: #ffffff !important;
   border-radius: 12px;
   padding: 10px 12px;
-  height: 75px !important;       /* Increased larger size */
-  max-height: 75px !important;
+  height: 60px !important;       /* Increased larger size */
+  max-height: 60px !important;
   width: auto;
   object-fit: contain;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -80,10 +80,12 @@ body {
 }
 
 /* Hide logo when sidebar is collapsed */
+/* Hide logo when sidebar is collapsed */
 body.sidebar-collapse .nag-logo {
-  opacity: 0;
-  transform: scale(0.9);
-  pointer-events: none;
+  opacity: 0 !important;
+  transform: scale(0.8) !important;
+  pointer-events: none !important;
+  display: none !important; /* ensure it's hidden in all layouts */
 }
 
 /* Responsiveness: ensure logo doesn't overflow header on small screens */
