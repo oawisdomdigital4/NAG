@@ -22,3 +22,11 @@ frontend/
 
 # Logs
 *.log
+
+# Ignore migration files
+accounts/migrations/
+community/migrations/
+courses/migrations/
+notifications/migrations/
+payments/migrations/
+utils/migrations/
