@@ -31,24 +31,6 @@ else
     exit 1
 fi
 
-# Step 3: Activate virtual environment
-if [ -f ".venv/bin/activate" ]; then
-    echo -e "${YELLOW}🧠 Activating virtual environment...${NC}"
-    source .venv/bin/activate
-else
-    echo -e "${RED}❌ Virtual environment not found at .venv/bin/activate${NC}"
-    exit 1
-fi
-
-# Step 4: Install dependencies
-echo -e "${YELLOW}📦 Installing dependencies...${NC}"
-if pip install -r requirements.txt; then
-    echo -e "${GREEN}✅ Dependencies installed.${NC}"
-else
-    echo -e "${RED}❌ Failed to install dependencies.${NC}"
-    exit 1
-fi
-
 # Step 5: Make and apply migrations
 echo -e "${YELLOW}🛠️  Making migrations...${NC}"
 if python manage.py makemigrations; then
@@ -75,12 +57,5 @@ else
     exit 1
 fi
 
-# Step 7: Reload web app
-echo -e "${YELLOW}🔄 Reloading web app...${NC}"
-if pa_reload_webapp "$WEBAPP_NAME"; then
-    echo -e "${GREEN}✅ Web app reloaded successfully.${NC}"
-else
-    echo -e "${RED}⚠️  Could not reload automatically. Please reload manually from the PythonAnywhere dashboard.${NC}"
-fi
 
 echo -e "${GREEN}🎉 Deployment complete!${NC}"
