@@ -5,7 +5,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Admin | {{ site_title|default:_('NAG Admin') }}{% endblock %}</title>
-    <link rel="stylesheet" href="{% static 'admin-theme/admin.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'admin-theme/admin.css' %}">
     <script src="{% static 'admin-theme/admin.js' %}" defer></script>
     {% block extrahead %}{% endblock %}
   </head>
@@ -17,13 +20,26 @@
       </div>
       <nav class="sidebar-nav">
         <ul>
-          <li><a href="/admin/">Dashboard</a></li>
-          <li><a href="/admin/accounts/user/">Users</a></li>
-          <li><a href="/admin/community/course/">Courses</a></li>
-          <li><a href="/admin/community/partner/">Partners</a></li>
-          <li><a href="/admin/payments/payment/">Payments</a></li>
-          <li><a href="/admin/notifications/notification/">Notifications</a></li>
-          <li><a href="/admin/utils/faq/">FAQ</a></li>
+          <li><a href="/admin/">🏠 Dashboard</a></li>
+          {% load admin_extras %}
+          {% get_admin_app_list as app_list %}
+          {% for app in app_list %}
+            <li class="sidebar-app" data-app="{{ app.app_label }}">
+              <button class="app-toggle" aria-expanded="false">▸ <span class="app-name">{{ app.name }}</span></button>
+              <ul class="model-list" hidden>
+                {% for model in app.models %}
+                  <li>
+                    <a href="{{ model.admin_url }}">
+                      <svg class="model-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                        <rect width="20" height="14" x="2" y="5" rx="3" fill="currentColor" />
+                      </svg>
+                      <span class="model-name">{{ model.name }}</span>
+                    </a>
+                  </li>
+                {% endfor %}
+              </ul>
+            </li>
+          {% endfor %}
         </ul>
       </nav>
       <div class="sidebar-footer">

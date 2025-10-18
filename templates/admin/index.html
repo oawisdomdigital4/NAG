@@ -36,14 +36,14 @@
       <aside class="dashboard-side">
         <div class="widget">
           <h4>Pending Verifications</h4>
-          <p class="widget-count">{% model_count 'community' 'CorporateVerification' %}</p>
-          <a class="btn small" href="/admin/community/corporateverification/">Review</a>
+          <p class="widget-count">{% filtered_count 'community' 'CorporateVerification' status='pending' %}</p>
+          <a class="btn small" href="{% url 'admin:community_corporateverification_changelist' %}">Review</a>
         </div>
 
         <div class="widget">
           <h4>Unread Notifications</h4>
-          <p class="widget-count">{% model_count 'community' 'Notification' %}</p>
-          <a class="btn small" href="/admin/notifications/notification/">View</a>
+          <p class="widget-count">{% filtered_count 'community' 'Notification' read=False %}</p>
+          <a class="btn small" href="{% url 'admin:notifications_notification_changelist' %}">View</a>
         </div>
       </aside>
     </div>
