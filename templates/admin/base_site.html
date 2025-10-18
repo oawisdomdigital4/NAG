@@ -4,33 +4,54 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Admin | {{ site_title|default:_('Django site admin') }}{% endblock %}</title>
+    <title>{% block title %}Admin | {{ site_title|default:_('NAG Admin') }}{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'admin-theme/admin.css' %}">
     <script src="{% static 'admin-theme/admin.js' %}" defer></script>
     {% block extrahead %}{% endblock %}
   </head>
   <body class="admin-root">
-    <aside class="sidebar">
-      <div class="sidebar-brand">NAG Admin</div>
+    <aside class="sidebar" id="adminSidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">NAG <span class="badge-gold">Admin</span></div>
+        <button id="sidebarClose" class="sidebar-close">✕</button>
+      </div>
       <nav class="sidebar-nav">
         <ul>
           <li><a href="/admin/">Dashboard</a></li>
-          <li><a href="/admin/auth/user/">Users</a></li>
+          <li><a href="/admin/accounts/user/">Users</a></li>
+          <li><a href="/admin/community/course/">Courses</a></li>
           <li><a href="/admin/community/partner/">Partners</a></li>
-          <li><a href="/admin/courses/course/">Courses</a></li>
-          <li><a href="/admin/utils/faqs/">FAQ</a></li>
+          <li><a href="/admin/payments/payment/">Payments</a></li>
+          <li><a href="/admin/notifications/notification/">Notifications</a></li>
+          <li><a href="/admin/utils/faq/">FAQ</a></li>
         </ul>
       </nav>
+      <div class="sidebar-footer">
+        <a class="sidebar-link" href="/admin/password_change/">Change password</a>
+        <a class="sidebar-link" href="/admin/logout/">Logout</a>
+      </div>
     </aside>
 
     <div class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button id="sidebarToggle" class="btn">☰</button>
+          <button id="sidebarToggle" class="btn icon">☰</button>
           <h1 class="site-title">{{ site_header|default:_('NAG Admin') }}</h1>
         </div>
+
+        <div class="topbar-center">
+          <form action="" class="topbar-search" method="get">
+            <input type="search" name="q" placeholder="Search models, users, payments..." aria-label="Search admin">
+            <button class="btn small" type="submit">Search</button>
+          </form>
+        </div>
+
         <div class="topbar-right">
-          <div class="user-info">{{ user.get_username }}</div>
+          <div class="topbar-actions">
+            <a class="icon-btn" href="#" title="Notifications">🔔<span class="notif-dot"></span></a>
+            <a class="icon-btn" href="#" title="Settings">⚙️</a>
+            <div class="user-info">{{ user.get_username }}</div>
+          </div>
         </div>
       </header>
 
@@ -39,4 +60,4 @@
       </main>
     </div>
   </body>
-  </html>
+</html>
