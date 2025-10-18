@@ -1,21 +1,51 @@
 // Ensure any element that has a class that starts with "bi-" also has the base "bi" class.
 // This helps the CSS rules targeting .bi to apply even when templates only render the specific class.
 (function () {
-  function addBiClass(root) {
-    const walker = document.createTreeWalker(root || document.body, NodeFilter.SHOW_ELEMENT, null, false);
-    let node = walker.currentNode;
-    while (node) {
-      for (let i = 0; i < node.classList.length; i++) {
-        const cls = node.classList[i];
-        if (cls && cls.indexOf && cls.indexOf('bi-') === 0) {
-          if (!node.classList.contains('bi')) node.classList.add('bi');
-          break;
-        }
+  function addBiClassToElement(el) {
+    if (!el || !el.classList) return;
+    for (let i = 0; i < el.classList.length; i++) {
+      const cls = el.classList[i];
+      if (cls && cls.indexOf && cls.indexOf('bi-') === 0) {
+        if (!el.classList.contains('bi')) el.classList.add('bi');
+        break;
       }
-      node = walker.nextNode();
     }
   }
 
-  // Run on DOMContentLoaded and also after short delay for dynamically rendered parts
-  document.addEventListener('DOMContentLoaded', function () { addBiClass(document); setTimeout(() => addBiClass(document), 2500); });
+  function scan(root) {
+    root = root || document.body;
+    if (!root) return;
+    // quick selector for any element with a bi- class
+    root.querySelectorAll('[class*="bi-"]').forEach(el => addBiClassToElement(el));
+  }
+
+  // Immediately run if possible
+  if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    scan(document);
+  } else {
+    document.addEventListener('DOMContentLoaded', () => scan(document));
+  }
+
+  // Observe DOM changes so dynamically added items get the bi class too
+  const obs = new MutationObserver(mutations => {
+    for (const m of mutations) {
+      if (m.type === 'childList') {
+        m.addedNodes.forEach(node => {
+          if (node.nodeType === 1) {
+            // node itself
+            if (node.matches && node.matches('[class*="bi-"]')) addBiClassToElement(node);
+            // and any descendants
+            node.querySelectorAll && node.querySelectorAll('[class*="bi-"]').forEach(el => addBiClassToElement(el));
+          }
+        });
+      } else if (m.type === 'attributes' && m.attributeName === 'class') {
+        const target = m.target;
+        if (target && target.matches && target.matches('[class*="bi-"]')) addBiClassToElement(target);
+      }
+    }
+  });
+
+  if (window.MutationObserver) {
+    obs.observe(document.documentElement || document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  }
 })();
