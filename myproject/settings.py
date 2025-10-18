@@ -196,44 +196,30 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "NAG Admin",
+    "site_title": "New Africa Group Admin",
     "site_header": "New Africa Group",
-    "site_brand": "NAG Admin",
-    "welcome_sign": "Welcome to NAG Admin Dashboard",
-    "copyright": "New Africa Group © 2025",
+    "site_brand": "NAG",
+    "welcome_sign": "Welcome to New Africa Group Admin",
+    "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
-    # --- Main UI Colors ---
-    "primary_color": "#0D1B52",  # Deep Royal Blue
-    "accent": "#E3212D",         # Vibrant Red
-    "button_classes": {
-        "primary": "btn btn-primary text-white",
-        "secondary": "btn btn-outline-light",
-        "success": "btn btn-success",
-        "danger": "btn btn-danger",
-        "info": "btn btn-info",
-        "warning": "btn btn-warning",
-    },
+    # === COLOR THEME ===
+    "theme": "cosmo",  # base theme; you can use 'flatly' or 'litera' if you prefer lighter layouts
+    "custom_css": "admin/css/custom-theme.css",  # <-- we'll create this next
 
-    # --- Topbar and Sidebar ---
+    # === SIDEBAR ===
+    "navigation_expanded": True,
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
-        {"name": "Visit Site", "url": "/", "new_window": True},
-        {"model": "auth.User"},
-        {"app": "community"},
     ],
 
-    "usermenu_links": [
-        {"name": "Profile", "url": "admin:auth_user_change", "new_window": False},
-        {"name": "Support", "url": "https://newafricagroup.pythonanywhere.com", "new_window": True},
-    ],
-
-    "show_sidebar": True,
-    "navigation_expanded": True,
-
-    # --- Custom Colors ---
-    "dark_mode_theme": None,
-    "theme": "cyborg",  # Optional: a base dark theme
-    "custom_css": "admin/custom_admin.css",  # We'll create this next
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "accounts": "fas fa-user",
+        "community": "fas fa-users",
+        "courses": "fas fa-book",
+        "payments": "fas fa-credit-card",
+        "notifications": "fas fa-bell",
+    },
 }
 

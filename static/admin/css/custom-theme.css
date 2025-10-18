@@ -1,0 +1,93 @@
+/* === Custom Admin Theme for New Africa Group === */
+
+/* Primary Colors */
+:root {
+  --color-primary: #0D1B52;  /* Deep Royal Blue */
+  --color-accent: #E3212D;   /* Vibrant Red */
+  --color-gold: #D4A63E;     /* Bright Gold */
+  --color-lightblue: #4169E1; /* Cool Light Blue */
+  --color-dark: #1A1A1A;     /* Charcoal Black */
+  --color-white: #FFFFFF;
+}
+
+/* Sidebar */
+#jazzy-sidebar {
+  background-color: var(--color-primary) !important;
+}
+
+#jazzy-sidebar .nav-item a {
+  color: var(--color-white) !important;
+}
+
+#jazzy-sidebar .nav-item.active a {
+  background-color: var(--color-lightblue) !important;
+  color: var(--color-white) !important;
+}
+
+/* Header */
+.navbar.navbar-expand.navbar-dark.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
+
+.btn-danger {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.btn-warning {
+  background-color: var(--color-gold) !important;
+  border-color: var(--color-gold) !important;
+  color: var(--color-dark) !important;
+}
+
+/* Table headers */
+.table thead th {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+/* Links */
+a {
+  color: var(--color-lightblue) !important;
+}
+
+/* Login Page */
+body.login {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+body.login #content {
+  background-color: var(--color-dark) !important;
+  border-radius: 10px;
+  padding: 30px;
+}
+
+body.login .form-row label {
+  color: var(--color-gold) !important;
+}
+
+body.login input[type="submit"] {
+  background-color: var(--color-gold) !important;
+  color: var(--color-dark) !important;
+  border: none;
+}
+
+/* Table Hover */
+.table-hover tbody tr:hover {
+  background-color: rgba(65, 105, 225, 0.1) !important;
+}
+
+/* Cards and content background */
+.content-wrapper,
+.card,
+.box {
+  background-color: var(--color-white) !important;
+  border-radius: 10px;
+}
