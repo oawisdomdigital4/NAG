@@ -75,6 +75,12 @@
   letter-spacing: 0.04em;
 }
 
+/* Admin app headings on listing pages (apps index and app sections) */
+.app-title, .app-list h2, .module h2, .app-list .module h2 {
+  color: #BFC6CC; /* light-gray */
+  font-weight: 700;
+}
+
 /* Improve icon contrast inside the sidebar */
 .sidebar .bi,
 .sidebar .bi-* {
@@ -172,10 +178,12 @@ body {
 .bi-clock-history { background-image: url('/static/admin/icons/png/clock-history.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); }
 .bi-people { background-image: url('/static/admin/icons/png/people.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/people.svg'); mask-image: url('/static/admin/icons/bootstrap/people.svg'); }
 .bi-person { background-image: url('https://png.pngtree.com/png-vector/20220411/ourmid/pngtree-person-icon-in-flat-style-man-symbol-worker-people-care-vector-png-image_45189836.jpg'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person.svg'); mask-image: url('/static/admin/icons/bootstrap/person.svg'); }
+.bi-person { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person.svg'); -webkit-mask-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person.svg'); mask-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/person.svg'); }
 .bi-people-fill { background-image: url('/static/admin/icons/png/people-fill.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); }
 .bi-person-badge { background-image: url('/static/admin/icons/png/person-badge.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); }
 .bi-person-circle { background-image: url('/static/admin/icons/png/person-circle.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); }
 .bi-journal-bookmark { background-image: url('https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); }
+.bi-journal-bookmark { background-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/journal-bookmark.svg'); -webkit-mask-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/journal-bookmark.svg'); mask-image: url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/icons/journal-bookmark.svg'); }
 .bi-journal-richtext { background-image: url('/static/admin/icons/png/journal-richtext.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); }
 .bi-credit-card { background-image: url('/static/admin/icons/png/credit-card.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); }
 .bi-cash-stack { background-image: url('/static/admin/icons/png/cash-stack.png'); -webkit-mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); }
