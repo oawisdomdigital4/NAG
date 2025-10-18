@@ -71,8 +71,8 @@ body {
   background-color: #ffffff !important;
   border-radius: 12px;
   padding: 10px 12px;
-  height: 60px !important;       /* Increased larger size */
-  max-height: 60px !important;
+  height: 80px !important;       /* Increased larger size */
+  max-height: 80px !important;
   width: auto;
   object-fit: contain;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
