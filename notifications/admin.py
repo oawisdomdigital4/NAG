@@ -23,7 +23,7 @@ def archive_notifications(modeladmin, request, queryset):
 
 @admin.register(Notification)
 class NotificationAdmin(admin.ModelAdmin):
-	list_display = ("id", "title", "short_message", "user", "category", "read", "archived", "created_at")
+	list_display = ("id", "icon", "title", "short_message", "user", "category", "read", "archived", "created_at")
 	list_filter = ("category", "read", "archived", "created_at")
 	search_fields = ("title", "message", "user__email", "user__first_name", "user__last_name")
 	readonly_fields = ("created_at", "read_at", "email_sent_at", "archived_at")
@@ -35,6 +35,11 @@ class NotificationAdmin(admin.ModelAdmin):
 		return (obj.message[:75] + "...") if len(obj.message) > 75 else obj.message
 
 	short_message.short_description = "Message"
+
+	def icon(self, obj):
+		# Use a small envelope icon for notifications; could be customized per category
+		return format_html("<i class='fas fa-envelope' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 
 @admin.register(NotificationPreference)

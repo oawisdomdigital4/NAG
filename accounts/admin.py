@@ -6,6 +6,7 @@ from .models import (
     UserProfile,
     UserToken,
 )
+from django.utils.html import format_html
 
 
 # -----------------------------
@@ -14,7 +15,7 @@ from .models import (
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
-    list_display = ("email", "username", "role", "is_active", "is_staff", "date_joined")
+    list_display = ("icon", "email", "username", "role", "is_active", "is_staff", "date_joined")
     list_filter = ("role", "is_staff", "is_active")
     search_fields = ("email", "username")
     ordering = ("email",)
@@ -30,6 +31,21 @@ class UserAdmin(BaseUserAdmin):
             "fields": ("email", "username", "password1", "password2", "role", "is_active", "is_staff"),
         }),
     )
+
+    def icon(self, obj):
+        # Show user avatar if exists on related profile, otherwise a Font Awesome user icon
+        try:
+            profile = getattr(obj, 'profile', None) or getattr(obj, 'userprofile', None)
+            if profile:
+                avatar = getattr(profile, 'avatar', None) or getattr(profile, 'avatar_url', None)
+                if avatar:
+                    # avatar may be a FieldFile or a URL string
+                    url = avatar.url if hasattr(avatar, 'url') else avatar
+                    return format_html("<img src='{}' style='max-height:32px; border-radius:6px' />", url)
+        except Exception:
+            pass
+        return format_html("<i class='fas fa-user-circle' style='font-size:18px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 # -----------------------------
