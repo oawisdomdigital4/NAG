@@ -237,3 +237,33 @@ JAZZMIN_SETTINGS = {
         "sites": "fas fa-globe",
     },
 }
+
+# Replace certain Font Awesome classes with our lightweight SVG-based icon classes
+# so the admin uses local SVGs where available. This scans the `icons` mapping and
+# swaps values that contain recognizable keywords (e.g., 'user', 'users', 'group', 'shield').
+try:
+    _svg_map_keywords = {
+        'user': 'icon-user',
+        'users': 'icon-groups',
+        'group': 'icon-groups',
+        'shield': 'icon-shield',
+    }
+
+    def _map_icon_value(val: str) -> str:
+        if not isinstance(val, str):
+            return val
+        low = val.lower()
+        # If already using our icon- prefix, leave it
+        if low.startswith('icon-'):
+            return val
+        for kw, icon_name in _svg_map_keywords.items():
+            if kw in low:
+                return icon_name
+        return val
+
+    if isinstance(JAZZMIN_SETTINGS, dict) and 'icons' in JAZZMIN_SETTINGS:
+        for k, v in list(JAZZMIN_SETTINGS['icons'].items()):
+            JAZZMIN_SETTINGS['icons'][k] = _map_icon_value(v)
+except Exception:
+    # Non-critical: If something goes wrong here, fall back to the original icons.
+    pass
