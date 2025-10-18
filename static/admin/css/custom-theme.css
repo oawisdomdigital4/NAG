@@ -70,21 +70,20 @@ body {
 .nag-logo {
   background-color: #ffffff !important;
   border-radius: 12px;
-  padding: 6px 8px;
-  height: 56px !important;       /* Reduced size to avoid large header */
-  max-height: 56px !important;
+  padding: 10px 12px;
+  height: 80px !important;       /* Increased larger size */
+  max-height: 80px !important;
   width: auto;
   object-fit: contain;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
 }
 
-/* Hide logo completely when sidebar is collapsed to prevent header shrinking */
-body.sidebar-collapse .nag-logo,
-body.navbar-nav .nag-logo {
-  display: none !important;
-  visibility: hidden !important;
-  pointer-events: none !important;
+/* Hide logo when sidebar is collapsed */
+body.sidebar-collapse .nag-logo {
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
 }
 
 /* Responsiveness: ensure logo doesn't overflow header on small screens */
@@ -94,99 +93,4 @@ body.navbar-nav .nag-logo {
     max-height: 56px !important;
     padding: 6px 8px;
   }
-}
-
-/* Reserve left brand area so shrinking the logo doesn't push header items */
-.navbar .navbar-brand, .navbar .site-brand, .brand {
-  min-width: 160px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  padding-left: 8px;
-}
-
-/* When the sidebar is collapsed keep a small reserved width to avoid layout jump */
-body.sidebar-collapse .navbar .navbar-brand,
-body.sidebar-collapse .navbar .site-brand,
-body.sidebar-collapse .brand {
-  min-width: 56px;
-}
-
-/* Stronger header layout rules: use flexbox and push nav to the right */
-.navbar.navbar-inverse .container-fluid,
-.navbar.navbar-inverse .navbar-inner,
-.navbar.navbar-inverse .navbar-header-wrapper {
-  display: flex !important;
-  align-items: center !important;
-}
-
-.navbar.navbar-inverse .navbar-header,
-.navbar.navbar-inverse .navbar-brand {
-  flex: 0 0 160px !important; /* fixed left brand width */
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Push the primary nav and right-side tools to the far right */
-.navbar.navbar-inverse .navbar-nav,
-.navbar.navbar-inverse .nav.navbar-nav {
-  margin-left: auto !important;
-}
-
-/* If Jazzmin uses a collapse wrapper, target that too */
-.navbar.navbar-inverse .navbar-collapse {
-  display: flex !important;
-  align-items: center !important;
-  width: 100%;
-}
-.navbar.navbar-inverse .navbar-collapse .navbar-nav {
-  margin-left: auto !important;
-}
-
-/* Keep the logo inline and prevent it from affecting layout when hidden */
-.navbar .navbar-brand .nag-logo {
-  display: inline-block !important;
-  vertical-align: middle !important;
-}
-
-@media (max-width: 768px) {
-  .navbar.navbar-inverse .navbar-header,
-  .navbar.navbar-inverse .navbar-brand { flex: 0 0 56px !important; }
-}
-
-/* Alternate strategy: absolutely position the brand area and reserve header padding
-   This prevents the rest of the header from reflowing when the logo changes size or is hidden */
-.navbar.navbar-inverse {
-  position: relative !important;
-}
-
-.navbar.navbar-inverse .navbar-brand,
-.navbar.navbar-inverse .site-brand,
-.navbar.navbar-inverse .brand {
-  position: absolute !important;
-  left: 8px !important;
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  width: 160px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  padding: 0 8px !important;
-}
-
-/* Reserve space for the brand area so nav items won't overlap */
-.navbar.navbar-inverse .container-fluid,
-.navbar.navbar-inverse .navbar-inner {
-  padding-left: 180px !important;
-}
-
-/* When sidebar is collapsed shrink reserved area */
-body.sidebar-collapse .navbar.navbar-inverse .navbar-brand,
-body.sidebar-collapse .navbar.navbar-inverse .site-brand,
-body.sidebar-collapse .navbar.navbar-inverse .brand {
-  width: 56px !important;
-}
-body.sidebar-collapse .navbar.navbar-inverse .container-fluid,
-body.sidebar-collapse .navbar.navbar-inverse .navbar-inner {
-  padding-left: 64px !important;
 }
