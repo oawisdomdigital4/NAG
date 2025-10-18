@@ -81,13 +81,7 @@
   font-weight: 700;
 }
 
-/* Improve icon contrast inside the sidebar */
-.sidebar .bi,
-.sidebar .bi-* {
-  opacity: 0.98;
-  vertical-align: middle;
-  margin-right: 0.5rem;
-}
+
 
 /* Compact the sidebar items slightly on small screens */
 @media (max-width: 767px) {
@@ -213,3 +207,18 @@ body.sidebar-collapse .nag-logo {
 }
 
 
+/* --- Sidebar Icons --- */
+.sidebar i.bi {
+  font-size: 1.2rem;
+  color: var(--highlight-color);
+  margin-right: 10px;
+  width: 22px;
+  text-align: center;
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+.sidebar a:hover i.bi,
+.sidebar .active i.bi {
+  color: var(--white);
+  transform: scale(1.1);
+}

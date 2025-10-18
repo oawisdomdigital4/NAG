@@ -220,20 +220,21 @@ JAZZMIN_SETTINGS = {
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
 
-    # === ICONS (Bootstrap Icons) ===
     "icons": {
-        "admin.LogEntry": "bi bi-clock-history",
-        "auth": "bi bi-people",
-        "auth.user": "bi bi-person",
-        "auth.Group": "bi bi-people-fill",
-        "accounts": "bi bi-person-badge",
-        "accounts.profile": "bi bi-person-circle",
-        "community": "bi bi-people",
-        "courses": "bi bi-journal-bookmark",
-        "courses.course": "bi bi-journal-richtext",
-        "payments": "bi bi-credit-card",
-        "payments.transaction": "bi bi-cash-stack",
-        "notifications": "bi bi-bell",
-        "sites": "bi bi-globe",
-    },
+    "admin.LogEntry": "bi bi-clock-history",
+    "auth": "bi bi-people",
+    "auth.user": "bi bi-person",
+    "auth.Group": "bi bi-people-fill",
+    "accounts": "bi bi-person-badge",
+    "accounts.profile": "bi bi-person-circle",
+    "community": "bi bi-people",
+    "courses": "bi bi-journal-bookmark",
+    "courses.course": "bi bi-journal-richtext",
+    "payments": "bi bi-credit-card",
+    "payments.transaction": "bi bi-cash-stack",
+    "notifications": "bi bi-bell",
+    "sites": "bi bi-globe",
+},
+"icons_html": True,   # <--- ADD THIS LINE
+
 }
