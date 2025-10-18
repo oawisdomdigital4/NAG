@@ -7,6 +7,8 @@ from .models import (
     UserToken,
 )
 from django.utils.html import format_html
+from django.contrib.auth.models import Group
+from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
 
 
 # -----------------------------
@@ -96,3 +98,19 @@ class UserTokenAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired.boolean = True
     is_expired.short_description = "Expired?"
+
+
+# Unregister default Group admin and re-register with an icon column
+try:
+    admin.site.unregister(Group)
+except Exception:
+    pass
+
+
+@admin.register(Group)
+class GroupAdmin(DefaultGroupAdmin):
+    list_display = ("icon",) + DefaultGroupAdmin.list_display
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-users' style='font-size:16px;color:#0D1B52;'></i>")
+    icon.short_description = ''
