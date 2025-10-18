@@ -205,35 +205,33 @@ JAZZMIN_SETTINGS = {
     "site_header": "New Africa Group",
     "site_brand": "NAG",
     "site_logo": "admin/img/logo.png",
-    "site_logo_classes": "img-fluid nag-logo", 
+    "site_logo_classes": "img-fluid nag-logo",
     "welcome_sign": "Welcome to New Africa Group Admin",
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
-    # === COLOR THEME ===
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
 
-    # === SIDEBAR ===
     "navigation_expanded": True,
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
 
-    # === ICONS ===
+    # === ICONS (Bootstrap Icons) ===
     "icons": {
-        "admin.LogEntry": "fas fa-history",
-        "auth": "fas fa-users-cog",
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "accounts": "fas fa-user-circle",
-        "accounts.profile": "fas fa-id-card",
-        "community": "fas fa-users",
-        "courses": "fas fa-book",
-        "courses.course": "fas fa-book-open",
-        "payments": "fas fa-credit-card",
-        "payments.transaction": "fas fa-money-bill-wave",
-        "notifications": "fas fa-bell",
-        "sites": "fas fa-globe",
+        "admin.LogEntry": "bi bi-clock-history",
+        "auth": "bi bi-people",
+        "auth.user": "bi bi-person",
+        "auth.Group": "bi bi-people-fill",
+        "accounts": "bi bi-person-badge",
+        "accounts.profile": "bi bi-person-circle",
+        "community": "bi bi-people",
+        "courses": "bi bi-journal-bookmark",
+        "courses.course": "bi bi-journal-richtext",
+        "payments": "bi bi-credit-card",
+        "payments.transaction": "bi bi-cash-stack",
+        "notifications": "bi bi-bell",
+        "sites": "bi bi-globe",
     },
 }
