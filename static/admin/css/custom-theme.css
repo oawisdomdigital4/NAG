@@ -80,12 +80,10 @@ body {
 }
 
 /* Hide logo when sidebar is collapsed */
-/* Hide logo when sidebar is collapsed */
 body.sidebar-collapse .nag-logo {
-  opacity: 0 !important;
-  transform: scale(0.8) !important;
-  pointer-events: none !important;
-  display: none !important; /* ensure it's hidden in all layouts */
+  opacity: 0;
+  transform: scale(0.9);
+  pointer-events: none;
 }
 
 /* Responsiveness: ensure logo doesn't overflow header on small screens */
