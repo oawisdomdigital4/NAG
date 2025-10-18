@@ -56,103 +56,31 @@ body {
 }
 
 /* --- Font Awesome Sync (CDN) --- */
-/* Generic FA base - prefer Brands for brand icons, Free for solid/regular */
 [class^="fa-"], [class*=" fa-"],
 [class^="fas"], [class*=" fas"],
 [class^="far"], [class*=" far"],
 [class^="fab"], [class*=" fab"] {
-  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands", sans-serif !important;
-  display: inline-block;
-  text-decoration: inherit;
-  text-align: center;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* Solid icons (fas) use the Free family with heavy weight */
-.fas, .fa-solid {
   font-family: "Font Awesome 5 Free" !important;
   font-weight: 900 !important;
-}
-
-/* Regular icons (far) use Free with normal weight */
-.far, .fa-regular {
-  font-family: "Font Awesome 5 Free" !important;
-  font-weight: 400 !important;
-}
-
-/* Brands (fab) use the Brands family and typically 400 weight */
-.fab, .fa-brands {
-  font-family: "Font Awesome 5 Brands" !important;
-  font-weight: 400 !important;
+  display: inline-block;
 }
 
 
 /* === Logo Styling === */
 .nag-logo {
   background-color: #ffffff !important;
-  border-radius: 14px;
-  padding: 10px;
-  height: 84px !important;       /* Increased size */
-  max-height: 84px;
+  border-radius: 12px;
+  padding: 8px;
+  height: 90px !important;       /* Larger size */
   width: auto;
   object-fit: contain;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
-  transition: transform 240ms cubic-bezier(.2,.8,.2,1),
-              opacity 180ms ease,
-              max-width 240ms cubic-bezier(.2,.8,.2,1),
-              padding 180ms ease;
-  display: block;
-  margin: 8px auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease-in-out;
 }
 
-/* When the admin sidebar is collapsed, hide/shrink the logo smoothly.
-   Different admin templates may toggle `sidebar-collapse` or `sidebar-mini`. */
-/* When the admin sidebar is fully collapsed, hide the logo smoothly. */
+/* Hide logo when sidebar is collapsed */
 body.sidebar-collapse .nag-logo {
-  /* Shrink and dim the logo when collapsed rather than removing it entirely.
-     Some admin templates may initialize the page in a collapsed state, and
-     fully hiding the image can make it appear 'missing'. */
-  opacity: 0.25;
-  transform: scale(0.45);
-  max-width: 64px;
-  padding: 4px;
-  margin: 4px auto;
+  opacity: 0;
+  transform: scale(0.9);
   pointer-events: none;
-}
-
-/* For the 'sidebar-mini' (compact) state, shrink the logo but keep it visible.
-   This prevents the logo from disappearing if the admin uses mini by default. */
-body.sidebar-mini .nag-logo {
-  opacity: 1;
-  transform: scale(0.6);
-  max-width: 64px;
-  padding: 6px;
-  margin: 6px auto;
-  pointer-events: auto;
-}
-
-/* Strengthen icon selectors inside the admin sidebar so FA icons don't get
-   overridden by other admin CSS. Targets <i> or <span> elements that carry
-   FA classes inside navigation links. */
-.main-sidebar i[class*="fa"],
-.main-sidebar span[class*="fa"],
-.main-sidebar a i[class*="fa"],
-.main-sidebar a span[class*="fa"] {
-  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands", sans-serif !important;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  display: inline-block;
-}
-
-/* Some admin icons use 'fa' or 'fas' without explicit weight; ensure solid
-   icons render by enforcing the 900 weight for .fas within the sidebar. */
-.main-sidebar .fas, .main-sidebar .fa-solid {
-  font-weight: 900 !important;
-}
-
-/* Brand icons should use the brand family */
-.main-sidebar .fab, .main-sidebar .fa-brands {
-  font-family: "Font Awesome 5 Brands" !important;
-  font-weight: 400 !important;
 }
