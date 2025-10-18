@@ -60,27 +60,42 @@ body {
 [class^="fas"], [class*=" fas"],
 [class^="far"], [class*=" far"],
 [class^="fab"], [class*=" fab"] {
-  font-family: "Font Awesome 5 Free" !important;
+  /* Use Font Awesome's provided families/weights so icons render correctly.
+     Keep !important minimal but present to override conflicting admin/theme rules. */
+  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands" !important;
   font-weight: 900 !important;
   display: inline-block;
+  text-decoration: inherit;
+  text-align: center;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 
 /* === Logo Styling === */
 .nag-logo {
   background-color: #ffffff !important;
-  border-radius: 12px;
-  padding: 8px;
-  height: 60px !important;       /* Larger size */
+  border-radius: 14px;
+  padding: 10px;
+  height: 84px !important;       /* Increased size */
   width: auto;
   object-fit: contain;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 240ms cubic-bezier(.2,.8,.2,1),
+              opacity 180ms ease,
+              width 240ms cubic-bezier(.2,.8,.2,1);
+  display: block;
+  margin: 8px auto;
 }
 
-/* Hide logo when sidebar is collapsed */
-body.sidebar-collapse .nag-logo {
+/* When the admin sidebar is collapsed, hide/shrink the logo smoothly.
+   Different admin templates may toggle `sidebar-collapse` or `sidebar-mini`. */
+body.sidebar-collapse .nag-logo,
+body.sidebar-mini .nag-logo {
   opacity: 0;
-  transform: scale(0.9);
+  transform: scale(0.85);
+  width: 0;
+  padding: 0;
+  margin: 0;
   pointer-events: none;
 }
