@@ -95,3 +95,19 @@ body.navbar-nav .nag-logo {
     padding: 6px 8px;
   }
 }
+
+/* Reserve left brand area so shrinking the logo doesn't push header items */
+.navbar .navbar-brand, .navbar .site-brand, .brand {
+  min-width: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 8px;
+}
+
+/* When the sidebar is collapsed keep a small reserved width to avoid layout jump */
+body.sidebar-collapse .navbar .navbar-brand,
+body.sidebar-collapse .navbar .site-brand,
+body.sidebar-collapse .brand {
+  min-width: 56px;
+}
