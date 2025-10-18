@@ -12,12 +12,35 @@ from django.utils.html import format_html
 
 @admin.register(Organizer)
 class OrganizerAdmin(admin.ModelAdmin):
-	list_display = ("name", "title", "link")
+	list_display = ("icon", "name", "title", "link")
+
+	def icon(self, obj):
+		# small organizer icon; prefer a logo/avatar field if present
+		img = getattr(obj, 'logo', None) or getattr(obj, 'avatar', None)
+		if img:
+			try:
+				url = img.url if hasattr(img, 'url') else img
+				return format_html("<img src='{}' style='max-height:36px; border-radius:6px' />", url)
+			except Exception:
+				pass
+		return format_html("<i class='fas fa-user-tie' style='font-size:16px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 
 @admin.register(FeaturedSpeaker)
 class FeaturedSpeakerAdmin(admin.ModelAdmin):
-	list_display = ("name", "title", "link")
+	list_display = ("icon", "name", "title", "link")
+
+	def icon(self, obj):
+		img = getattr(obj, 'photo', None) or getattr(obj, 'avatar', None)
+		if img:
+			try:
+				url = img.url if hasattr(img, 'url') else img
+				return format_html("<img src='{}' style='max-height:36px; border-radius:6px' />", url)
+			except Exception:
+				pass
+		return format_html("<i class='fas fa-microphone' style='font-size:16px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 
 @admin.register(Partner)
@@ -37,7 +60,10 @@ class PartnerAdmin(admin.ModelAdmin):
 
 @admin.register(PastEdition)
 class PastEditionAdmin(admin.ModelAdmin):
-	list_display = ("year", "location", "theme")
+	list_display = ("icon", "year", "location", "theme")
+	def icon(self, obj):
+		return format_html("<i class='fas fa-history' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 	readonly_fields = ()
 
 
@@ -67,5 +93,9 @@ class ChatRoomAdmin(admin.ModelAdmin):
 
 @admin.register(Message)
 class MessageAdmin(admin.ModelAdmin):
-	list_display = ('id', 'room', 'sender', 'created_at')
+	list_display = ('id', 'icon', 'room', 'sender', 'created_at')
 	list_filter = ('room', 'sender')
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-comment-dots' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''

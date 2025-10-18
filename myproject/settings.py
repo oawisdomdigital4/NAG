@@ -224,25 +224,58 @@ JAZZMIN_SETTINGS = {
         "accounts": "fas fa-user",
         "community": "fas fa-users",
         "courses": "fas fa-book",
-        "payments": "fas fa-credit-card",
         "notifications": "fas fa-bell",
+        "payments": "fas fa-credit-card",
+        "utils": "fas fa-cogs",
 
-        # model-level icons (app_label.modelname). Use lowercase model names.
+        # accounts models
         "accounts.user": "fas fa-user-circle",
         "accounts.userprofile": "fas fa-id-badge",
         "accounts.usertoken": "fas fa-key",
+        "accounts.follow": "fas fa-user-friends",
 
+        # community models
         "community.organizer": "fas fa-user-tie",
         "community.featuredspeaker": "fas fa-microphone",
         "community.partner": "fas fa-handshake",
         "community.pastedition": "fas fa-history",
+        "community.userprofile": "fas fa-id-card-alt",
+        "community.course": "fas fa-book-open",
+        "community.enrollment": "fas fa-user-graduate",
+        "community.group": "fas fa-layer-group",
+        "community.groupmembership": "fas fa-user-plus",
+        "community.post": "fas fa-sticky-note",
+        "community.postattachment": "fas fa-paperclip",
+        "community.postbookmark": "fas fa-bookmark",
+        "community.comment": "fas fa-comment",
+        "community.postreaction": "fas fa-heart",
+        "community.commentreaction": "fas fa-thumbs-up",
+        "community.plan": "fas fa-list-alt",
+        "community.subscription": "fas fa-receipt",
+        "community.payment": "fas fa-wallet",
+        "community.corporateverification": "fas fa-building",
         "community.chatroom": "fas fa-comments",
         "community.message": "fas fa-comment-dots",
 
+        # courses models
         "courses.course": "fas fa-book-open",
         "courses.coursemodule": "fas fa-layer-group",
+        "courses.coursereview": "fas fa-star",
+        "courses.enrollment": "fas fa-user-graduate",
 
-        "payments.payment": "fas fa-credit-card",
+        # notifications models
         "notifications.notification": "fas fa-envelope",
+        "notifications.notificationpreference": "fas fa-sliders-h",
+
+        # payments models
+        "payments.plan": "fas fa-list",
+        "payments.subscription": "fas fa-calendar-check",
+        "payments.payment": "fas fa-credit-card",
+
+        # utils models
+        "utils.faq": "fas fa-question-circle",
+        "utils.teammember": "fas fa-user-tie",
+        "utils.career": "fas fa-briefcase",
+        "utils.contactmessage": "fas fa-envelope",
     },
 }

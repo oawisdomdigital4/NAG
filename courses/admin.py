@@ -32,10 +32,16 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(CourseModule)
 class CourseModuleAdmin(admin.ModelAdmin):
-    list_display = ("title", "course", "order")
+    list_display = ("icon", "title", "course", "order")
+    def icon(self, obj):
+        return format_html("<i class='fas fa-layer-group' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     search_fields = ("title", "course__title")
 
 @admin.register(CourseReview)
 class CourseReviewAdmin(admin.ModelAdmin):
-    list_display = ("course", "user", "rating", "created_at")
+    list_display = ("icon", "course", "user", "rating", "created_at")
+    def icon(self, obj):
+        return format_html("<i class='fas fa-star' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     search_fields = ("course__title", "user__email")
