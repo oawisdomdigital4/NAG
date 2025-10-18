@@ -210,15 +210,10 @@ JAZZMIN_SETTINGS = {
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
-    # === THEME CONFIG ===
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
-    "custom_js": ["admin/js/fix-icons.js"],  # ✅ ensures Bootstrap icons load properly
 
-    # === SIDEBAR ===
     "navigation_expanded": True,
-
-    # === TOP MENU ===
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
@@ -240,4 +235,3 @@ JAZZMIN_SETTINGS = {
         "sites": "bi bi-globe",
     },
 }
-
