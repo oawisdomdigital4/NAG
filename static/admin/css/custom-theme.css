@@ -77,6 +77,10 @@ body {
   background-size: contain;
   vertical-align: middle;
   margin-right: 0.45rem;
+  /* White pill background for better contrast in dark sidebar */
+  background-color: #fff;
+  padding: 2px;
+  border-radius: 6px;
 }
 
 /* Map common FA class names to static SVGs (adjust paths if your STATIC_URL differs) */
@@ -88,6 +92,9 @@ body {
   background-image: url('/static/admin/icons/icon-dashboard.svg');
   background-size: contain;
   margin-right: 0.45rem;
+  background-color: #fff;
+  padding: 2px;
+  border-radius: 6px;
 }
 .fa-user::before, .icon-user::before {
   content: "";
@@ -97,6 +104,9 @@ body {
   background-image: url('/static/admin/icons/icon-user.svg');
   background-size: contain;
   margin-right: 0.45rem;
+  background-color: #fff;
+  padding: 2px;
+  border-radius: 6px;
 }
 .fa-users::before, .icon-groups::before {
   content: "";
@@ -106,6 +116,9 @@ body {
   background-image: url('/static/admin/icons/icon-groups.svg');
   background-size: contain;
   margin-right: 0.45rem;
+  background-color: #fff;
+  padding: 2px;
+  border-radius: 6px;
 }
 .fa-shield-alt::before, .fa-shield::before, .icon-shield::before {
   content: "";
@@ -115,6 +128,9 @@ body {
   background-image: url('/static/admin/icons/icon-shield.svg');
   background-size: contain;
   margin-right: 0.45rem;
+  background-color: #fff;
+  padding: 2px;
+  border-radius: 6px;
 }
 
 
@@ -141,7 +157,7 @@ body {
 }
 
 /* Hide logo entirely when sidebar is collapsed/minified to avoid bulging */
-body.sidebar-collapse .nag-logo,
+/* Only hide when the admin explicitly uses the mini collapsed state */
 body.sidebar-mini .nag-logo,
 .sidebar-collapse .brand-link .nag-logo {
   opacity: 0 !important;
@@ -152,4 +168,14 @@ body.sidebar-mini .nag-logo,
   margin: 0 !important;
   padding: 0 !important;
   overflow: hidden !important;
+}
+
+/* Ensure logo is visible by default */
+.brand-link .nag-logo,
+.main-header .brand-link .nag-logo,
+.navbar .brand-link .nag-logo {
+  display: inline-block !important;
+  opacity: 1 !important;
+  width: auto !important;
+  height: 44px !important;
 }
