@@ -57,36 +57,65 @@ body {
 
 /* --- Icon rendering via SVG backgrounds --- */
 /* We use SVG files from the Bootstrap Icons CDN for pixel-perfect, colorable icons. */
+/* Primary icon rule for elements that explicitly use the 'bi' class */
 .bi {
   display: inline-block;
   width: 1em;
   height: 1em;
+  min-width: 1em;
+  min-height: 1em;
   vertical-align: -0.125em;
-  background-color: currentColor; /* color the mask */
+  background-color: currentColor; /* color the mask/fallback */
   -webkit-mask-repeat: no-repeat;
   -webkit-mask-size: 100% 100%;
   -webkit-mask-position: center;
   mask-repeat: no-repeat;
   mask-size: 100% 100%;
   mask-position: center;
+  /* Fallback background for browsers that don't support mask-image */
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
   /* hide text fallback */
   text-indent: -9999px;
   overflow: hidden;
 }
 
+/* Also target elements that may only have the specific bi-* class but not 'bi' (cover edge cases) */
+[class*="bi-"] {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  min-width: 1em;
+  min-height: 1em;
+  vertical-align: -0.125em;
+  background-color: currentColor;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  -webkit-mask-position: center;
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+  mask-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  text-indent: -9999px;
+  overflow: hidden;
+}
+
 /* Map specific icons used in JAZZMIN_SETTINGS to local SVGs using mask so they inherit currentColor */
-.bi-clock-history { -webkit-mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); }
-.bi-people { -webkit-mask-image: url('/static/admin/icons/bootstrap/people.svg'); mask-image: url('/static/admin/icons/bootstrap/people.svg'); }
-.bi-person { -webkit-mask-image: url('/static/admin/icons/bootstrap/person.svg'); mask-image: url('/static/admin/icons/bootstrap/person.svg'); }
-.bi-people-fill { -webkit-mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); }
-.bi-person-badge { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); }
-.bi-person-circle { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); }
-.bi-journal-bookmark { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); }
-.bi-journal-richtext { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); }
-.bi-credit-card { -webkit-mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); }
-.bi-cash-stack { -webkit-mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); }
-.bi-bell { -webkit-mask-image: url('/static/admin/icons/bootstrap/bell.svg'); mask-image: url('/static/admin/icons/bootstrap/bell.svg'); }
-.bi-globe { -webkit-mask-image: url('/static/admin/icons/bootstrap/globe.svg'); mask-image: url('/static/admin/icons/bootstrap/globe.svg'); }
+.bi-clock-history { -webkit-mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); mask-image: url('/static/admin/icons/bootstrap/clock-history.svg'); background-image: url('/static/admin/icons/bootstrap/clock-history.svg'); }
+.bi-people { -webkit-mask-image: url('/static/admin/icons/bootstrap/people.svg'); mask-image: url('/static/admin/icons/bootstrap/people.svg'); background-image: url('/static/admin/icons/bootstrap/people.svg'); }
+.bi-person { -webkit-mask-image: url('/static/admin/icons/bootstrap/person.svg'); mask-image: url('/static/admin/icons/bootstrap/person.svg'); background-image: url('/static/admin/icons/bootstrap/person.svg'); }
+.bi-people-fill { -webkit-mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); mask-image: url('/static/admin/icons/bootstrap/people-fill.svg'); background-image: url('/static/admin/icons/bootstrap/people-fill.svg'); }
+.bi-person-badge { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); mask-image: url('/static/admin/icons/bootstrap/person-badge.svg'); background-image: url('/static/admin/icons/bootstrap/person-badge.svg'); }
+.bi-person-circle { -webkit-mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); mask-image: url('/static/admin/icons/bootstrap/person-circle.svg'); background-image: url('/static/admin/icons/bootstrap/person-circle.svg'); }
+.bi-journal-bookmark { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); background-image: url('/static/admin/icons/bootstrap/journal-bookmark.svg'); }
+.bi-journal-richtext { -webkit-mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); mask-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); background-image: url('/static/admin/icons/bootstrap/journal-richtext.svg'); }
+.bi-credit-card { -webkit-mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); mask-image: url('/static/admin/icons/bootstrap/credit-card.svg'); background-image: url('/static/admin/icons/bootstrap/credit-card.svg'); }
+.bi-cash-stack { -webkit-mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); mask-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); background-image: url('/static/admin/icons/bootstrap/cash-stack.svg'); }
+.bi-bell { -webkit-mask-image: url('/static/admin/icons/bootstrap/bell.svg'); mask-image: url('/static/admin/icons/bootstrap/bell.svg'); background-image: url('/static/admin/icons/bootstrap/bell.svg'); }
+.bi-globe { -webkit-mask-image: url('/static/admin/icons/bootstrap/globe.svg'); mask-image: url('/static/admin/icons/bootstrap/globe.svg'); background-image: url('/static/admin/icons/bootstrap/globe.svg'); }
 
 /* Hide any inline svg/img children (we use the element as a mask target) */
 .bi svg, .bi img { display: none; }
