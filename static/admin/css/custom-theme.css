@@ -71,10 +71,10 @@ body {
   background-color: #ffffff !important;
   border-radius: 12px;
   padding: 10px 12px;
-  width: 73px !important;       /* Increased larger size */
-  max-width: 73px !important;
-  height: auto !important;
-  object-fit: cover;
+  height: 70px !important;       /* Increased larger size */
+  max-height: 70px !important;
+  width: auto;
+  object-fit: contain;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
 }
