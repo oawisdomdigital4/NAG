@@ -210,31 +210,35 @@ JAZZMIN_SETTINGS = {
     "copyright": "© 2025 New Africa Group",
     "show_ui_builder": False,
 
+    # === THEME & CUSTOM FILES ===
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
-    # Load our small JS helper to ensure .bi base class is present when templates only output bi-* classes
-    "custom_js": "admin/js/ensure_bi_class.js",
 
+    # === SIDEBAR ===
     "navigation_expanded": True,
+
     "topmenu_links": [
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
 
+    # === ICONS (Using Bootstrap Icons) ===
     "icons": {
-    "admin.LogEntry": "bi bi-clock-history",
-    "auth": "bi bi-people",
-    "auth.user": "bi bi-person",
-    "auth.Group": "bi bi-people-fill",
-    "accounts": "bi bi-person-badge",
-    "accounts.profile": "bi bi-person-circle",
-    "community": "bi bi-people",
-    "courses": "bi bi-journal-bookmark",
-    "courses.course": "bi bi-journal-richtext",
-    "payments": "bi bi-credit-card",
-    "payments.transaction": "bi bi-cash-stack",
-    "notifications": "bi bi-bell",
-    "sites": "bi bi-globe",
-},
-"icons_html": True,   # <--- ADD THIS LINE
+        "admin.LogEntry": "bi bi-clock-history",
+        "auth": "bi bi-people",
+        "auth.user": "bi bi-person",
+        "auth.Group": "bi bi-people-fill",
+        "accounts": "bi bi-person-badge",
+        "accounts.profile": "bi bi-person-circle",
+        "community": "bi bi-people",
+        "courses": "bi bi-journal-bookmark",
+        "courses.course": "bi bi-journal-richtext",
+        "payments": "bi bi-credit-card",
+        "payments.transaction": "bi bi-cash-stack",
+        "notifications": "bi bi-bell",
+        "sites": "bi bi-globe",
+    },
 
+    # Allow HTML rendering for icons
+    "icons_html": True,
 }
+
