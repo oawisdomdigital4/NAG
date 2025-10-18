@@ -212,6 +212,8 @@ JAZZMIN_SETTINGS = {
 
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
+    # Load our small JS helper to ensure .bi base class is present when templates only output bi-* classes
+    "custom_js": "admin/js/ensure_bi_class.js",
 
     "navigation_expanded": True,
     "topmenu_links": [

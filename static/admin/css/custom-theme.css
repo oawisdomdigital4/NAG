@@ -3,18 +3,26 @@
 
 /* --- Global Variables --- */
 :root {
-  --primary-color: #0D1B52;
-  --accent-color: #E3212D;
-  --highlight-color: #D4A63E;
-  --light-blue: #4169E1;
-  --text-color: #1A1A1A;
+  /* Primary Colors */
+  --primary-color: #0D1B52; /* Deep Royal Blue */
+  --accent-color: #E3212D;  /* Vibrant Red */
+  --highlight-color: #D4A63E; /* Bright Gold */
+  --light-blue: #4169E1; /* Cool Light Blue */
+
+  /* Secondary / neutral */
+  --text-color: #1A1A1A; /* Charcoal Black / Deep Gray */
   --white: #FFFFFF;
+
+  /* Utility colors derived */
+  --sidebar-hover: rgba(255,255,255,0.06);
+  --sidebar-active-shadow: rgba(227,33,45,0.18);
 }
 
 /* --- Header Bar --- */
 .navbar.navbar-inverse {
   background-color: var(--primary-color) !important;
   border-color: var(--primary-color);
+  color: var(--white);
 }
 
 /* --- Sidebar --- */
@@ -89,10 +97,12 @@
   background-color: var(--primary-color);
   border-color: var(--primary-color);
   color: var(--white);
-  transition: background-color 0.3s ease;
+  transition: background-color 0.2s ease, box-shadow 0.15s ease;
+  box-shadow: 0 2px 8px rgba(13,27,82,0.12);
 }
 .btn-primary:hover {
   background-color: var(--light-blue);
+  box-shadow: 0 6px 18px rgba(13,27,82,0.18);
 }
 
 /* --- Accents & Highlights --- */
