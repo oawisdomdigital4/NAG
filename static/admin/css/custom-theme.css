@@ -111,3 +111,82 @@ body.sidebar-collapse .navbar .site-brand,
 body.sidebar-collapse .brand {
   min-width: 56px;
 }
+
+/* Stronger header layout rules: use flexbox and push nav to the right */
+.navbar.navbar-inverse .container-fluid,
+.navbar.navbar-inverse .navbar-inner,
+.navbar.navbar-inverse .navbar-header-wrapper {
+  display: flex !important;
+  align-items: center !important;
+}
+
+.navbar.navbar-inverse .navbar-header,
+.navbar.navbar-inverse .navbar-brand {
+  flex: 0 0 160px !important; /* fixed left brand width */
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Push the primary nav and right-side tools to the far right */
+.navbar.navbar-inverse .navbar-nav,
+.navbar.navbar-inverse .nav.navbar-nav {
+  margin-left: auto !important;
+}
+
+/* If Jazzmin uses a collapse wrapper, target that too */
+.navbar.navbar-inverse .navbar-collapse {
+  display: flex !important;
+  align-items: center !important;
+  width: 100%;
+}
+.navbar.navbar-inverse .navbar-collapse .navbar-nav {
+  margin-left: auto !important;
+}
+
+/* Keep the logo inline and prevent it from affecting layout when hidden */
+.navbar .navbar-brand .nag-logo {
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+@media (max-width: 768px) {
+  .navbar.navbar-inverse .navbar-header,
+  .navbar.navbar-inverse .navbar-brand { flex: 0 0 56px !important; }
+}
+
+/* Alternate strategy: absolutely position the brand area and reserve header padding
+   This prevents the rest of the header from reflowing when the logo changes size or is hidden */
+.navbar.navbar-inverse {
+  position: relative !important;
+}
+
+.navbar.navbar-inverse .navbar-brand,
+.navbar.navbar-inverse .site-brand,
+.navbar.navbar-inverse .brand {
+  position: absolute !important;
+  left: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 160px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 0 8px !important;
+}
+
+/* Reserve space for the brand area so nav items won't overlap */
+.navbar.navbar-inverse .container-fluid,
+.navbar.navbar-inverse .navbar-inner {
+  padding-left: 180px !important;
+}
+
+/* When sidebar is collapsed shrink reserved area */
+body.sidebar-collapse .navbar.navbar-inverse .navbar-brand,
+body.sidebar-collapse .navbar.navbar-inverse .site-brand,
+body.sidebar-collapse .navbar.navbar-inverse .brand {
+  width: 56px !important;
+}
+body.sidebar-collapse .navbar.navbar-inverse .container-fluid,
+body.sidebar-collapse .navbar.navbar-inverse .navbar-inner {
+  padding-left: 64px !important;
+}
