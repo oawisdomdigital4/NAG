@@ -71,9 +71,9 @@ body {
   background-color: #ffffff !important;
   border-radius: 12px;
   padding: 10px 12px;
-  height: 80px !important;       /* Increased larger size */
-  width: auto;
-  object-fit: contain;
+  width: 80px !important;       /* Increased larger size */
+  height: auto !important;
+  object-fit: cover;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   transition: all 0.3s ease-in-out;
 }
