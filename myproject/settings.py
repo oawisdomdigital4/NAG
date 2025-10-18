@@ -103,11 +103,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-# Ensure Font Awesome and other Jazzmin assets load properly
-JAZZMIN_UI_TWEAKS = {
-    "theme": "cosmo",
-}
-
 
 if ON_PYTHONANYWHERE:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
@@ -201,51 +196,19 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "New Africa Group Admin",
-    "site_header": "New Africa Group",
-    "site_brand": "NAG",
-    "site_logo": "admin/img/logo.png",
-    "site_logo_classes": "img-fluid nag-logo",
-    "welcome_sign": "Welcome to New Africa Group Admin",
-    "copyright": "© 2025 New Africa Group",
-    "show_ui_builder": False,
-
-    "theme": "cosmo",
-    "custom_css": "admin/css/custom-theme.css",
-
-    "navigation_expanded": True,
-
+    "site_title": "NewAfrica Group Admin",
+    "site_header": "NewAfrica Group",
+    "site_brand": "NewAfrica",
+    "logo": "images/logo.png",       # your static file path
+    "welcome_sign": "Welcome to NewAfrica Dashboard",
+    "copyright": "NewAfrica Group Ltd",
+    "user_avatar": None,
     "topmenu_links": [
-        {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"model": "auth.User"},
     ],
-
-    # === Replace app bullets with Bootstrap Icons ===
-    "icons": {
-        "admin.LogEntry": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Log'/>",
-        "auth": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' alt='Auth'/>",
-        "auth.user": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' alt='User'/>",
-        "auth.Group": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Group'/>",
-        "accounts": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Accounts'/>",
-        "accounts.profile": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Profile'/>",
-        "community": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Community'/>",
-        "community.featuredspeaker": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Featured'/>",
-        "community.organizer": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Organizer'/>",
-        "community.partner": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Partner'/>",
-        "courses": "<img src='https://www.pngmart.com/files/8/Bookmark-PNG-Transparent-Picture.png' class='nag-admin-icon' alt='Courses'/>",
-        "courses.course": "<img src='/static/admin/icons/bootstrap/journal-richtext.svg' class='nag-admin-icon' alt='Course'/>",
-        "payments": "<img src='/static/admin/icons/bootstrap/credit-card.svg' class='nag-admin-icon' alt='Payments'/>",
-        "payments.transaction": "<img src='/static/admin/icons/bootstrap/cash-stack.svg' class='nag-admin-icon' alt='Transaction'/>",
-        "notifications": "<img src='/static/admin/icons/bootstrap/bell.svg' class='nag-admin-icon' alt='Notifications'/>",
-        "sites": "<img src='/static/admin/icons/bootstrap/globe.svg' class='nag-admin-icon' alt='Sites'/>",
-    },
-
-    "custom_css": "admin/css/custom-theme.css",
-    # Load JS helpers for the admin. ensure_bi_class adds the `.bi` base class
-    # to elements that only render `bi-*` classes so our CSS applies.
-    # We omit remove-bullets for now to avoid accidental removal of legitimate icons.
-    "custom_js": [
-        "admin/js/ensure_bi_class.js",
-    ],
-    "icons_html": True,
+    "show_sidebar": True,
+    "navigation_expanded": True,
+    # other customization...
 }
 

@@ -1,76 +1,93 @@
-/* === FORCE REMOVE ANY SIDEBAR/BULLET MARKERS (comprehensive) === */
+/* === Custom Admin Theme for New Africa Group === */
 
-/* remove list-style markers on common admin lists */
-.sidebar, .nav-sidebar, .app-list, .module, .model-list, .model-links, .modules, .app-list ul, .app-list li, .nav {
-  list-style: none !important;
-  -webkit-margin-before: 0 !important;
-  -webkit-margin-after: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
+/* Primary Colors */
+:root {
+  --color-primary: #0D1B52;  /* Deep Royal Blue */
+  --color-accent: #E3212D;   /* Vibrant Red */
+  --color-gold: #D4A63E;     /* Bright Gold */
+  --color-lightblue: #4169E1; /* Cool Light Blue */
+  --color-dark: #1A1A1A;     /* Charcoal Black */
+  --color-white: #FFFFFF;
 }
 
-/* hide pseudo-elements that render bullets on many templates */
-.sidebar .nav-sidebar > li > a::before,
-.sidebar .nav-sidebar > li::before,
-.sidebar .nav-sidebar li::marker,
-.sidebar .nav-item > a::before,
-.app-list .module li::before,
-.app-list .module li > a::before,
-.app-list .module li::marker,
-.model-list li::before,
-.model-list li::marker,
-.module li::before,
-.module li::marker,
-.module .model-links li::before,
-.module .model-links li::marker {
-  content: none !important;
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
+/* Sidebar */
+#jazzy-sidebar {
+  background-color: var(--color-primary) !important;
 }
 
-/* extra: remove pseudo arrow / dot classes some themes use */
-.sidebar .nav-sidebar > li .fa-circle,
-.sidebar .nav-sidebar > li .fa-dot-circle,
-.sidebar .nav-sidebar > li .dot-indicator,
-.sidebar .nav-sidebar > li .sidebar-dot,
-.sidebar .nav-list .bullet {
-  display: none !important;
-  visibility: hidden !important;
-  height: 0 !important;
-  width: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
+#jazzy-sidebar .nav-item a {
+  color: var(--color-white) !important;
 }
 
-/* adjust spacing after removal to keep alignment */
-.sidebar .nav-sidebar > li > a,
-.sidebar .nav-sidebar .nav-item > a {
-  padding-left: 14px !important;   /* tighten left padding if needed */
-  align-items: center;
+#jazzy-sidebar .nav-item.active a {
+  background-color: var(--color-lightblue) !important;
+  color: var(--color-white) !important;
 }
 
-/* ensure icons align after removing bullets */
-.sidebar .nav-sidebar > li > a > i,
-.sidebar .nav-sidebar > li > a .bi {
-  margin-left: 0 !important;
-  margin-right: 10px !important;
-  min-width: 22px !important;
-  text-align: center !important;
+/* Header */
+.navbar.navbar-expand.navbar-dark.bg-primary {
+  background-color: var(--color-primary) !important;
 }
 
-/* ensure collapsed state still hides logo smoothly */
-body.sidebar-collapse .nag-logo { opacity: 0; transform: scale(0.9); pointer-events: none; }
+/* Buttons */
+.btn-primary {
+  background-color: var(--color-primary) !important;
+  border-color: var(--color-primary) !important;
+}
 
-/* Styling for inline admin images injected via JAZZMIN_SETTINGS icons_html */
-.nag-admin-icon {
-  width: 20px;
-  height: 20px;
-  display: inline-block;
-  vertical-align: middle;
-  margin-right: 10px;
-  object-fit: contain;
+.btn-danger {
+  background-color: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+}
+
+.btn-warning {
+  background-color: var(--color-gold) !important;
+  border-color: var(--color-gold) !important;
+  color: var(--color-dark) !important;
+}
+
+/* Table headers */
+.table thead th {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+/* Links */
+a {
+  color: var(--color-lightblue) !important;
+}
+
+/* Login Page */
+body.login {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+body.login #content {
+  background-color: var(--color-dark) !important;
+  border-radius: 10px;
+  padding: 30px;
+}
+
+body.login .form-row label {
+  color: var(--color-gold) !important;
+}
+
+body.login input[type="submit"] {
+  background-color: var(--color-gold) !important;
+  color: var(--color-dark) !important;
+  border: none;
+}
+
+/* Table Hover */
+.table-hover tbody tr:hover {
+  background-color: rgba(65, 105, 225, 0.1) !important;
+}
+
+/* Cards and content background */
+.content-wrapper,
+.card,
+.box {
+  background-color: var(--color-white) !important;
+  border-radius: 10px;
 }
