@@ -14,13 +14,6 @@ db.sqlite3
 media/
 staticfiles/
 
-accounts/migrations
-community/migrations
-courses/migrations
-notifications/migrations
-payments/migrations
-utils/migrations
-
 # Frontend
 frontend/
 
@@ -30,10 +23,3 @@ frontend/
 # Logs
 *.log
 
-# Ignore migration files
-accounts/migrations/
-community/migrations/
-courses/migrations/
-notifications/migrations/
-payments/migrations/
-utils/migrations/
