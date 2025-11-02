@@ -7,36 +7,65 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Environment detection
 HOSTNAME = socket.gethostname()
-ON_PYTHONANYWHERE = "pythonanywhere" in HOSTNAME or "newafricagroup" in HOSTNAME
+# Detect PythonAnywhere: hostname may not contain 'pythonanywhere' on all runtimes,
+# so also check known environment variables that PA sets when running web apps.
+ON_PYTHONANYWHERE = (
+    "pythonanywhere" in HOSTNAME
+    or "newafricagroup" in HOSTNAME
+    or bool(os.environ.get("PYTHONANYWHERE_DOMAIN"))
+    or bool(os.environ.get("PYTHONANYWHERE_USERNAME"))
+)
 
-# Load local settings if not in production
+# Load local settings if not in production. If `local_settings.py` is missing,
+# prefer to continue and allow configuration via environment variables.
 if not ON_PYTHONANYWHERE:
     try:
         from .local_settings import *
     except ImportError:
-        raise ImportError(
-            "local_settings.py is required for development. Please create it from local_settings.example.py"
-        )
+        # local_settings.py is optional; environment variables (.env or host) will be used instead.
+        pass
 else:
     # Production settings
     DEBUG = False
     SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-=h5qyq6ims%&1xawe!c(m99n=ns!pql1cuxpij3w+vqpcdh$#_')
-    
+
+    # Add production hostnames here (your custom domain and pythonanywhere hostname)
     ALLOWED_HOSTS = [
         'newafricagroup.pythonanywhere.com',
+        'superadmin.thenewafricagroup.com',
     ]
-    
-    # Production database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'newafricagroup$nag2'),
-            'USER': os.environ.get('DB_USER', 'newafricagroup'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', '@Nag123456'),
-            'HOST': os.environ.get('DB_HOST', 'newafricagroup.mysql.pythonanywhere-services.com'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
+
+    # Production database: prefer DATABASE_URL if provided (e.g., managed DB URL),
+    # otherwise fall back to the PythonAnywhere MySQL credentials.
+    if os.environ.get('DATABASE_URL'):
+        try:
+            import dj_database_url
+            DATABASES = {
+                'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600),
+            }
+        except Exception:
+            # If dj_database_url is not available or parsing fails, keep a safe fallback
+            DATABASES = {
+                'default': {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': os.environ.get('DB_NAME', 'mrokaimoses$default'),
+                    'USER': os.environ.get('DB_USER', 'mrokaimoses'),
+                    'PASSWORD': os.environ.get('DB_PASSWORD', '@Nag123456'),
+                    'HOST': os.environ.get('DB_HOST', 'mrokaimoses.mysql.pythonanywhere-services.com'),
+                    'PORT': os.environ.get('DB_PORT', '3306'),
+                }
+            }
+    else:
+        DATABASES = {
+            'default': {
+                    'ENGINE': 'django.db.backends.mysql',
+                    'NAME': os.environ.get('DB_NAME', 'mrokaimoses$default'),
+                    'USER': os.environ.get('DB_USER', 'mrokaimoses'),
+                    'PASSWORD': os.environ.get('DB_PASSWORD', '@Nag123456'),
+                    'HOST': os.environ.get('DB_HOST', 'mrokaimoses.mysql.pythonanywhere-services.com'),
+                    'PORT': os.environ.get('DB_PORT', '3306'),
+                }
         }
-    }
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -127,6 +156,7 @@ if ON_PYTHONANYWHERE:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
+    SECURE_SSL_REDIRECT = True
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
@@ -138,10 +168,12 @@ else:
 if ON_PYTHONANYWHERE:
     CORS_ALLOWED_ORIGINS = [
         'https://newafricagroup.pythonanywhere.com',
+        'https://superadmin.thenewafricagroup.com',
         'https://myproject-zeta-indol.vercel.app',
     ]
     CSRF_TRUSTED_ORIGINS = [
         'https://newafricagroup.pythonanywhere.com',
+        'https://superadmin.thenewafricagroup.com',
         'https://myproject-zeta-indol.vercel.app',
     ]
 else:

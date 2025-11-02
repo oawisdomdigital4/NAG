@@ -10,3 +10,8 @@ django-cors-headers>=4.0
 # Optional / dev packages (not strictly required in production but useful)
 pytest>=7.0
 pytest-django>=4.5
+
+# Production / deployment helpers
+django-jazzmin>=2.0
+mysqlclient>=2.1
+python-dotenv>=1.0
