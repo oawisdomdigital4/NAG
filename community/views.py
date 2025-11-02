@@ -15,6 +15,14 @@ from .serializers import OrganizerSerializer, FeaturedSpeakerSerializer
 from .serializers import PastEditionSerializer, ChatRoomSerializer, MessageSerializer
 from .models import PastEdition, ChatRoom, Message
 from .serializers import ChatRoomSerializer, MessageSerializer
+from .serializers import SummitHeroSerializer
+from .models import SummitHero
+from .serializers import AboutHeroSerializer
+from .models import AboutHero
+from .serializers import SummitAboutSerializer
+from .models import SummitAbout
+from .serializers import SummitKeyThemesSerializer
+from .models import SummitKeyThemes
 from rest_framework.authentication import SessionAuthentication
 from django.db.models import Q
 from django.db import models
@@ -28,6 +36,12 @@ from accounts.authentication import DatabaseTokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .permissions import IsCommunityMember
 from accounts.authentication import DatabaseTokenAuthentication
+from rest_framework import viewsets, permissions
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from django.db.models import F
+from community.models import Video, VideoCategory
+from .serializers import VideoSerializer, VideoCategorySerializer
 
 
 class OrganizerViewSet(viewsets.ReadOnlyModelViewSet):
@@ -47,10 +61,201 @@ class PartnerViewSet(viewsets.ReadOnlyModelViewSet):
 	permission_classes = [AllowAny]
 
 
+class RegistrationPackageViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Expose registration packages to the frontend as a simple ordered list."""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import RegistrationPackage
+		return RegistrationPackage.objects.all().order_by('order', 'id')
+
+	def get_serializer_class(self):
+		from .serializers import RegistrationPackageSerializer
+		return RegistrationPackageSerializer
+
+
+class PartnerSectionViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published PartnerSection instance as a single object.
+
+	The frontend calls the list endpoint and receives the current partner section
+	object (or `{}` if none exists).
+	"""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import PartnerSection
+		return PartnerSection.objects.filter(is_published=True).order_by('-created_at')
+
+	def get_serializer_class(self):
+		from .serializers import PartnerSectionSerializer
+		return PartnerSectionSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class FooterContentViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published FooterContent instance as a single object."""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import FooterContent
+		return FooterContent.objects.filter(is_published=True).order_by('-created_at')
+
+	def get_serializer_class(self):
+		from .serializers import FooterContentSerializer
+		return FooterContentSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
 class PastEditionViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = PastEdition.objects.all()
 	serializer_class = PastEditionSerializer
 	permission_classes = [AllowAny]
+
+
+class SummitHeroViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published SummitHero instance as a single object.
+	The frontend calls the list endpoint and receives the current hero object
+	(or `{}` if none exists).
+	"""
+	# prefetch related stats for efficient serialization
+	queryset = SummitHero.objects.filter(is_published=True).order_by('-created_at').prefetch_related('stats')
+	serializer_class = SummitHeroSerializer
+	permission_classes = [AllowAny]
+
+	def list(self, request, *args, **kwargs):
+		obj = self.queryset.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class CommunitySectionViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published CommunitySection instance as a single object."""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import CommunitySection
+		return CommunitySection.objects.filter(is_published=True).order_by('-created_at')
+
+	def get_serializer_class(self):
+		from .serializers import CommunitySectionSerializer
+		return CommunitySectionSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class SummitAboutViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest SummitAbout instance (with pillars) for the Summit page."""
+	queryset = SummitAbout.objects.all().order_by('-created_at').prefetch_related('pillars')
+	serializer_class = SummitAboutSerializer
+	permission_classes = [AllowAny]
+
+	def list(self, request, *args, **kwargs):
+		obj = self.queryset.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class SummitKeyThemesViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest SummitKeyThemes instance (with nested themes)."""
+	queryset = SummitKeyThemes.objects.all().order_by('-created_at').prefetch_related('themes')
+	serializer_class = SummitKeyThemesSerializer
+	permission_classes = [AllowAny]
+
+	def list(self, request, *args, **kwargs):
+		obj = self.queryset.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class SummitAgendaViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest SummitAgenda instance (with days)."""
+	queryset = None
+	serializer_class = None
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import SummitAgenda
+		return SummitAgenda.objects.all().order_by('-created_at').prefetch_related('days')
+
+	def get_serializer_class(self):
+		from .serializers import SummitAgendaSerializer
+		return SummitAgendaSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class AboutHeroViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published AboutHero instance as a single object."""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import AboutHero
+		return AboutHero.objects.filter(is_published=True).order_by('-created_at')
+
+	def get_serializer_class(self):
+		from .serializers import AboutHeroSerializer
+		return AboutHeroSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
+
+
+class CTABannerViewSet(viewsets.ReadOnlyModelViewSet):
+	"""Return the latest published CTABanner instance as a single object."""
+	permission_classes = [AllowAny]
+
+	def get_queryset(self):
+		from .models import CTABanner
+		return CTABanner.objects.filter(is_published=True).order_by('-created_at')
+
+	def get_serializer_class(self):
+		from .serializers import CTABannerSerializer
+		return CTABannerSerializer
+
+	def list(self, request, *args, **kwargs):
+		qs = self.get_queryset()
+		obj = qs.first()
+		if not obj:
+			return Response({}, status=200)
+		serializer = self.get_serializer(obj, context={'request': request})
+		return Response(serializer.data)
 
 class GroupViewSet(viewsets.ModelViewSet):
 	queryset = Group.objects.all()
@@ -455,3 +660,35 @@ def community_search(request):
 		return Response({'detail': 'Search failed', 'error': str(e)}, status=500)
 
 	return Response(results)
+
+
+
+class VideoCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = VideoCategory.objects.filter(is_active=True)
+    serializer_class = VideoCategorySerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        """Only return categories that have published videos."""
+        return super().get_queryset().filter(videos__is_published=True).distinct()
+
+class VideoViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Video.objects.filter(is_published=True)
+    serializer_class = VideoSerializer
+    permission_classes = [permissions.AllowAny]
+    lookup_field = 'slug'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        category_slug = self.request.query_params.get('category', None)
+        if category_slug:
+            queryset = queryset.filter(category__slug=category_slug)
+        return queryset
+
+    @action(detail=True, methods=['post'])
+    def increment_views(self, request, slug=None):
+        """Increment the view count for a video."""
+        video = self.get_object()
+        Video.objects.filter(id=video.id).update(view_count=F('view_count') + 1)
+        return Response({'status': 'view count updated'})

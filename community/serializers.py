@@ -5,16 +5,23 @@ import json
 import logging
 from typing import Any
 from .models import Group, GroupMembership, Post, Comment, Partner
+from .models import SummitAgenda, SummitAgendaDay, SummitAgendaItem
+from .models import Video, VideoCategory
 
 class OrganizerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Organizer
-        fields = ["id", "name", "title", "bio", "image", "link"]
+        # The prototype displays organiser name and a short descriptive line.
+        # Expose only the fields needed by the UI: id, name, bio and image.
+        # We intentionally omit link and title to keep the API minimal for the
+        # prototype-based UI.
+        fields = ["id", "name", "bio", "image"]
 
 class FeaturedSpeakerSerializer(serializers.ModelSerializer):
     class Meta:
         model = FeaturedSpeaker
-        fields = ["id", "name", "title", "bio", "image", "link"]
+        # Expose name + bio + image + location for the prototype-based UI.
+        fields = ["id", "name", "bio", "image", "location"]
 
 class PastEditionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -25,6 +32,234 @@ class PartnerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Partner
         fields = ['id', 'logo']
+
+
+
+class SummitStatSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'icon', 'label', 'value', 'order']
+
+
+class SummitHeroSerializer(serializers.ModelSerializer):
+    # nested stats provided via related_name 'stats'
+    stats = SummitStatSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = None  # set at runtime if available
+        fields = [
+            'id', 'title_main', 'title_highlight', 'date_text', 'location_text',
+            'subtitle', 'strapline', 'cta_register_label', 'cta_register_url', 'cta_brochure_label', 'cta_brochure_url', 'stats',
+            'background_image', 'is_published', 'created_at'
+        ]
+
+
+class SummitPillarSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'icon', 'title', 'description', 'order']
+
+
+class SummitAboutSerializer(serializers.ModelSerializer):
+    pillars = SummitPillarSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = None
+        fields = ['id', 'title_main', 'title_highlight', 'description', 'image', 'pillars', 'created_at']
+
+
+class SummitThemeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'icon', 'title', 'subtitle', 'description', 'color', 'order']
+
+
+class SummitAgendaItemSerializer(serializers.ModelSerializer):
+    time = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SummitAgendaItem
+        fields = ['id', 'time', 'title', 'order']
+
+    def get_time(self, obj):
+        # Format time as "HH:MM - HH:MM"
+        return f"{obj.start_time.strftime('%H:%M')} - {obj.end_time.strftime('%H:%M')}"
+
+
+class SummitAgendaDaySerializer(serializers.ModelSerializer):
+    # Keep structured items available for clients that use them
+    # source='items' is redundant when the field name matches the relation
+    items = SummitAgendaItemSerializer(many=True, read_only=True)
+
+    # Expose the plain-text field for editing as well as a parsed activities list
+    activities_text = serializers.CharField(required=False, allow_blank=True)
+    activities = serializers.SerializerMethodField()
+
+    # friendly frontend helpers
+    day = serializers.SerializerMethodField()
+    icon = serializers.SerializerMethodField()
+    color = serializers.SerializerMethodField()
+    date_formatted = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SummitAgendaDay
+        # include a friendly 'day' label and optional icon/color for frontend
+        fields = ['id', 'day', 'title', 'location', 'date', 'date_formatted', 'order', 'activities_text', 'activities', 'items', 'icon', 'color']
+        ordering = ['order', 'date']
+
+    def get_activities(self, obj):
+        try:
+            acts = getattr(obj, 'activities', []) or []
+            out = []
+            if acts:
+                for a in acts:
+                    time = a.get('time') if isinstance(a, dict) else None
+                    title = (a.get('title') if isinstance(a, dict) else str(a)) or ''
+                    if time:
+                        # normalize separators to " - " for frontend display
+                        t = str(time).strip().replace('\u2013', '-').replace('–', '-').replace('--', '-')
+                        if '-' in t and ' - ' not in t:
+                            parts = [p.strip() for p in t.split('-')]
+                            t = ' - '.join(parts)
+                        time = t
+                    out.append({'time': time or '', 'title': title})
+                return out
+
+            # fallback: build from structured items if no plain-text activities present
+            for item in getattr(obj, 'items', []).all() if hasattr(obj, 'items') else []:
+                try:
+                    time = f"{item.start_time.strftime('%H:%M')} - {item.end_time.strftime('%H:%M')}"
+                except Exception:
+                    time = ''
+                out.append({'time': time, 'title': getattr(item, 'title', '')})
+            return out
+        except Exception:
+            return []
+
+    def get_day(self, obj):
+        # Human-friendly label for the frontend (uses ordering if available)
+        try:
+            idx = (obj.order or 0) + 1
+            return f"Day {idx}"
+        except Exception:
+            return ''
+
+    def get_icon(self, obj):
+        # No icon stored on the model currently — return None so frontend can fallback
+        try:
+            return getattr(obj, 'icon', None) or None
+        except Exception:
+            return None
+
+    def get_color(self, obj):
+        # No color stored on the model currently — return None for frontend default
+        try:
+            return getattr(obj, 'color', None) or None
+        except Exception:
+            return None
+
+    def get_date_formatted(self, obj):
+        try:
+            if not getattr(obj, 'date', None):
+                return ''
+            return obj.date.strftime('%B %-d, %Y')
+        except Exception:
+            try:
+                # Windows/strptime/platform differences: fallback without '-' flag
+                return obj.date.strftime('%B %d, %Y')
+            except Exception:
+                return ''
+
+class SummitAgendaSerializer(serializers.ModelSerializer):
+    days = SummitAgendaDaySerializer(many=True, read_only=True)
+
+    # Provide frontend-friendly aliases so the React component can read
+    # title_main/title_highlight/subtitle without special-casing different models.
+    title_main = serializers.SerializerMethodField()
+    title_highlight = serializers.SerializerMethodField()
+    subtitle = serializers.SerializerMethodField()
+
+    class Meta:
+        model = SummitAgenda
+        # expose a frontend-friendly shape: title_main/title_highlight/subtitle map to
+        # the simple SummitAgenda's title/description if present
+        fields = ['id', 'title', 'title_main', 'title_highlight', 'subtitle', 'description', 'days', 'created_at', 'updated_at']
+
+    def get_title_main(self, obj):
+        try:
+            return getattr(obj, 'title', '')
+        except Exception:
+            return ''
+
+    def get_title_highlight(self, obj):
+        # No separate highlight stored on this model; return empty so frontend falls back
+        return ''
+
+    def get_subtitle(self, obj):
+        try:
+            return getattr(obj, 'description', '')
+        except Exception:
+            return ''
+
+
+class SummitKeyThemesSerializer(serializers.ModelSerializer):
+    themes = SummitThemeSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = None
+        # expose title_main + title_highlight so frontend can preserve the
+        # prototype's highlighted title styling rather than hard-coding text
+        # Remove legacy `title` and `description` fields (frontend uses the
+        # two-part title and subtitle).
+        fields = ['id', 'title_main', 'title_highlight', 'subtitle', 'cta_label', 'cta_url', 'themes', 'created_at']
+
+
+class PartnerSectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'partner_section_title', 'partner_section_subtitle', 'partner_cta_label', 'partner_cta_url', 'is_published', 'created_at']
+
+
+class CommunitySectionSerializer(serializers.ModelSerializer):
+    image = serializers.ImageField(read_only=True)
+
+    class Meta:
+        model = None
+        fields = [
+            'id', 'badge', 'title_main', 'title_highlight', 'description', 'image',
+            # explicit stats
+            'stat1_value', 'stat1_label', 'stat2_value', 'stat2_label', 'stat3_value', 'stat3_label',
+            # explicit cards
+            'card1_title', 'card1_description', 'card1_feature_1', 'card1_feature_2',
+            'card2_title', 'card2_description', 'card2_feature_1', 'card2_feature_2',
+            'cta_label', 'cta_url', 'is_published', 'created_at', 'updated_at'
+        ]
+
+    def to_representation(self, obj):
+        """Normalize image URL to absolute when request is available."""
+        data = super().to_representation(obj)
+        request = self.context.get('request') if isinstance(self.context, dict) else None
+        try:
+            base = None
+            if request is not None:
+                base = request.build_absolute_uri('/')[:-1]
+        except Exception:
+            base = None
+
+        try:
+            img = data.get('image')
+            if img and base and isinstance(img, str) and img.startswith('/'):
+                data['image'] = f"{base}{img}"
+        except Exception:
+            pass
+
+        return data
+
+
+class AboutHeroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'title_main', 'subtitle', 'background_image', 'is_published', 'created_at']
 
 class GroupSerializer(serializers.ModelSerializer):
     # created_by is assigned server-side
@@ -604,20 +839,240 @@ class MessageSerializer(serializers.ModelSerializer):
         model = None
         fields = ['id', 'room', 'sender', 'content', 'read', 'created_at']
 
-# Patch in PastEdition model if available
+class RegistrationPackageSerializer(serializers.ModelSerializer):
+    """Expose registration packages to the frontend in a simple shape.
+
+    The frontend expects an array of packages with: id, name, price, currency,
+    features (list), popular (bool), order (int), icon, color.
+    """
+
+    class Meta:
+        model = None
+        # include description so frontend can render the package subtitle/text
+        # icons were removed for RegistrationPackage; expose color only
+        fields = ['id', 'name', 'description', 'price', 'currency', 'features', 'popular', 'order', 'color', 'created_at']
+
+
+# Patch in runtime models (PastEdition, SummitHero/Stat, SummitAbout/Pillar, Chat models)
 try:
     from .models import PastEdition
     PastEditionSerializer.Meta.model = PastEdition
-    # Attach chat models if available
+except Exception:
+    pass
+
+try:
+    from .models import SummitKeyThemes, SummitTheme
+    # attach serializers if available
+    SummitKeyThemesSerializer.Meta.model = SummitKeyThemes
+    SummitThemeSerializer.Meta.model = SummitTheme
+except Exception:
+    pass
+
+try:
+    from .models import SummitAgenda, SummitAgendaDay
+    SummitAgendaSerializer.Meta.model = SummitAgenda
+    SummitAgendaDaySerializer.Meta.model = SummitAgendaDay
+except Exception:
+    pass
+
+try:
+    from .models import SummitHero
+    SummitHeroSerializer.Meta.model = SummitHero
+    try:
+        from .models import SummitStat
+        SummitStatSerializer.Meta.model = SummitStat
+    except Exception:
+        pass
+except Exception:
+    pass
+
+try:
+    from .models import SummitAbout, SummitPillar
+    SummitAboutSerializer.Meta.model = SummitAbout
+    SummitPillarSerializer.Meta.model = SummitPillar
+except Exception:
+    pass
+
+try:
     from .models import ChatRoom, Message
     ChatRoomSerializer.Meta.model = ChatRoom
     MessageSerializer.Meta.model = Message
 except Exception:
     pass
 
-# Resolve runtime model for user serializer helper
+# Attach RegistrationPackage model to serializer if available
 try:
-    from django.contrib.auth import get_user_model
-    SimpleUserSerializer.Meta.model = get_user_model()
+    from .models import RegistrationPackage
+    RegistrationPackageSerializer.Meta.model = RegistrationPackage
 except Exception:
     pass
+
+# Attach PartnerSection model to serializer if available
+try:
+    from .models import PartnerSection
+    PartnerSectionSerializer.Meta.model = PartnerSection
+except Exception:
+    pass
+
+
+# FooterContent serializer
+class FooterContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = [
+            'id', 'company_name', 'tagline', 'address_text', 'contact_email',
+            # social
+            'social_facebook', 'social_instagram', 'social_linkedin', 'social_twitter', 'social_youtube',
+            # company
+            'company_about', 'company_team', 'company_careers', 'company_contact',
+            # platforms
+            'platforms_magazine', 'platforms_tv', 'platforms_institute', 'platforms_summit', 'platforms_community',
+            # account
+            'account_login', 'account_signup', 'account_faqs',
+            # legal
+            'legal_terms', 'legal_privacy', 'legal_help',
+            'copyright_text', 'is_published', 'created_at'
+        ]
+
+
+# Attach FooterContent model if available
+try:
+    from .models import FooterContent
+    FooterContentSerializer.Meta.model = FooterContent
+except Exception:
+    pass
+
+# Attach AboutHero model if available
+try:
+    from .models import AboutHero
+    AboutHeroSerializer.Meta.model = AboutHero
+except Exception:
+    pass
+
+# Attach CommunitySection model if available
+try:
+    from .models import CommunitySection
+    CommunitySectionSerializer.Meta.model = CommunitySection
+except Exception:
+    pass
+
+
+# CTABanner serializer
+class CTABannerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = [
+            'id', 'badge', 'title_main', 'title_highlight', 'description',
+            'primary_cta_label', 'primary_cta_url', 'secondary_cta_label', 'secondary_cta_url',
+            'feature1_title', 'feature1_subtitle', 'feature2_title', 'feature2_subtitle', 'feature3_title', 'feature3_subtitle',
+            'is_published', 'created_at'
+        ]
+
+
+# Attach CTABanner model if available
+try:
+    from .models import CTABanner
+    CTABannerSerializer.Meta.model = CTABanner
+except Exception:
+    pass
+
+
+
+
+class VideoCategorySerializer(serializers.ModelSerializer):
+    video_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = VideoCategory
+        fields = [
+            'id', 'name', 'slug', 'description', 'icon',
+            'color_from', 'color_to', 'video_count'
+        ]
+
+    def get_video_count(self, obj):
+        return obj.videos.filter(is_published=True).count()
+
+# Simplified serializer for related videos to avoid recursion
+class RelatedVideoSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    video_id = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = [
+            'id', 'title', 'slug', 'description', 'category_name',
+            'content_type', 'video_id', 'thumbnail_url', 'duration',
+            'view_count', 'created_at'
+        ]
+
+    def get_video_id(self, obj):
+        vid = obj.get_video_id()
+        request = self.context.get('request') if isinstance(self.context, dict) else None
+        try:
+            if vid and isinstance(vid, str) and request and vid.startswith('/'):
+                return request.build_absolute_uri(vid)
+        except Exception:
+            pass
+        return vid
+
+    def get_thumbnail_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
+            url = obj.thumbnail.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
+
+class VideoSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    video_id = serializers.SerializerMethodField()
+    thumbnail_url = serializers.SerializerMethodField()
+    related_videos = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = [
+            'id', 'title', 'slug', 'description', 'category', 'category_name',
+            'content_type', 'video_id', 'thumbnail_url', 'duration',
+            'is_featured', 'view_count', 'created_at', 'related_videos'
+        ]
+
+    def get_video_id(self, obj):
+        # Return an absolute URL for uploaded videos when a request is
+        # available so the frontend fetches media from the Django backend
+        # (prevents the browser resolving a relative path against the
+        # frontend dev server which may not support Range requests).
+        vid = obj.get_video_id()
+        request = self.context.get('request') if isinstance(self.context, dict) else None
+        try:
+            if vid and isinstance(vid, str) and request and vid.startswith('/'):
+                return request.build_absolute_uri(vid)
+        except Exception:
+            # on any error, fall back to the raw value
+            pass
+        return vid
+
+    def get_thumbnail_url(self, obj):
+        request = self.context.get('request')
+        if obj.thumbnail and hasattr(obj.thumbnail, 'url'):
+            url = obj.thumbnail.url
+            if request:
+                return request.build_absolute_uri(url)
+            return url
+        return None
+
+    def get_related_videos(self, obj):
+        """Return 3 related videos from the same category.
+        Uses RelatedVideoSerializer to avoid recursion."""
+        related = Video.objects.filter(
+            category=obj.category,
+            is_published=True
+        ).exclude(id=obj.id)[:3]
+        
+        return RelatedVideoSerializer(
+            related, 
+            many=True, 
+            context=self.context
+        ).data

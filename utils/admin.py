@@ -1,6 +1,14 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import FAQ, TeamMember, Career, ContactMessage
+from .models import (
+    FAQ,
+    TeamMember,
+    Career,
+    ContactMessage,
+    ContactDetails,
+    OfficeLocation,
+    DepartmentContact
+)
 
 
 @admin.register(FAQ)
@@ -12,20 +20,55 @@ class FAQAdmin(admin.ModelAdmin):
 	icon.short_description = ''
 
 
+# Team member and contact information admin
+class OfficeLocationInline(admin.TabularInline):
+    model = OfficeLocation
+    extra = 1
+    fields = ('city', 'country', 'address', 'type', 'order')
+
+
+class DepartmentContactInline(admin.TabularInline):
+    model = DepartmentContact
+    extra = 1
+    fields = ('title', 'email', 'description', 'order')
+
+
 @admin.register(TeamMember)
 class TeamMemberAdmin(admin.ModelAdmin):
-	list_display = ("photo_preview", "name", "role") if hasattr(TeamMember, 'name') else ("photo_preview",)
+    list_display = ('photo_preview', 'name', 'is_active', 'order')
+    list_filter = ('is_active',)
+    search_fields = ('name',)
+    readonly_fields = ('photo_preview', 'created_at', 'updated_at')
+    fields = (
+        'name', 'bio', 'photo', 'photo_preview',
+        'linkedin_url', 'twitter_url', 'email',
+        'order', 'is_active',
+        'created_at', 'updated_at'
+    )
 
-	def photo_preview(self, obj):
-		img = getattr(obj, 'photo', None) or getattr(obj, 'avatar', None)
-		if img:
-			try:
-				url = img.url if hasattr(img, 'url') else img
-				return format_html("<img src='{}' style='max-height:48px; object-fit:contain; border-radius:6px;'/>", url)
-			except Exception:
-				pass
-		return format_html("<i class='fas fa-user-tie' style='font-size:18px;color:#0D1B52;'></i>")
-	photo_preview.short_description = ''
+    def photo_preview(self, obj):
+        if obj.photo:
+            return format_html(
+                '<img src="{}" style="max-height: 48px; border-radius: 4px;">',
+                obj.photo.url
+            )
+        return format_html('<i class="fas fa-user" style="font-size: 24px; color: #666;"></i>')
+    photo_preview.short_description = 'Photo'
+
+
+@admin.register(ContactDetails)
+class ContactDetailsAdmin(admin.ModelAdmin):
+    list_display = ('contact_email', 'contact_phone', 'is_published', 'created_at')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('contact_email', 'contact_phone', 'contact_hours', 'headquarters_address')
+        }),
+        ('Publishing', {
+            'fields': ('is_published', 'created_at', 'updated_at')
+        })
+    )
+    inlines = [OfficeLocationInline, DepartmentContactInline]
 
 
 @admin.register(Career)

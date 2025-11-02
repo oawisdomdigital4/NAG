@@ -18,7 +18,7 @@ from community.models import (
 )
 
 class UserToken(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     token = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
@@ -45,7 +45,7 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, related_name='profile')
     full_name = models.CharField(max_length=255, blank=True)
     phone = models.CharField(max_length=30, blank=True, default='1')
     country = models.CharField(max_length=100, blank=True)
@@ -67,8 +67,8 @@ class Follow(models.Model):
 
     We keep this lightweight and explicit so we can count followers efficiently.
     """
-    follower = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='following_set')
-    followed = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='followers_set')
+    follower = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='following_set')
+    followed = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='followers_set')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

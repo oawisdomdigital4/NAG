@@ -2,41 +2,20 @@ import os
 import socket
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Environment detection
+SECRET_KEY = 'django-insecure-=h5qyq6ims%&1xawe!c(m99n=ns!pql1cuxpij3w+vqpcdh$#_'
+
 HOSTNAME = socket.gethostname()
 ON_PYTHONANYWHERE = "pythonanywhere" in HOSTNAME or "newafricagroup" in HOSTNAME
 
-# Load local settings if not in production
-if not ON_PYTHONANYWHERE:
-    try:
-        from .local_settings import *
-    except ImportError:
-        raise ImportError(
-            "local_settings.py is required for development. Please create it from local_settings.example.py"
-        )
-else:
-    # Production settings
-    DEBUG = False
-    SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-=h5qyq6ims%&1xawe!c(m99n=ns!pql1cuxpij3w+vqpcdh$#_')
-    
-    ALLOWED_HOSTS = [
-        'newafricagroup.pythonanywhere.com',
-    ]
-    
-    # Production database
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.environ.get('DB_NAME', 'newafricagroup$nag2'),
-            'USER': os.environ.get('DB_USER', 'newafricagroup'),
-            'PASSWORD': os.environ.get('DB_PASSWORD', '@Nag123456'),
-            'HOST': os.environ.get('DB_HOST', 'newafricagroup.mysql.pythonanywhere-services.com'),
-            'PORT': os.environ.get('DB_PORT', '3306'),
-        }
-    }
+DEBUG = not ON_PYTHONANYWHERE
+
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'newafricagroup.pythonanywhere.com',
+]
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -56,7 +35,6 @@ INSTALLED_APPS = [
     'notifications',
     'payments',
     'utils',
-    'magazine',
 ]
 
 
@@ -76,8 +54,16 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'myproject.urls'
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
-# Database settings are loaded from local_settings.py in development
-# or set above in production environment
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'newafricagroup$nag2',
+        'USER': 'newafricagroup',
+        'PASSWORD': '@Nag123456',
+        'HOST': 'newafricagroup.mysql.pythonanywhere-services.com',
+        'PORT': '3306',
+    }
+}
 
 TEMPLATES = [
     {
@@ -134,21 +120,21 @@ else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
 
-# CORS settings
-if ON_PYTHONANYWHERE:
-    CORS_ALLOWED_ORIGINS = [
-        'https://newafricagroup.pythonanywhere.com',
-        'https://myproject-zeta-indol.vercel.app',
-    ]
-    CSRF_TRUSTED_ORIGINS = [
-        'https://newafricagroup.pythonanywhere.com',
-        'https://myproject-zeta-indol.vercel.app',
-    ]
-else:
-    # Development CORS settings are in local_settings.py
-    pass
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://newafricagroup.pythonanywhere.com',
+    'https://myproject-zeta-indol.vercel.app',
+]
 
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://newafricagroup.pythonanywhere.com',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    'https://myproject-zeta-indol.vercel.app',
+]
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

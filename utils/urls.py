@@ -4,12 +4,18 @@ from .views import (
     TeamMemberViewSet,
     CareerViewSet,
     ContactMessageViewSet,
+        ContactDetailsViewSet,
+        OfficeLocationViewSet,
+        DepartmentContactViewSet,
 )
 
 router = DefaultRouter()
 router.register(r'faqs', FAQViewSet)
-router.register(r'team-members', TeamMemberViewSet)
+router.register(r'team-members', TeamMemberViewSet, basename='team-members')
 router.register(r'careers', CareerViewSet)
 router.register(r'contact-messages', ContactMessageViewSet)
+router.register(r'contact-details', ContactDetailsViewSet, basename='contact-details')
+router.register(r'office-locations', OfficeLocationViewSet)
+router.register(r'department-contacts', DepartmentContactViewSet)
 
 urlpatterns = router.urls

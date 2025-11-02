@@ -26,6 +26,7 @@ urlpatterns = [
     # Backwards-compatible endpoint used by frontend for member lookups
     path('api/accounts/', include('accounts.urls')),
     path('api/community/', include('community.urls')),
+    path('api/magazine/', include('magazine.api_urls')),
     path('api/utils/', include('utils.urls')),
     path('api/courses/', include('courses.urls')),
     path('api/notifications/', include('notifications.urls')),
