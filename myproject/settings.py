@@ -167,20 +167,27 @@ else:
 # CORS settings
 if ON_PYTHONANYWHERE:
     CORS_ALLOWED_ORIGINS = [
-        'https://newafricagroup.pythonanywhere.com',
-        'https://superadmin.thenewafricagroup.com',
-        'https://myproject-zeta-indol.vercel.app',
+        'superadmin.thenewafricagroup.com',
+        'www.superadmin.thenewafricagroup.com',
+        'thenewafricagroup.com',
     ]
     CSRF_TRUSTED_ORIGINS = [
-        'https://newafricagroup.pythonanywhere.com',
-        'https://superadmin.thenewafricagroup.com',
-        'https://myproject-zeta-indol.vercel.app',
+        'superadmin.thenewafricagroup.com',
+        'www.superadmin.thenewafricagroup.com',
+        'thenewafricagroup.com',
     ]
 else:
     # Development CORS settings are in local_settings.py
     pass
 
 CORS_ALLOW_CREDENTIALS = True
+
+ALLOWED_HOSTS = [
+    'superadmin.thenewafricagroup.com',
+    'www.superadmin.thenewafricagroup.com',
+    'thenewafricagroup.com',
+]
+
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
