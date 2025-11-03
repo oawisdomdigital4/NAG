@@ -105,6 +105,7 @@ User = get_user_model()
 TOKEN_LIFETIME = timedelta(days=7)
 
 # ----------------------------- SIGN UP
+@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])
@@ -131,6 +132,7 @@ def signup_view(request):
     })
 
 
+@csrf_exempt
 @api_view(["POST"])
 @authentication_classes([])
 @permission_classes([AllowAny])

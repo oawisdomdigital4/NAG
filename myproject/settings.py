@@ -167,14 +167,16 @@ else:
 # CORS settings
 if ON_PYTHONANYWHERE:
     CORS_ALLOWED_ORIGINS = [
-        'superadmin.thenewafricagroup.com',
-        'www.superadmin.thenewafricagroup.com',
-        'thenewafricagroup.com',
+        'http://localhost:5173',
+        'https://superadmin.thenewafricagroup.com',
+        'https://www.superadmin.thenewafricagroup.com',
+        'https://thenewafricagroup.com',
     ]
     CSRF_TRUSTED_ORIGINS = [
-        'superadmin.thenewafricagroup.com',
-        'www.superadmin.thenewafricagroup.com',
-        'thenewafricagroup.com',
+        'http://localhost:5173',
+        'https://superadmin.thenewafricagroup.com',
+        'https://www.superadmin.thenewafricagroup.com',
+        'https://thenewafricagroup.com',
     ]
 else:
     # Development CORS settings are in local_settings.py
@@ -183,6 +185,7 @@ else:
 CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = [
+    'localhost',
     'superadmin.thenewafricagroup.com',
     'www.superadmin.thenewafricagroup.com',
     'thenewafricagroup.com',
