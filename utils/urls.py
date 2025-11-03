@@ -8,6 +8,8 @@ from .views import (
         OfficeLocationViewSet,
         DepartmentContactViewSet,
 )
+from .views_extra import ensure_csrf
+from django.urls import path
 
 router = DefaultRouter()
 router.register(r'faqs', FAQViewSet)
@@ -18,4 +20,6 @@ router.register(r'contact-details', ContactDetailsViewSet, basename='contact-det
 router.register(r'office-locations', OfficeLocationViewSet)
 router.register(r'department-contacts', DepartmentContactViewSet)
 
-urlpatterns = router.urls
+urlpatterns = router.urls + [
+    path('csrf/', ensure_csrf, name='api-utils-csrf'),
+]
