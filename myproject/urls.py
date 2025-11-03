@@ -34,6 +34,15 @@ urlpatterns = [
 
 ]
 
-# Serve media files in development
+# Serve media files
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    # For production, add a view to serve media files through Django
+    from django.views.static import serve
+    urlpatterns += [
+        path('media/<path:path>', serve, {
+            'document_root': settings.MEDIA_ROOT,
+            'show_indexes': False,
+        }),
+    ]

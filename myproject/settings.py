@@ -160,6 +160,11 @@ if ON_PYTHONANYWHERE:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    
+    # PythonAnywhere Media Settings
+    MEDIA_ROOT = '/home/mrokaimoses/Nag/media'
+    MEDIA_URL = '/media/'
+    
 else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
