@@ -19,9 +19,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from utils.views_extra import ensure_csrf
 
 urlpatterns = [
     path('', admin.site.urls),
+    # CSRF helper endpoint - both /api/csrf/ and /api/utils/csrf/ work
+    path('api/csrf/', ensure_csrf, name='api-csrf'),
     path('api/auth/', include('accounts.urls')),
     # Backwards-compatible endpoint used by frontend for member lookup
     path('api/accounts/', include('accounts.urls')),
