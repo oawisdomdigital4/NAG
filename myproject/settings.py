@@ -148,7 +148,7 @@ TIME_ZONE = 'Africa/Lagos'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -177,6 +177,14 @@ if ON_PYTHONANYWHERE:
 else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
+
+# In production we want the CSRF and session cookies usable by a cross-site
+# frontend (e.g. a Vercel app). Browsers require SameSite=None plus Secure
+# for third-party cookies; keep these guarded to production only.
+if ON_PYTHONANYWHERE:
+    CSRF_COOKIE_SAMESITE = 'None'
+    SESSION_COOKIE_SAMESITE = 'None'
+
 
 # CORS settings
 CORS_ALLOWED_ORIGINS = [
