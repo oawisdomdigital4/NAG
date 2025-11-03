@@ -133,10 +133,18 @@ def signup_view(request):
 
 
 @csrf_exempt
-@api_view(["POST"])
+@api_view(["POST", "OPTIONS"])
 @authentication_classes([])
 @permission_classes([AllowAny])
 def login_view(request):
+    if request.method == "OPTIONS":
+        response = Response()
+        response["Access-Control-Allow-Origin"] = request.headers.get('Origin', '*')
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Auth-Token"
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
+
     serializer = SignInSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
 
@@ -164,12 +172,18 @@ def login_view(request):
         "corporate": "/dashboard/corporate",
     }
 
-    return Response({
+    response = Response({
         "success": True,
         "user": user_data,
         "token": str(token.token),
         "redirect_url": redirect_map.get(user.role, "/dashboard"),
     })
+    
+    # Explicitly set CORS headers for the response
+    response["Access-Control-Allow-Origin"] = request.headers.get('Origin', '*')
+    response["Access-Control-Allow-Credentials"] = "true"
+    
+    return response
 
 
 # ----------------------------- LOGOUT

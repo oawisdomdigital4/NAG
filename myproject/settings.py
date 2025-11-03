@@ -165,22 +165,44 @@ else:
     CSRF_COOKIE_SECURE = False
 
 # CORS settings
-if ON_PYTHONANYWHERE:
-    CORS_ALLOWED_ORIGINS = [
-        'http://localhost:5173',
-        'https://superadmin.thenewafricagroup.com',
-        'https://www.superadmin.thenewafricagroup.com',
-        'https://thenewafricagroup.com',
-    ]
-    CSRF_TRUSTED_ORIGINS = [
-        'http://localhost:5173',
-        'https://superadmin.thenewafricagroup.com',
-        'https://www.superadmin.thenewafricagroup.com',
-        'https://thenewafricagroup.com',
-    ]
-else:
-    # Development CORS settings are in local_settings.py
-    pass
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:5173',
+    'https://superadmin.thenewafricagroup.com',
+    'https://www.superadmin.thenewafricagroup.com',
+    'https://thenewafricagroup.com',
+]
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:5173',
+    'https://superadmin.thenewafricagroup.com',
+    'https://www.superadmin.thenewafricagroup.com',
+    'https://thenewafricagroup.com',
+]
+
+# Additional CORS settings
+CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_METHODS = [
+    'DELETE',
+    'GET',
+    'OPTIONS',
+    'PATCH',
+    'POST',
+    'PUT',
+]
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'x-auth-token',
+    'cache-control',
+    'access-control-allow-origin',
+    'access-control-allow-headers'
+]
 
 CORS_ALLOW_CREDENTIALS = True
 
