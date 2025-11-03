@@ -44,8 +44,12 @@ class NotificationAdmin(admin.ModelAdmin):
 
 @admin.register(NotificationPreference)
 class NotificationPreferenceAdmin(admin.ModelAdmin):
-	list_display = ("id", "user", "notification_type", "in_app_enabled", "email_enabled", "created_at")
+	list_display = ("icon", "id", "user", "notification_type", "in_app_enabled", "email_enabled", "created_at")
 	list_filter = ("in_app_enabled", "email_enabled", "notification_type")
 	search_fields = ("user__email", "notification_type")
 	readonly_fields = ("created_at", "updated_at")
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-sliders-h' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 

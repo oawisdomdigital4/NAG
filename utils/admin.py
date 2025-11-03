@@ -58,7 +58,7 @@ class TeamMemberAdmin(admin.ModelAdmin):
 
 @admin.register(ContactDetails)
 class ContactDetailsAdmin(admin.ModelAdmin):
-    list_display = ('contact_email', 'contact_phone', 'is_published', 'created_at')
+    list_display = ('icon', 'contact_email', 'contact_phone', 'is_published', 'created_at')
     readonly_fields = ('created_at', 'updated_at')
     fieldsets = (
         (None, {
@@ -69,6 +69,10 @@ class ContactDetailsAdmin(admin.ModelAdmin):
         })
     )
     inlines = [OfficeLocationInline, DepartmentContactInline]
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-address-book' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 @admin.register(Career)

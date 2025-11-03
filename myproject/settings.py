@@ -19,11 +19,19 @@ ON_PYTHONANYWHERE = (
 # Load local settings if not in production. If `local_settings.py` is missing,
 # prefer to continue and allow configuration via environment variables.
 if not ON_PYTHONANYWHERE:
+    # Try a few common local settings filenames so development machines can
+    # use either `local_settings.py` or `local_dev_settings.py` without
+    # editing the main settings file. If neither exists, fall back to
+    # environment variables and sensible defaults below.
     try:
         from .local_settings import *
     except ImportError:
-        # local_settings.py is optional; environment variables (.env or host) will be used instead.
-        pass
+        try:
+            from .local_dev_settings import *
+        except ImportError:
+            # No local settings file found; leave it to environment vars.
+            # Ensure DEBUG has a default value to avoid NameError later.
+            DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
 else:
     # Production settings
     DEBUG = False
@@ -33,6 +41,7 @@ else:
     ALLOWED_HOSTS = [
         'newafricagroup.pythonanywhere.com',
         'superadmin.thenewafricagroup.com',
+        'myproject-zeta-indol.vercel.app',
     ]
 
     # Production database: prefer DATABASE_URL if provided (e.g., managed DB URL),
@@ -175,12 +184,16 @@ CORS_ALLOWED_ORIGINS = [
     'https://superadmin.thenewafricagroup.com',
     'https://www.superadmin.thenewafricagroup.com',
     'https://thenewafricagroup.com',
+    'https://127.0.0.1:8000',
+    'https://myproject-zeta-indol.vercel.app',
 ]
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:5173',
     'https://superadmin.thenewafricagroup.com',
     'https://www.superadmin.thenewafricagroup.com',
     'https://thenewafricagroup.com',
+    'https://127.0.0.1:8000',
+    'https://myproject-zeta-indol.vercel.app',
 ]
 
 # Additional CORS settings
@@ -213,9 +226,11 @@ CORS_ALLOW_CREDENTIALS = True
 
 ALLOWED_HOSTS = [
     'localhost',
+    '127.0.0.1',
     'superadmin.thenewafricagroup.com',
     'www.superadmin.thenewafricagroup.com',
     'thenewafricagroup.com',
+    'myproject-zeta-indol.vercel.app',
 ]
 
 
@@ -234,6 +249,10 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.AllowAny",
     ],
 }
+
+# Ensure DEBUG is always defined (local_settings may not set it when imported)
+if 'DEBUG' not in globals():
+    DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() in ('1', 'true', 'yes')
 
 if DEBUG:
     REST_FRAMEWORK.setdefault("DEFAULT_RENDERER_CLASSES", [
@@ -284,16 +303,13 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "New Africa Group Admin",
-    "site_header": "New Africa Group",
-    "site_brand": "NAG",
-    "site_brand_classes": "nag",
+    "site_title": "",
+    "site_header": "",
+    "site_brand": "",
     "site_logo": "admin/img/logo.png",
-    "site_logo_classes": "img-fluid nag-logo",  # 👈 Add custom class for styling
-    "welcome_sign": "Welcome to New Africa Group Admin",
-    "copyright": "© 2025 New Africa Group",
-    "show_ui_builder": False,
-
+    "show_sidebar_logo": False,  # Hide from sidebar
+    "site_brand_classes": "nag-header-logo-container",  # for positioning in navbar
+    "site_logo_classes": "nag-logo",
     "theme": "cosmo",
     "custom_css": "admin/css/custom-theme.css",
 
@@ -341,6 +357,24 @@ JAZZMIN_SETTINGS = {
         "community.corporateverification": "fas fa-building",
         "community.chatroom": "fas fa-comments",
         "community.message": "fas fa-comment-dots",
+        "community.summithero": "fas fa-bullhorn",
+        "community.summitstat": "fas fa-chart-line",
+        "community.summitabout": "fas fa-info-circle",
+        "community.summitpillar": "fas fa-compass",
+        "community.summitkeythemes": "fas fa-th-large",
+        "community.summitagenda": "fas fa-calendar-alt",
+        "community.summitagendaday": "fas fa-calendar-day",
+        "community.summitagendaitem": "fas fa-list",
+        "community.summittheme": "fas fa-lightbulb",
+        "community.partner": "fas fa-handshake",
+        "community.partnersection": "fas fa-users",
+        "community.ctabanner": "fas fa-bullhorn",
+        "community.communitysection": "fas fa-users-cog",
+        "community.videocategory": "fas fa-film",
+        "community.video": "fas fa-video",
+        "community.registrationpackage": "fas fa-ticket-alt",
+        "community.abouthero": "fas fa-info-circle",
+        "community.footercontent": "fas fa-columns",
 
         # courses models
         "courses.course": "fas fa-book-open",
@@ -362,5 +396,14 @@ JAZZMIN_SETTINGS = {
         "utils.teammember": "fas fa-user-tie",
         "utils.career": "fas fa-briefcase",
         "utils.contactmessage": "fas fa-envelope",
+        "utils.contactdetails": "fas fa-address-book",
+        "utils.officelocation": "fas fa-map-marker-alt",
+        "utils.departmentcontact": "fas fa-address-card",
+            
+        # magazine models
+        "magazine.author": "fas fa-user",
+        "magazine.category": "fas fa-folder",
+        "magazine.tag": "fas fa-tag",
+        "magazine.article": "fas fa-newspaper",
     },
 }

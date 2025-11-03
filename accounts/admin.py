@@ -17,7 +17,8 @@ from django.contrib.auth.admin import GroupAdmin as DefaultGroupAdmin
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
-    list_display = ("icon", "email", "username", "role", "is_active", "is_staff", "date_joined")
+    # Show avatar icon, then first and last name prominently in the changelist (sidebar)
+    list_display = ("icon", "first_name", "last_name", "username", "role", "is_active", "is_staff", "date_joined")
     list_filter = ("role", "is_staff", "is_active")
     search_fields = ("email", "username")
     ordering = ("email",)
@@ -49,13 +50,35 @@ class UserAdmin(BaseUserAdmin):
         return format_html("<i class='fas fa-user-circle' style='font-size:18px;color:#0D1B52;'></i>")
     icon.short_description = ''
 
+    def full_name(self, obj):
+        """Display the user's full name in admin list view.
+
+        Falls back to related profile.full_name if first/last name are empty,
+        and finally to the email address.
+        """
+        try:
+            name = ' '.join(filter(None, [getattr(obj, 'first_name', ''), getattr(obj, 'last_name', '')])).strip()
+            if name:
+                return name
+            # try related profile
+            profile = getattr(obj, 'profile', None) or getattr(obj, 'userprofile', None)
+            if profile:
+                full = getattr(profile, 'full_name', None) or getattr(profile, 'full_name', '')
+                if full:
+                    return full
+        except Exception:
+            pass
+        return obj.email
+    full_name.short_description = 'Name'
+    full_name.admin_order_field = 'first_name'
+
 
 # -----------------------------
 # UserProfile Admin
 # -----------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar")
+    list_display = ("icon", "user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar")
     search_fields = ("user__email", "full_name", "phone", "country", "company_name")
     actions = ("approve_community_access", "revoke_community_access")
     readonly_fields = ("avatar_preview",)
@@ -74,6 +97,10 @@ class UserProfileAdmin(admin.ModelAdmin):
     has_avatar.boolean = True
     has_avatar.short_description = "Has Avatar?"
 
+    def icon(self, obj):
+        return format_html("<i class='fas fa-id-badge' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
     @admin.action(description="Approve community access")
     def approve_community_access(self, request, queryset):
         updated = queryset.update(community_approved=True)
@@ -90,7 +117,7 @@ class UserProfileAdmin(admin.ModelAdmin):
 # -----------------------------
 @admin.register(UserToken)
 class UserTokenAdmin(admin.ModelAdmin):
-    list_display = ("user", "token", "created_at", "expires_at", "is_expired")
+    list_display = ("icon", "user", "token", "created_at", "expires_at", "is_expired")
     search_fields = ("user__email", "token")
     readonly_fields = ("token", "created_at", "expires_at")
 
@@ -98,6 +125,10 @@ class UserTokenAdmin(admin.ModelAdmin):
         return obj.is_expired()
     is_expired.boolean = True
     is_expired.short_description = "Expired?"
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-key' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 # Unregister default Group admin and re-register with an icon column

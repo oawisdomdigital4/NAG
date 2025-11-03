@@ -21,9 +21,9 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('', admin.site.urls),
     path('api/auth/', include('accounts.urls')),
-    # Backwards-compatible endpoint used by frontend for member lookups
+    # Backwards-compatible endpoint used by frontend for member lookup
     path('api/accounts/', include('accounts.urls')),
     path('api/community/', include('community.urls')),
     path('api/magazine/', include('magazine.api_urls')),
