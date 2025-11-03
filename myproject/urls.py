@@ -22,7 +22,6 @@ from django.conf.urls.static import static
 from utils.views_extra import ensure_csrf
 
 urlpatterns = [
-    path('', admin.site.urls),
     # CSRF helper endpoint - both /api/csrf/ and /api/utils/csrf/ work
     path('api/csrf/', ensure_csrf, name='api-csrf'),
     path('api/auth/', include('accounts.urls')),
@@ -34,18 +33,23 @@ urlpatterns = [
     path('api/courses/', include('courses.urls')),
     path('api/notifications/', include('notifications.urls')),
     path('api/payments/', include('payments.urls')),
+    # Keep admin URLs last so they don't override API endpoints
+    path('admin/', admin.site.urls),
 
 ]
 
-# Serve media files
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-else:
-    # For production, add a view to serve media files through Django
-    from django.views.static import serve
-    urlpatterns += [
-        path('media/<path:path>', serve, {
-            'document_root': settings.MEDIA_ROOT,
-            'show_indexes': False,
-        }),
-    ]
+# Serve media files without requiring authentication
+from django.views.static import serve
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def serve_media(request, path):
+    """Serve media files directly without requiring authentication"""
+    return serve(request, path, document_root=settings.MEDIA_ROOT, show_indexes=False)
+
+# Add media serving URLs
+urlpatterns += [
+    path('media/<path:path>', serve_media, name='media'),
+]
