@@ -95,6 +95,7 @@ INSTALLED_APPS = [
     'payments',
     'utils',
     'magazine',
+    'newsletter',
 ]
 
 

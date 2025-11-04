@@ -1,0 +1,149 @@
+{% extends "admin/login.html" %}
+{% load i18n static jazzmin %}
+
+{% block extrastyle %}
+{{ block.super }}
+<!-- Override any existing logo styles -->
+<style>
+    img[src*="logo"], 
+    .brand-link img, 
+    .nag-logo {
+        max-height: 35px !important;
+        width: auto !important;
+    }
+</style>
+{{ block.super }}
+<style>
+    :root {
+        --primary: #00205B;
+        --secondary: #EFBE22;
+        --link-fg: #00205B;
+        --link-hover-color: #EFBE22;
+    }
+
+    body.login {
+        background: #f8f9fa;
+    }
+
+    .login #header {
+        background: var(--primary);
+        color: var(--secondary);
+    }
+
+    .login .submit-row {
+        padding: 0;
+        text-align: center;
+        background: none;
+        border: none;
+    }
+
+    .login .submit-row input {
+        width: 100%;
+        margin: 0;
+        padding: 12px 20px;
+        background: var(--primary);
+        color: white;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    .login .submit-row input:hover {
+        background: var(--secondary);
+        color: var(--primary);
+    }
+
+    .login #content {
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        background: white;
+    }
+
+    .login #container {
+        width: 380px;
+        margin: 100px auto;
+    }
+
+    .login form {
+        margin-top: 20px;
+    }
+
+    .login form .form-row {
+        padding: 8px 0;
+    }
+
+    .login form .form-row label {
+        display: block;
+        line-height: 2;
+        font-size: 14px;
+        color: #555;
+    }
+
+    .login form .form-row #id_username,
+    .login form .form-row #id_password {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+
+    .login form .form-row #id_username:focus,
+    .login form .form-row #id_password:focus {
+        border-color: var(--primary);
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(0, 32, 91, 0.1);
+    }
+
+    /* Error states */
+    .login .errornote {
+        background: #fff0f0;
+        border: 1px solid #ffb6b6;
+        border-radius: 4px;
+        padding: 12px;
+        color: #d63939;
+        margin-bottom: 20px;
+    }
+
+    /* Custom branding */
+    .login #branding {
+        margin-bottom: 20px;
+    }
+
+    .login #branding h1 {
+        margin: 0;
+        padding: 20px 0;
+        font-weight: 300;
+        font-size: 24px;
+        letter-spacing: 0.5px;
+    }
+
+    .login .nag-logo {
+        max-height: 35px;
+        width: auto;
+        margin: 10px auto;
+        display: block;
+    }
+    
+    .login .nag-logo-container {
+        text-align: center;
+        margin: 0 auto 20px;
+    }
+
+    /* Password reset link */
+    .login .password-reset-link {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 14px;
+    }
+
+    .login .password-reset-link a {
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .login .password-reset-link a:hover {
+        color: var(--secondary);
+    }
+</style>
+{% endblock %}

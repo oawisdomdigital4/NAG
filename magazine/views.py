@@ -2,8 +2,11 @@ from rest_framework import viewsets, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
-from .models import Article, Category, Tag, Author
-from .serializers import ArticleListSerializer, ArticleDetailSerializer, CategorySerializer, TagSerializer, AuthorSerializer
+from .models import Article, Category, Tag, Author, Magazine
+from .serializers import (
+    ArticleListSerializer, ArticleDetailSerializer, CategorySerializer, 
+    TagSerializer, AuthorSerializer, MagazineSerializer
+)
 
 
 class ArticleViewSet(viewsets.ReadOnlyModelViewSet):
@@ -40,3 +43,15 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = Author.objects.all()
 	serializer_class = AuthorSerializer
+
+
+class MagazineViewSet(viewsets.ReadOnlyModelViewSet):
+	queryset = Magazine.objects.filter(is_active=True)
+	serializer_class = MagazineSerializer
+	lookup_field = 'slug'
+	filter_backends = [filters.OrderingFilter]
+	ordering_fields = ['published_date']
+	ordering = ['-published_date']
+
+	def get_queryset(self):
+		return super().get_queryset().order_by('-published_date')

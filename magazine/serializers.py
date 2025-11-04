@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Article, Category, Tag, Author
+from .models import Article, Category, Tag, Author, Magazine
 
 
 class AuthorSerializer(serializers.ModelSerializer):
@@ -59,3 +59,25 @@ class ArticleDetailSerializer(ArticleListSerializer):
 
     class Meta(ArticleListSerializer.Meta):
         fields = ArticleListSerializer.Meta.fields + ('content',)
+
+
+class MagazineSerializer(serializers.ModelSerializer):
+    cover_image = serializers.SerializerMethodField()
+    pdf_file = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Magazine
+        fields = ('id', 'title', 'issue', 'slug', 'description', 'cover_image', 
+                 'pdf_file', 'pages', 'published_date', 'is_active')
+
+    def get_cover_image(self, obj):
+        request = self.context.get('request')
+        if obj.cover_image and hasattr(obj.cover_image, 'url'):
+            return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
+        return None
+
+    def get_pdf_file(self, obj):
+        request = self.context.get('request')
+        if obj.pdf_file and hasattr(obj.pdf_file, 'url'):
+            return request.build_absolute_uri(obj.pdf_file.url) if request else obj.pdf_file.url
+        return None
