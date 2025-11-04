@@ -20,6 +20,8 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from utils.views_extra import ensure_csrf
+from django.urls import re_path
+from utils.frontend_views import serve_spa
 
 urlpatterns = [
     # CSRF helper endpoint - both /api/csrf/ and /api/utils/csrf/ work
@@ -52,4 +54,12 @@ def serve_media(request, path):
 # Add media serving URLs
 urlpatterns += [
     path('media/<path:path>', serve_media, name='media'),
+]
+
+# Catch-all for client-side routes (SPA). This must come last and will
+# serve the frontend `index.html` for any path that doesn't start with
+# api/, admin/, static/ or media/ so that client-side routing works on
+# refresh. Adjust build locations in `utils/frontend_views.py` if needed.
+urlpatterns += [
+    re_path(r'^(?!api/|admin/|static/|media/).*$', serve_spa),
 ]
