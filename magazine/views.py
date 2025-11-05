@@ -46,12 +46,21 @@ class AuthorViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 class MagazineViewSet(viewsets.ReadOnlyModelViewSet):
-	queryset = Magazine.objects.filter(is_active=True)
-	serializer_class = MagazineSerializer
-	lookup_field = 'slug'
-	filter_backends = [filters.OrderingFilter]
-	ordering_fields = ['published_date']
-	ordering = ['-published_date']
+    queryset = Magazine.objects.filter(is_active=True)
+    serializer_class = MagazineSerializer
+    lookup_field = 'slug'
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['published_date']
+    ordering = ['-published_date']
 
-	def get_queryset(self):
-		return super().get_queryset().order_by('-published_date')
+    def get_queryset(self):
+        return super().get_queryset().order_by('-published_date')
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        # Print debug info
+        if self.request:
+            print(f"[Magazine] Request scheme: {self.request.scheme}")
+            print(f"[Magazine] Request host: {self.request.get_host()}")
+            print(f"[Magazine] Request path: {self.request.path}")
+        return context

@@ -73,11 +73,19 @@ class MagazineSerializer(serializers.ModelSerializer):
     def get_cover_image(self, obj):
         request = self.context.get('request')
         if obj.cover_image and hasattr(obj.cover_image, 'url'):
-            return request.build_absolute_uri(obj.cover_image.url) if request else obj.cover_image.url
+            if request:
+                url = request.build_absolute_uri(obj.cover_image.url)
+                print(f"[Magazine] Cover image URL: {url}")  # Debug log
+                return url
+            return obj.cover_image.url
         return None
 
     def get_pdf_file(self, obj):
         request = self.context.get('request')
         if obj.pdf_file and hasattr(obj.pdf_file, 'url'):
-            return request.build_absolute_uri(obj.pdf_file.url) if request else obj.pdf_file.url
+            if request:
+                url = request.build_absolute_uri(obj.pdf_file.url)
+                print(f"[Magazine] PDF file URL: {url}")  # Debug log
+                return url
+            return obj.pdf_file.url
         return None

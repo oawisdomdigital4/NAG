@@ -48,9 +48,14 @@ from rest_framework.permissions import AllowAny
 @permission_classes([AllowAny])
 def serve_media(request, path):
     """Serve media files directly without requiring authentication"""
-    return serve(request, path, document_root=settings.MEDIA_ROOT, show_indexes=False)
+    response = serve(request, path, document_root=settings.MEDIA_ROOT, show_indexes=False)
+    response['Access-Control-Allow-Origin'] = '*'  # Allow CORS for media files
+    return response
 
-# Add media serving URLs
-urlpatterns += [
-    path('media/<path:path>', serve_media, name='media'),
-]
+# Add media serving URLs and enable in DEBUG mode
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+else:
+    urlpatterns += [
+        path('media/<path:path>', serve_media, name='media'),
+    ]
