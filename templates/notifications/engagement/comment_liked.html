@@ -1,0 +1,60 @@
+{% load i18n %}<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% trans "Comment Liked" %}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 8px 8px 0 0; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+        .user-info { display: flex; align-items: center; margin: 20px 0; }
+        .avatar { width: 48px; height: 48px; border-radius: 50%; margin-right: 15px; background: #ddd; }
+        .user-details h3 { margin: 0; font-size: 16px; }
+        .user-details p { margin: 5px 0; color: #666; font-size: 14px; }
+        .comment-box { background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0; border-radius: 4px; }
+        .comment-text { color: #333; font-size: 14px; margin: 0; }
+        .cta-button { display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: bold; }
+        .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #666; border-radius: 4px; margin-top: 20px; }
+        .footer a { color: #667eea; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>❤️ {% trans "Your comment received a like" %}</h1>
+        </div>
+        <div class="content">
+            <p>{% blocktrans with name=triggered_by_name %}Hi {{ recipient_name }},<br><br>{{ name }} liked your comment!{% endblocktrans %}</p>
+            
+            <div class="user-info">
+                {% if triggered_by_avatar %}
+                <img src="{{ triggered_by_avatar }}" alt="{{ triggered_by_name }}" class="avatar">
+                {% else %}
+                <div class="avatar"></div>
+                {% endif %}
+                <div class="user-details">
+                    <h3>{{ triggered_by_name }}</h3>
+                    <p>{% trans "Just now" %}</p>
+                </div>
+            </div>
+            
+            {% if comment_preview %}
+            <div class="comment-box">
+                <p class="comment-text">{{ comment_preview }}</p>
+            </div>
+            {% endif %}
+            
+            <p>{{ role_specific_message }}</p>
+            
+            <a href="{{ post_url }}" class="cta-button">{% trans "View Discussion" %}</a>
+        </div>
+        <div class="footer">
+            <p>{% trans "You received this email because someone liked your comment." %}</p>
+            <p><a href="{{ app_url }}/settings/notifications">{% trans "Manage notification preferences" %}</a></p>
+        </div>
+    </div>
+</body>
+</html>

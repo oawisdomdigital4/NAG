@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django import forms
 from django.utils.safestring import mark_safe
-from ..models import Video, VideoCategory
+from tv.models import Video, VideoCategory
 
 # Note: combined gradient choices removed — admin now uses separate
 # color_from_choice and color_to_choice fields with a constrained palette.

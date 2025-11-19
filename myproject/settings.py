@@ -96,6 +96,9 @@ INSTALLED_APPS = [
     'utils',
     'magazine',
     'newsletter',
+    'promotions',
+    'summit',
+    'tv',
 ]
 
 
@@ -236,6 +239,7 @@ CORS_ALLOW_CREDENTIALS = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
+    'testserver',
     'superadmin.thenewafricagroup.com',
     'www.superadmin.thenewafricagroup.com',
     'thenewafricagroup.com',
@@ -272,6 +276,23 @@ else:
     REST_FRAMEWORK.setdefault("DEFAULT_RENDERER_CLASSES", [
         "rest_framework.renderers.JSONRenderer",
     ])
+
+# Use local memory cache for development
+# This is a simple caching backend that doesn't require any external services
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,  # Maximum number of cache entries
+            'CULL_FREQUENCY': 3,  # Fraction of entries to cull when max is reached
+        }
+    }
+}
+
+# Use cache-backed sessions for improved performance (optional)
+SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_CACHE_ALIAS = 'default'
 
 # Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
 # characters instead of raising UnicodeDecodeError. This prevents 500s when
@@ -416,3 +437,22 @@ JAZZMIN_SETTINGS = {
         "magazine.article": "fas fa-newspaper",
     },
 }
+
+# ============================================================================
+# EMAIL CONFIGURATION - Mailjet
+# ============================================================================
+EMAIL_BACKEND = 'django_mailjet.backends.MailjetBackend'
+# Use provided Mailjet credentials directly (should be stored in environment in production)
+MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', 'f378fb1358a57d5e6aba848d75f4a38c')
+MAILJET_SECRET_KEY = os.environ.get('MAILJET_SECRET_KEY', '10284f167f05d41129ff7b6d27a00056')
+MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL', 'no-reply@thenewafricagroup.com')
+MAILJET_FROM_NAME = 'The New Africa Group'
+
+# Django email settings (backup for non-Mailjet emails)
+EMAIL_HOST = 'in-v3.mailjet.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = MAILJET_API_KEY
+EMAIL_HOST_PASSWORD = MAILJET_SECRET_KEY
+DEFAULT_FROM_EMAIL = MAILJET_FROM_EMAIL
+SERVER_EMAIL = MAILJET_FROM_EMAIL

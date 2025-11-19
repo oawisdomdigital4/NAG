@@ -10,3 +10,9 @@ class CommunityConfig(AppConfig):
             from . import signals  # noqa: F401
         except Exception:
             pass
+        
+        # Import engagement signals for auto-logging
+        try:
+            from . import engagement_signals  # noqa: F401
+        except Exception:
+            pass

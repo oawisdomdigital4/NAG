@@ -4,6 +4,7 @@ from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from datetime import timedelta
 
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -12,13 +13,14 @@ from rest_framework.decorators import api_view, permission_classes
 
 from rest_framework.decorators import api_view, authentication_classes
 from accounts.authentication import DatabaseTokenAuthentication
-from django.views.decorators.csrf import csrf_exempt
+from rest_framework.authentication import SessionAuthentication, TokenAuthentication
 
 
 from .serializers import (
     SignupSerializer,
     SignInSerializer,
     UserSerializer,
+    UserProfileSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
 )
@@ -199,7 +201,7 @@ def logout_view(request):
 
 
 @api_view(["GET", "PATCH"]) 
-@authentication_classes([DatabaseTokenAuthentication])  # ✅ Use custom auth
+@authentication_classes([DatabaseTokenAuthentication, SessionAuthentication])  # ✅ Support both Bearer token and session
 @permission_classes([IsAuthenticated])
 def me_view(request):
     # GET: return current user
@@ -208,8 +210,14 @@ def me_view(request):
         return Response({"user": user_data})
 
     # PATCH: allow updating profile fields, including avatar upload
-    # Accept both JSON body with profile.avatar_url and multipart/form-data with 'avatar' file
+    user = request.user
+    profile = getattr(user, 'profile', None)
+    if not profile:
+        profile = UserProfile.objects.create(user=user)
+
+    # Extract profile data from request
     raw_profile = request.data.get('profile') if 'profile' in request.data else {}
+    
     # When sent as multipart/form-data the 'profile' field may be a JSON string
     if isinstance(raw_profile, str):
         try:
@@ -220,50 +228,20 @@ def me_view(request):
         profile_data = raw_profile
     else:
         profile_data = {}
-    user = request.user
 
-    # Update simple profile fields
-    profile = getattr(user, 'profile', None)
-    if not profile:
-        profile = UserProfile.objects.create(user=user)
-
-    # If a file was uploaded under 'avatar', save it to the ImageField
+    # If a file was uploaded under 'avatar', add it to profile_data
     avatar_file = request.FILES.get('avatar')
     if avatar_file:
-        profile.avatar.save(avatar_file.name, avatar_file, save=True)
+        profile_data['avatar'] = avatar_file
 
-    # External avatar URL
-    avatar_url = profile_data.get('avatar_url')
-    if avatar_url is not None:
-        # Basic safety: reject values that clearly contain binary markers or NUL bytes
-        if isinstance(avatar_url, str):
-            if '\x00' in avatar_url or 'JFIF' in avatar_url.upper() or 'ICC_PROFILE' in avatar_url.upper():
-                # don't save corrupted avatar values; log to server logs
-                try:
-                    print(f"[safety] Rejected binary-like avatar_url for user {user.pk}")
-                except Exception:
-                    pass
-            else:
-                # optionally validate URL shape: allow http(s) or path-like values
-                if re.match(r'^(https?:)?//', avatar_url) or avatar_url.startswith('/') or avatar_url.startswith('data:image/'):
-                    profile.avatar_url = avatar_url
-                else:
-                    # if it's an odd value (very long or contains binary-looking chars), ignore
-                    if len(avatar_url) < 500:
-                        profile.avatar_url = avatar_url
-        else:
-            # non-string avatar_url; ignore
-            pass
-
-    # Allow updating full_name etc if provided
-    for fld in ['full_name', 'phone', 'country', 'bio', 'company_name', 'industry']:
-        if fld in profile_data:
-            setattr(profile, fld, profile_data.get(fld))
-
-    profile.save()
-
-    user_data = UserSerializer(user, context={'request': request}).data
-    return Response({"user": user_data})
+    # Use the serializer to update the profile (handles all fields including portfolio_url)
+    serializer = UserProfileSerializer(profile, data=profile_data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        user_data = UserSerializer(user, context={'request': request}).data
+        return Response({"user": user_data})
+    else:
+        return Response(serializer.errors, status=400)
 
 
 

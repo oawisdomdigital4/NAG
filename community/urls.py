@@ -1,58 +1,66 @@
 from rest_framework.routers import DefaultRouter
-from django.urls import path
+from django.urls import path, include
 from .views import (
 	GroupViewSet,
 	GroupMembershipViewSet,
 	PostViewSet,
 	CommentViewSet,
-	PartnerViewSet,
-	OrganizerViewSet,
-	FeaturedSpeakerViewSet,
-	PastEditionViewSet,
-	SummitHeroViewSet,
-    AboutHeroViewSet,
-	PartnerSectionViewSet,
-	FooterContentViewSet,
-	SummitAboutViewSet,
-	SummitKeyThemesViewSet,
-	SummitAgendaViewSet,
-	RegistrationPackageViewSet,
     CommunitySectionViewSet,
 	CTABannerViewSet,
-    ChatRoomViewSet,
-    MessageViewSet,
-    VideoViewSet,
-    VideoCategoryViewSet,
+	UserEngagementScoreViewSet,
+	SubscriptionTierViewSet,
+	SponsoredPostViewSet,
+	TrendingTopicViewSet,
+	CorporateOpportunityViewSet,
+	OpportunityApplicationViewSet,
+	CollaborationRequestViewSet,
+	CorporateConnectionViewSet,
+	PlatformAnalyticsViewSet,
+	CorporatePartnerViewSet,
+	CorporateMessageViewSet,
 )
+from .engagement_views import EngagementAnalyticsViewSet
 
 router = DefaultRouter()
-router.register(r'partners', PartnerViewSet, basename='partner')
-router.register(r'organizers', OrganizerViewSet, basename='organizer')
-router.register(r'featured-speakers', FeaturedSpeakerViewSet, basename='featured-speaker')
-router.register(r'past-editions', PastEditionViewSet, basename='past-edition')
-router.register(r'summit-hero', SummitHeroViewSet, basename='summit-hero')
-router.register(r'about-hero', AboutHeroViewSet, basename='about-hero')
-router.register(r'partner-section', PartnerSectionViewSet, basename='partner-section')
-router.register(r'footer', FooterContentViewSet, basename='footer')
-router.register(r'summit-about', SummitAboutViewSet, basename='summit-about')
-router.register(r'summit-keythemes', SummitKeyThemesViewSet, basename='summit-keythemes')
-router.register(r'summit-agenda', SummitAgendaViewSet, basename='summit-agenda')
-router.register(r'registration-packages', RegistrationPackageViewSet, basename='registration-package')
 router.register(r'community-section', CommunitySectionViewSet, basename='community-section')
 router.register(r'cta-banner', CTABannerViewSet, basename='cta-banner')
 router.register(r'groups', GroupViewSet)
 router.register(r'group-memberships', GroupMembershipViewSet)
 router.register(r'posts', PostViewSet)
 router.register(r'comments', CommentViewSet)
-router.register(r'chat-rooms', ChatRoomViewSet)
-router.register(r'messages', MessageViewSet)
-router.register(r'videos', VideoViewSet, basename='video')
-router.register(r'video-categories', VideoCategoryViewSet, basename='video-category')
+router.register(r'engagement-scores', UserEngagementScoreViewSet, basename='engagement-score')
+router.register(r'subscription-tiers', SubscriptionTierViewSet, basename='subscription-tier')
+router.register(r'sponsored-posts', SponsoredPostViewSet, basename='sponsored-post')
+router.register(r'trending-topics', TrendingTopicViewSet, basename='trending-topic')
+router.register(r'opportunities', CorporateOpportunityViewSet, basename='opportunity')
+router.register(r'opportunity-applications', OpportunityApplicationViewSet, basename='opportunity-application')
+router.register(r'collaborations', CollaborationRequestViewSet, basename='collaboration')
+router.register(r'connections', CorporateConnectionViewSet, basename='corporate-connection')
+router.register(r'platform-analytics', PlatformAnalyticsViewSet, basename='platform-analytics')
+router.register(r'engagement/analytics', EngagementAnalyticsViewSet, basename='engagement-analytics')
+router.register(r'partners', CorporatePartnerViewSet, basename='corporate-partner')
+router.register(r'messages', CorporateMessageViewSet, basename='corporate-message')
 
 urlpatterns = router.urls
 
 from .views import community_search
+from .api.link_preview import fetch_link_preview
+from .api.user_activity import update_user_activity, get_user_activity
 
 urlpatterns += [
-	path('search/', community_search, name='community-search'),
+    path('search/', community_search, name='community-search'),
+    path('link-preview/', fetch_link_preview, name='link-preview'),
+    path('activity/update/', update_user_activity, name='update-activity'),
+    path('activity/user/<int:user_id>/', get_user_activity, name='get-user-activity'),
+]
+
+# Add verification submission endpoint
+from .views import CorporateVerificationSubmitView
+urlpatterns += [
+    path('verification/submit/', CorporateVerificationSubmitView.as_view(), name='corporate-verification-submit'),
+]
+
+# Include promotions routes so sponsor-campaigns endpoints are available under /api/community/
+urlpatterns += [
+	path('', include('promotions.urls')),
 ]

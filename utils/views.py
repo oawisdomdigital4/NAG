@@ -2,10 +2,34 @@ from rest_framework import viewsets, permissions
 from rest_framework.response import Response
 from .models import (
     FAQ, TeamMember, Career, ContactMessage,
-    ContactDetails, OfficeLocation, DepartmentContact
+    ContactDetails, OfficeLocation, DepartmentContact, AboutHero,
 )
 # Import only non-contact related serializers to avoid circular imports
-from .serializers import FAQSerializer, CareerSerializer, ContactMessageSerializer
+from .serializers import FAQSerializer, CareerSerializer, ContactMessageSerializer, AboutHeroSerializer
+from rest_framework.permissions import AllowAny, IsAuthenticated
+
+
+class AboutHeroViewSet(viewsets.ReadOnlyModelViewSet):
+    """Return the latest published AboutHero instance as a single object."""
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        from .models import AboutHero
+
+        return AboutHero.objects.filter(is_published=True).order_by('-created_at')
+
+    def get_serializer_class(self):
+        from .serializers import AboutHeroSerializer
+
+        return AboutHeroSerializer
+
+    def list(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        obj = qs.first()
+        if not obj:
+            return Response({}, status=200)
+        serializer = self.get_serializer(obj, context={'request': request})
+        return Response(serializer.data)
 
 class FAQViewSet(viewsets.ReadOnlyModelViewSet):
 	queryset = FAQ.objects.all()
@@ -103,3 +127,24 @@ class ContactMessageViewSet(viewsets.ModelViewSet):
 		return self.permission_denied(request, message='Retrieve is restricted.')
 
 
+class FooterContentViewSet(viewsets.ReadOnlyModelViewSet):
+    """Return the latest published FooterContent instance as a single object."""
+    permission_classes = [AllowAny]
+
+    def get_queryset(self):
+        from .models import FooterContent
+
+        return FooterContent.objects.filter(is_published=True).order_by('-created_at')
+
+    def get_serializer_class(self):
+        from .serializers import FooterContentSerializer
+
+        return FooterContentSerializer
+
+    def list(self, request, *args, **kwargs):
+        qs = self.get_queryset()
+        obj = qs.first()
+        if not obj:
+            return Response({}, status=200)
+        serializer = self.get_serializer(obj, context={'request': request})
+        return Response(serializer.data)

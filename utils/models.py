@@ -108,6 +108,79 @@ class ContactMessage(models.Model):
 			self.name = self.full_name
 		super().save(*args, **kwargs)
 
+# --- Footer Content ---
+class FooterContent(models.Model):
+    """Editable footer content model. Stores all the links, text and social media
+    info needed to render the site footer. Frontend will load the latest published entry.
+    """
+    # Company section
+    company_name = models.CharField(max_length=255, help_text='Company name shown in footer')
+    tagline = models.CharField(max_length=255, blank=True)
+    address_text = models.TextField(blank=True)
+    contact_email = models.EmailField(blank=True)
+    
+    # Social media links
+    social_facebook = models.URLField(blank=True)
+    social_twitter = models.URLField(blank=True)
+    social_instagram = models.URLField(blank=True)
+    social_linkedin = models.URLField(blank=True)
+    social_youtube = models.URLField(blank=True)
+    
+    # Company links
+    company_about = models.URLField(blank=True, help_text='About Us page URL')
+    company_team = models.URLField(blank=True, help_text='Team page URL')
+    company_careers = models.URLField(blank=True, help_text='Careers page URL')
+    company_contact = models.URLField(blank=True, help_text='Contact Us page URL')
+    
+    # Platform links
+    platforms_magazine = models.URLField(blank=True)
+    platforms_tv = models.URLField(blank=True)
+    platforms_institute = models.URLField(blank=True)
+    platforms_summit = models.URLField(blank=True)
+    platforms_community = models.URLField(blank=True)
+    
+    # Account links
+    account_login = models.URLField(blank=True)
+    account_signup = models.URLField(blank=True)
+    account_faqs = models.URLField(blank=True)
+    
+    # Legal links
+    legal_terms = models.URLField(blank=True, help_text='Terms of Service URL')
+    legal_privacy = models.URLField(blank=True, help_text='Privacy Policy URL')
+    legal_help = models.URLField(blank=True, help_text='Help/Support URL')
+    
+    # Footer bottom
+    copyright_text = models.CharField(max_length=255, blank=True)
+    
+    # Publishing
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Footer Content'
+        verbose_name_plural = 'Footer Content'
+
+    def __str__(self):
+        return f"Footer Content ({self.created_at.isoformat()})"
 
 
+# --- About page hero (site-level About page) ---
+class AboutHero(models.Model):
+    """Editable hero content for the site's About page. Admins can create
+    one or more AboutHero entries and mark the current one as published.
+    The frontend will request the latest published entry and render its
+    title and subtitle.
+    """
+    title_main = models.CharField(max_length=255, help_text='Primary headline shown on the About page')
+    subtitle = models.TextField(blank=True, help_text='Supporting paragraph shown below the headline')
+    background_image = models.ImageField(upload_to='about/hero/', blank=True, null=True)
+    is_published = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"AboutHero ({self.created_at.isoformat()})"

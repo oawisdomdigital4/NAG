@@ -166,3 +166,45 @@ class ContactMessageSerializer(serializers.ModelSerializer):
 
 
 
+
+# FooterContent serializer
+class FooterContentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = [
+            'id', 'company_name', 'tagline', 'address_text', 'contact_email',
+            # social
+            'social_facebook', 'social_instagram', 'social_linkedin', 'social_twitter', 'social_youtube',
+            # company
+            'company_about', 'company_team', 'company_careers', 'company_contact',
+            # platforms
+            'platforms_magazine', 'platforms_tv', 'platforms_institute', 'platforms_summit', 'platforms_community',
+            # account
+            'account_login', 'account_signup', 'account_faqs',
+            # legal
+            'legal_terms', 'legal_privacy', 'legal_help',
+            'copyright_text', 'is_published', 'created_at'
+        ]
+
+
+# Attach FooterContent model if available
+try:
+    from .models import FooterContent
+    FooterContentSerializer.Meta.model = FooterContent
+except Exception:
+    pass
+
+
+class AboutHeroSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = None
+        fields = ['id', 'title_main', 'subtitle', 'background_image', 'is_published', 'created_at']
+
+
+# Attach AboutHero model if available
+try:
+    from .models import AboutHero
+    AboutHeroSerializer.Meta.model = AboutHero
+except Exception:
+    pass
+

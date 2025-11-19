@@ -148,7 +148,7 @@ FRONTEND_BASE_URL = "http://localhost:5173"
 if DEBUG:
     logging.basicConfig(level=logging.DEBUG)
     logging.getLogger('django.server').setLevel(logging.DEBUG)
-    print("✅ Django is running in DEBUG mode with CSRF & session debugging enabled.")
+    print("[OK] Django is running in DEBUG mode with CSRF & session debugging enabled.")
 
 # Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
 # characters instead of raising UnicodeDecodeError. This prevents 500s when

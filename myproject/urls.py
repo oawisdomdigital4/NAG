@@ -34,6 +34,9 @@ urlpatterns = [
     path('api/notifications/', include('notifications.urls')),
     path('api/payments/', include('payments.urls')),
     path('api/newsletter/', include('newsletter.urls')),
+    path('api/promotions/', include('promotions.urls')),
+    path('api/summit/', include('summit.urls')),
+    path('api/tv/', include('tv.urls')),
     # Keep admin URLs last so they don't override API endpoints
     path('admin/', admin.site.urls),
 

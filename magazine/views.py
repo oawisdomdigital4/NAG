@@ -64,3 +64,22 @@ class MagazineViewSet(viewsets.ReadOnlyModelViewSet):
             print(f"[Magazine] Request host: {self.request.get_host()}")
             print(f"[Magazine] Request path: {self.request.path}")
         return context
+
+    @action(detail=False, methods=['get'], permission_classes=[])
+    def featured_campaigns(self, request):
+        """Get featured active campaigns for magazine sidebar"""
+        from django.utils import timezone
+        from django.db.models import Q
+        from promotions.models import SponsorCampaign
+        from promotions.serializers import SponsorCampaignSerializer
+        
+        now = timezone.now()
+        campaigns = SponsorCampaign.objects.filter(
+            status='active',
+            start_date__lte=now,
+            end_date__gte=now,
+            priority_level__gte=2  # Only high and premium campaigns
+        ).select_related('sponsored_post', 'sponsor').order_by('-priority_level', '-created_at')[:5]
+        
+        serializer = SponsorCampaignSerializer(campaigns, many=True, context={'request': request})
+        return Response({'results': serializer.data})

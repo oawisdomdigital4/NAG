@@ -12,18 +12,30 @@ User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
     avatar = serializers.ImageField(required=False, allow_null=True)
+    verification_status = serializers.SerializerMethodField()
+    
     class Meta:
         model = UserProfile
         fields = [
             'full_name', 'phone', 'country', 'bio',
-            'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar'
+            'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar',
+            'verification_status', 'balance', 'total_earnings', 'portfolio_url'
         ]
+    
+    def get_verification_status(self, obj):
+        """Get verification status from CorporateVerification model"""
+        try:
+            from community.models import CorporateVerification
+            verification = CorporateVerification.objects.get(user=obj.user)
+            return verification.status
+        except:
+            return 'pending'
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer()
     class Meta:
         model = User
-        fields = ['id', 'email', 'role', 'profile', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'role', 'profile', 'first_name', 'last_name']
 
 class SignupSerializer(serializers.ModelSerializer):
     full_name = serializers.CharField(required=False)

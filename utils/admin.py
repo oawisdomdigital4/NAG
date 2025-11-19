@@ -7,9 +7,19 @@ from .models import (
     ContactMessage,
     ContactDetails,
     OfficeLocation,
-    DepartmentContact
+    DepartmentContact,
+    FooterContent,
+    AboutHero,
 )
 
+
+@admin.register(AboutHero)
+class AboutHeroAdmin(admin.ModelAdmin):
+	list_display = ('id', 'title_main', 'is_published', 'created_at')
+	readonly_fields = ('created_at',)
+	fields = (
+		'title_main', 'subtitle', 'background_image', 'is_published', 'created_at'
+	)
 
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
@@ -91,3 +101,26 @@ class ContactMessageAdmin(admin.ModelAdmin):
 	def icon(self, obj):
 		return format_html("<i class='fas fa-envelope' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
+
+
+@admin.register(FooterContent)
+class FooterContentAdmin(admin.ModelAdmin):
+	"""Admin for editing footer content. JSON fields accept arrays/objects."""
+	list_display = ('id', 'company_name', 'is_published', 'created_at')
+	readonly_fields = ('created_at', 'updated_at')
+	fields = (
+		'company_name', 'tagline', 'address_text', 'contact_email',
+		# social explicit fields
+		'social_facebook', 'social_instagram', 'social_linkedin', 'social_twitter', 'social_youtube',
+		# company links
+		'company_about', 'company_team', 'company_careers', 'company_contact',
+		# platforms
+		'platforms_magazine', 'platforms_tv', 'platforms_institute', 'platforms_summit', 'platforms_community',
+		# account
+		'account_login', 'account_signup', 'account_faqs',
+		# legal
+		'legal_terms', 'legal_privacy', 'legal_help',
+		'copyright_text', 'is_published', 'created_at'
+	)
+
+

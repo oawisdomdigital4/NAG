@@ -5,6 +5,7 @@ from .models import (
     User,
     UserProfile,
     UserToken,
+    OTPVerification,
 )
 from django.utils.html import format_html
 from django.contrib.auth.models import Group
@@ -78,7 +79,8 @@ class UserAdmin(BaseUserAdmin):
 # -----------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("icon", "user", "full_name", "phone", "country", "company_name", "community_approved", "has_avatar")
+    list_display = ("icon", "user", "full_name", "phone", "country", "company_name", "balance", "total_earnings", "community_approved", "has_avatar")
+    list_editable = ("balance", "total_earnings")
     search_fields = ("user__email", "full_name", "phone", "country", "company_name")
     actions = ("approve_community_access", "revoke_community_access")
     readonly_fields = ("avatar_preview",)
@@ -145,3 +147,46 @@ class GroupAdmin(DefaultGroupAdmin):
     def icon(self, obj):
         return format_html("<i class='fas fa-users' style='font-size:16px;color:#0D1B52;'></i>")
     icon.short_description = ''
+
+
+# ============================================================================
+# OTPVerification Admin
+# ============================================================================
+@admin.register(OTPVerification)
+class OTPVerificationAdmin(admin.ModelAdmin):
+    list_display = ("icon", "email", "otp_type", "is_verified", "created_at", "expires_at", "is_expired", "attempts")
+    list_filter = ("otp_type", "is_verified", "created_at")
+    search_fields = ("email",)
+    readonly_fields = ("otp_code", "created_at", "expires_at")
+    
+    fieldsets = (
+        ("OTP Information", {
+            "fields": ("email", "otp_code", "otp_type")
+        }),
+        ("Verification Status", {
+            "fields": ("is_verified", "user")
+        }),
+        ("Timing", {
+            "fields": ("created_at", "expires_at")
+        }),
+        ("Attempts", {
+            "fields": ("attempts", "max_attempts")
+        }),
+    )
+    
+    def is_expired(self, obj):
+        return obj.is_expired()
+    is_expired.boolean = True
+    is_expired.short_description = "Expired?"
+    
+    def icon(self, obj):
+        if obj.is_verified:
+            return format_html("<i class='fas fa-check-circle' style='font-size:14px;color:#27ae60;'></i>")
+        if obj.is_expired():
+            return format_html("<i class='fas fa-times-circle' style='font-size:14px;color:#e74c3c;'></i>")
+        return format_html("<i class='fas fa-hourglass-half' style='font-size:14px;color:#f39c12;'></i>")
+    icon.short_description = ''
+
+
+
+
