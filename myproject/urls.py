@@ -38,7 +38,7 @@ urlpatterns = [
     path('api/summit/', include('summit.urls')),
     path('api/tv/', include('tv.urls')),
     # Keep admin URLs last so they don't override API endpoints
-    path('admin/', admin.site.urls),
+    path('', admin.site.urls),
 
 ]
 

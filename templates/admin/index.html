@@ -1,0 +1,135 @@
+{% extends "admin/index.html" %}
+{% load i18n static admin %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <style>
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0D1B52;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .stat-box h3 {
+            font-size: 12px;
+            color: #666;
+            margin: 0 0 10px 0;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+        
+        .stat-box .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0D1B52;
+        }
+        
+        .stat-box.success { border-left-color: #27ae60; }
+        .stat-box.info { border-left-color: #3498db; }
+        .stat-box.warning { border-left-color: #f39c12; }
+        .stat-box.danger { border-left-color: #e74c3c; }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>Welcome to NAG Admin Dashboard</h1>
+    
+    <div class="dashboard-stats">
+        <!-- User Statistics -->
+        <div class="stat-box success">
+            <h3>Total Users</h3>
+            <div class="value">{{ total_users }}</div>
+        </div>
+        
+        <div class="stat-box info">
+            <h3>Active Users</h3>
+            <div class="value">{{ active_users }}</div>
+        </div>
+        
+        <div class="stat-box warning">
+            <h3>Facilitators</h3>
+            <div class="value">{{ facilitators }}</div>
+        </div>
+        
+        <div class="stat-box danger">
+            <h3>New Users (30d)</h3>
+            <div class="value">{{ new_users_month }}</div>
+        </div>
+        
+        <!-- Community Statistics -->
+        <div class="stat-box success">
+            <h3>Total Posts</h3>
+            <div class="value">{{ total_posts }}</div>
+        </div>
+        
+        <div class="stat-box info">
+            <h3>Total Comments</h3>
+            <div class="value">{{ total_comments }}</div>
+        </div>
+        
+        <div class="stat-box warning">
+            <h3>Total Groups</h3>
+            <div class="value">{{ total_groups }}</div>
+        </div>
+        
+        <div class="stat-box danger">
+            <h3>Posts (30d)</h3>
+            <div class="value">{{ posts_month }}</div>
+        </div>
+        
+        <!-- Course Statistics -->
+        <div class="stat-box success">
+            <h3>Total Courses</h3>
+            <div class="value">{{ total_courses }}</div>
+        </div>
+        
+        <div class="stat-box info">
+            <h3>Published Courses</h3>
+            <div class="value">{{ published_courses }}</div>
+        </div>
+        
+        <div class="stat-box warning">
+            <h3>Total Enrollments</h3>
+            <div class="value">{{ total_enrollments }}</div>
+        </div>
+        
+        <div class="stat-box danger">
+            <h3>Active Enrollments</h3>
+            <div class="value">{{ active_enrollments }}</div>
+        </div>
+        
+        <!-- Payment Statistics -->
+        <div class="stat-box success">
+            <h3>Total Payments</h3>
+            <div class="value">{{ total_payments }}</div>
+        </div>
+        
+        <div class="stat-box info">
+            <h3>Successful Payments</h3>
+            <div class="value">{{ successful_payments }}</div>
+        </div>
+        
+        <div class="stat-box warning">
+            <h3>Total Revenue</h3>
+            <div class="value">${{ total_revenue|floatformat:0 }}</div>
+        </div>
+        
+        <div class="stat-box danger">
+            <h3>Active Subscriptions</h3>
+            <div class="value">{{ active_subscriptions }}</div>
+        </div>
+    </div>
+    
+    {% include "admin/app_list.html" with app_list=app_list %}
+</div>
+{% endblock %}
