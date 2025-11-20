@@ -70,7 +70,7 @@ def welcome_email_template(full_name: str, activation_url: str) -> str:
     <body>
         <div class="container">
             <div class="logo-section">
-                <img src="https://thenewafricagroup.com/static/TNAG_Black_Logo.png" alt="The New Africa Group Logo">
+                <img src="https://thenewafricagroup.com/TNAG%20Black%20Logo.png" alt="The New Africa Group Logo">
             </div>
             <div class="header">
                 <h1>Welcome to The New Africa Group!</h1>
@@ -171,7 +171,7 @@ def password_reset_email_template(full_name: str, reset_url: str) -> str:
     <body>
         <div class="container">
             <div class="logo-section">
-                <img src="https://thenewafricagroup.com/static/TNAG_Black_Logo.png" alt="The New Africa Group Logo">
+                <img src="https://thenewafricagroup.com/TNAG%20Black%20Logo.png" alt="The New Africa Group Logo">
             </div>
             <div class="header">
                 <h1>Password Reset Request</h1>
@@ -269,7 +269,7 @@ def notification_email_template(full_name: str, notification_title: str, notific
     <body>
         <div class="container">
             <div class="logo-section">
-                <img src="https://thenewafricagroup.com/static/TNAG_Black_Logo.png" alt="The New Africa Group Logo">
+                <img src="https://thenewafricagroup.com/TNAG%20Black%20Logo.png" alt="The New Africa Group Logo">
             </div>
             <div class="header">
                 <h1>{notification_title}</h1>
@@ -366,7 +366,7 @@ def otp_email_template(full_name: str, otp_code: str, expires_in_minutes: int = 
     <body>
         <div class="container">
             <div class="logo-section">
-                <img src="https://thenewafricagroup.com/static/TNAG_Black_Logo.png" alt="The New Africa Group Logo">
+                <img src="https://thenewafricagroup.com/TNAG%20Black%20Logo.png" alt="The New Africa Group Logo">
             </div>
             <div class="header">
                 <h1>Verify Your Account</h1>
