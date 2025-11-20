@@ -294,6 +294,11 @@ CACHES = {
 SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
 SESSION_CACHE_ALIAS = 'default'
 
+# Keep users logged in for 7 days in the admin site
+SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days in seconds (604800)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Don't expire when browser closes
+SESSION_SAVE_EVERY_REQUEST = False  # Only save when session data changes
+
 # Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
 # characters instead of raising UnicodeDecodeError. This prevents 500s when
 # corrupted binary data slips into serializer output. We still keep serializer
