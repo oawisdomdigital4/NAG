@@ -290,14 +290,13 @@ CACHES = {
     }
 }
 
-# Use cache-backed sessions for improved performance (optional)
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
-SESSION_CACHE_ALIAS = 'default'
+# Use database-backed sessions for reliability and persistence across page refreshes
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 # Keep users logged in for 7 days in the admin site
 SESSION_COOKIE_AGE = 7 * 24 * 60 * 60  # 7 days in seconds (604800)
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # Don't expire when browser closes
-SESSION_SAVE_EVERY_REQUEST = False  # Only save when session data changes
+SESSION_SAVE_EVERY_REQUEST = True  # Save on every request to ensure persistence
 
 # Safety: patch DRF's JSON encoder to defensively decode bytes using replacement
 # characters instead of raising UnicodeDecodeError. This prevents 500s when
