@@ -29,7 +29,7 @@ class SponsorCampaignForm(forms.ModelForm):
 @admin.register(SponsorCampaign)
 class SponsorCampaignAdmin(admin.ModelAdmin):
     form = SponsorCampaignForm
-    list_display = ('id', 'title', 'sponsor', 'status', 'start_date', 'end_date', 'budget', 'campaign_image_preview', 'created_at')
+    list_display = ('icon', 'title', 'sponsor', 'status', 'start_date', 'end_date', 'budget', 'campaign_image_preview', 'created_at')
     list_filter = ('status', 'priority_level', 'created_at')
     search_fields = ('title', 'sponsor__username', 'sponsor__email')
     readonly_fields = ('created_at', 'updated_at', 'impression_count', 'click_count', 'campaign_image_display', 'sponsored_post_link', 'current_media_urls', 'edit_media_urls')
@@ -84,6 +84,10 @@ class SponsorCampaignAdmin(admin.ModelAdmin):
             pass
         return format_html('<span style="color: #999;">No image</span>')
     campaign_image_preview.short_description = 'Campaign Image'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-bullhorn' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
     def campaign_image_display(self, obj):
         """Display larger preview in detail view"""
@@ -216,15 +220,20 @@ class SponsorCampaignAdmin(admin.ModelAdmin):
 
 @admin.register(CampaignAnalytics)
 class CampaignAnalyticsAdmin(admin.ModelAdmin):
-    list_display = ('campaign', 'date', 'impressions', 'clicks', 'conversions', 'spend')
+    list_display = ('icon', 'campaign', 'date', 'impressions', 'clicks', 'conversions', 'spend')
     list_filter = ('date', 'campaign')
     search_fields = ('campaign__title',)
     date_hierarchy = 'date'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-line' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 @admin.register(PromotionMetrics)
 class PromotionMetricsAdmin(admin.ModelAdmin):
     list_display = (
+        'icon',
         'campaign',
         'date',
         'impressions',
@@ -245,6 +254,10 @@ class PromotionMetricsAdmin(admin.ModelAdmin):
     )
     date_hierarchy = 'date'
 
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-bar' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
     def save_model(self, request, obj, form, change):
         super().save_model(request, obj, form, change)
         # If the PromotionMetrics model exposes a calculate_metrics helper, call it
@@ -258,12 +271,16 @@ class PromotionMetricsAdmin(admin.ModelAdmin):
 
 @admin.register(WithdrawalRequest)
 class WithdrawalRequestAdmin(admin.ModelAdmin):
-    list_display = ('facilitator', 'amount', 'status', 'requested_at', 'processed_at')
+    list_display = ('icon', 'facilitator', 'amount', 'status', 'requested_at', 'processed_at')
     list_filter = ('status', 'requested_at', 'processed_at')
     search_fields = ('facilitator__username', 'bank_name', 'account_name')
     readonly_fields = ('requested_at', 'processed_at', 'processed_by')
     fields = ('facilitator', 'amount', 'status', 'bank_name', 'account_number', 'account_name', 'notes', 'requested_at', 'processed_at', 'processed_by')
     date_hierarchy = 'requested_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-money-bill-wave' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
     def save_model(self, request, obj, form, change):
         import logging
@@ -298,10 +315,14 @@ class WithdrawalRequestAdmin(admin.ModelAdmin):
 
 @admin.register(FacilitatorEarning)
 class FacilitatorEarningAdmin(admin.ModelAdmin):
-    list_display = ('facilitator', 'amount', 'source', 'earned_at', 'is_paid')
+    list_display = ('icon', 'facilitator', 'amount', 'source', 'earned_at', 'is_paid')
     list_filter = ('is_paid', 'source', 'earned_at')
     search_fields = ('facilitator__username', 'description')
     date_hierarchy = 'earned_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-dollar-sign' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 

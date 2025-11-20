@@ -1065,7 +1065,11 @@ class PostViewSet(viewsets.ModelViewSet):
                 except Exception:
                     pass
 
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            # Return deleted post ID so frontend can remove it from UI
+            return Response(
+                {'deleted_post_id': post_id, 'detail': 'Post deleted successfully'},
+                status=status.HTTP_200_OK
+            )
         except Exception:
             import logging
             logger = logging.getLogger(__name__)
@@ -2286,8 +2290,11 @@ class CorporatePartnerViewSet(viewsets.ModelViewSet):
     permission_classes = [AllowAny]
     
     def get_queryset(self):
-        """Get all approved corporate verifications"""
-        return CorporateVerification.objects.filter(status='approved').select_related('user', 'user__profile').order_by('-submitted_at')
+        """Get all approved corporate verifications with valid users"""
+        return CorporateVerification.objects.filter(
+            status='approved',
+            user__isnull=False  # Ensure user is not null
+        ).select_related('user', 'user__profile').order_by('-submitted_at')
     
     def get_object(self):
         """Override to lookup by user_id instead of pk"""

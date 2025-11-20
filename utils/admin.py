@@ -15,11 +15,15 @@ from .models import (
 
 @admin.register(AboutHero)
 class AboutHeroAdmin(admin.ModelAdmin):
-	list_display = ('id', 'title_main', 'is_published', 'created_at')
+	list_display = ('icon', 'id', 'title_main', 'is_published', 'created_at')
 	readonly_fields = ('created_at',)
 	fields = (
 		'title_main', 'subtitle', 'background_image', 'is_published', 'created_at'
 	)
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-image' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 @admin.register(FAQ)
 class FAQAdmin(admin.ModelAdmin):
@@ -45,10 +49,14 @@ class DepartmentContactInline(admin.TabularInline):
 
 @admin.register(TeamMember)
 class TeamMemberAdmin(admin.ModelAdmin):
-    list_display = ('photo_preview', 'name', 'is_active', 'order')
+    list_display = ('icon', 'photo_preview', 'name', 'is_active', 'order')
     list_filter = ('is_active',)
     search_fields = ('name',)
     readonly_fields = ('photo_preview', 'created_at', 'updated_at')
+    
+    def icon(self, obj):
+        return format_html("<i class='fas fa-user-tie' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     fields = (
         'name', 'bio', 'photo', 'photo_preview',
         'linkedin_url', 'twitter_url', 'email',
@@ -106,8 +114,12 @@ class ContactMessageAdmin(admin.ModelAdmin):
 @admin.register(FooterContent)
 class FooterContentAdmin(admin.ModelAdmin):
 	"""Admin for editing footer content. JSON fields accept arrays/objects."""
-	list_display = ('id', 'company_name', 'is_published', 'created_at')
+	list_display = ('icon', 'id', 'company_name', 'is_published', 'created_at')
 	readonly_fields = ('created_at', 'updated_at')
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-shoe-prints' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 	fields = (
 		'company_name', 'tagline', 'address_text', 'contact_email',
 		# social explicit fields

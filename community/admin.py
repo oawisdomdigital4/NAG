@@ -33,7 +33,7 @@ from .engagement import (
 
 @admin.register(CommunitySection)
 class CommunitySectionAdmin(admin.ModelAdmin):
-	list_display = ('id', 'title_main', 'title_highlight', 'is_published', 'created_at')
+	list_display = ('icon', 'title_main', 'title_highlight', 'is_published', 'created_at')
 	readonly_fields = ('created_at', 'updated_at')
 	fields = (
 		'badge', 'title_main', 'title_highlight', 'description', 'image',
@@ -44,6 +44,10 @@ class CommunitySectionAdmin(admin.ModelAdmin):
 		'card2_title', 'card2_description', 'card2_feature_1', 'card2_feature_2',
 		'cta_label', 'cta_url', 'is_published', 'created_at'
 	)
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-layer-group' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 
 @admin.action(description="Set subscription status to active")
@@ -61,7 +65,7 @@ def set_subscription_cancelled(modeladmin, request, queryset):
 
 @admin.register(CTABanner)
 class CTABannerAdmin(admin.ModelAdmin):
-	list_display = ('id', 'title_main', 'title_highlight', 'is_published', 'created_at')
+	list_display = ('icon', 'title_main', 'title_highlight', 'is_published', 'created_at')
 	readonly_fields = ('created_at',)
 	fields = (
 		'badge', 'title_main', 'title_highlight', 'description',
@@ -70,18 +74,26 @@ class CTABannerAdmin(admin.ModelAdmin):
 		'is_published', 'created_at'
 	)
 
+	def icon(self, obj):
+		return format_html("<i class='fas fa-bullhorn' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
 
 
 @admin.register(CorporateConnection)
 class CorporateConnectionAdmin(admin.ModelAdmin):
-    list_display = ('sender', 'receiver', 'status', 'created_at')
+    list_display = ('icon', 'sender', 'receiver', 'status', 'created_at')
     list_filter = ('status',)
     search_fields = ('sender__username', 'receiver__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-handshake' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 @admin.register(CorporateVerification)
 class CorporateVerificationAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'user', 'status', 'submitted_at', 'reviewed_at')
+    list_display = ('icon', 'company_name', 'user', 'status', 'submitted_at', 'reviewed_at')
     list_filter = ('status', 'submitted_at')
     search_fields = ('company_name', 'user__username', 'registration_number')
     readonly_fields = ('submitted_at', 'reviewed_at')
@@ -90,6 +102,15 @@ class CorporateVerificationAdmin(admin.ModelAdmin):
         'contact_person_title', 'contact_phone', 'business_description',
         'status', 'review_reason', 'submitted_at', 'reviewed_at'
     )
+
+    def icon(self, obj):
+        status_icons = {
+            'approved': "<i class='fas fa-check-circle' style='font-size:14px;color:#27ae60;'></i>",
+            'rejected': "<i class='fas fa-times-circle' style='font-size:14px;color:#e74c3c;'></i>",
+            'pending': "<i class='fas fa-hourglass-half' style='font-size:14px;color:#f39c12;'></i>",
+        }
+        return format_html(status_icons.get(obj.status, "<i class='fas fa-building' style='font-size:14px;color:#0D1B52;'></i>"))
+    icon.short_description = ''
 
     def save_model(self, request, obj, form, change):
         """Override save to timestamp reviews and notify the user when status changes."""
@@ -150,16 +171,24 @@ class CorporateVerificationAdmin(admin.ModelAdmin):
 
 @admin.register(UserEngagementScore)
 class UserEngagementScoreAdmin(admin.ModelAdmin):
-    list_display = ('user', 'engagement_score', 'facilitator_authority_score', 'corporate_campaign_score', 'updated_at')
+    list_display = ('icon', 'user', 'engagement_score', 'facilitator_authority_score', 'corporate_campaign_score', 'updated_at')
     list_filter = ('updated_at',)
     search_fields = ('user__username', 'user__email')
     readonly_fields = ('user', 'last_activity', 'updated_at')
 
+    def icon(self, obj):
+        return format_html("<i class='fas fa-fire' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
 
 @admin.register(SubscriptionTier)
 class SubscriptionTierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'tier_type', 'price', 'can_sponsor_posts', 'can_post_opportunities', 'priority_feed_ranking')
+    list_display = ('icon', 'name', 'tier_type', 'price', 'can_sponsor_posts', 'can_post_opportunities', 'priority_feed_ranking')
     list_filter = ('can_sponsor_posts', 'can_post_opportunities')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-crown' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     fieldsets = (
         ('Basic Info', {
             'fields': ('tier_type', 'name', 'price', 'duration_days')
@@ -176,9 +205,13 @@ class SubscriptionTierAdmin(admin.ModelAdmin):
 
 @admin.register(SponsoredPost)
 class SponsoredPostAdmin(admin.ModelAdmin):
-    list_display = ('title', 'creator', 'status', 'budget', 'spent', 'ctr', 'start_date')
+    list_display = ('icon', 'title', 'creator', 'status', 'budget', 'spent', 'ctr', 'start_date')
     list_filter = ('status', 'start_date')
     search_fields = ('title', 'creator__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-star' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     readonly_fields = ('created_at', 'updated_at', 'ctr')
     fieldsets = (
         ('Basic Info', {
@@ -199,17 +232,25 @@ class SponsoredPostAdmin(admin.ModelAdmin):
 
 @admin.register(TrendingTopic)
 class TrendingTopicAdmin(admin.ModelAdmin):
-    list_display = ('topic', 'mention_count', 'engagement_score', 'last_mentioned')
+    list_display = ('icon', 'topic', 'mention_count', 'engagement_score', 'last_mentioned')
     list_filter = ('created_at',)
     search_fields = ('topic',)
     readonly_fields = ('created_at',)
 
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-line' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
 
 @admin.register(CorporateOpportunity)
 class CorporateOpportunityAdmin(admin.ModelAdmin):
-    list_display = ('title', 'creator', 'opportunity_type', 'status', 'view_count', 'application_count')
+    list_display = ('icon', 'title', 'creator', 'opportunity_type', 'status', 'view_count', 'application_count')
     list_filter = ('opportunity_type', 'status', 'remote_friendly')
     search_fields = ('title', 'creator__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-lightbulb' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     readonly_fields = ('view_count', 'application_count', 'created_at', 'updated_at')
     fieldsets = (
         ('Basic Info', {
@@ -233,9 +274,13 @@ class CorporateOpportunityAdmin(admin.ModelAdmin):
 
 @admin.register(OpportunityApplication)
 class OpportunityApplicationAdmin(admin.ModelAdmin):
-    list_display = ('applicant', 'opportunity', 'status', 'applied_at')
+    list_display = ('icon', 'applicant', 'opportunity', 'status', 'applied_at')
     list_filter = ('status', 'applied_at')
     search_fields = ('applicant__username', 'opportunity__title')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-file-alt' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     readonly_fields = ('applied_at', 'status_updated_at')
     fieldsets = (
         ('Application Info', {
@@ -253,9 +298,13 @@ class OpportunityApplicationAdmin(admin.ModelAdmin):
 
 @admin.register(CollaborationRequest)
 class CollaborationRequestAdmin(admin.ModelAdmin):
-    list_display = ('requester', 'recipient', 'collaboration_type', 'status', 'created_at')
+    list_display = ('icon', 'requester', 'recipient', 'collaboration_type', 'status', 'created_at')
     list_filter = ('collaboration_type', 'status', 'created_at')
     search_fields = ('requester__username', 'recipient__username', 'title')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-people-arrows' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     readonly_fields = ('created_at', 'responded_at')
     fieldsets = (
         ('Participants', {
@@ -276,9 +325,13 @@ class CollaborationRequestAdmin(admin.ModelAdmin):
 
 @admin.register(PlatformAnalytics)
 class PlatformAnalyticsAdmin(admin.ModelAdmin):
-    list_display = ('date', 'total_users', 'active_users_today', 'posts_created', 'subscriptions_active', 'mrr')
+    list_display = ('icon', 'date', 'total_users', 'active_users_today', 'posts_created', 'subscriptions_active', 'mrr')
     list_filter = ('date',)
     readonly_fields = ('date',)
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-bar' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     fieldsets = (
         ('Date', {
             'fields': ('date',)
@@ -297,10 +350,14 @@ class PlatformAnalyticsAdmin(admin.ModelAdmin):
 
 @admin.register(GroupInvite)
 class GroupInviteAdmin(admin.ModelAdmin):
-    list_display = ('group', 'invited_by', 'invited_user', 'invited_email', 'status', 'created_at', 'expires_at')
+    list_display = ('icon', 'group', 'invited_by', 'invited_user', 'invited_email', 'status', 'created_at', 'expires_at')
     list_filter = ('status', 'created_at')
     search_fields = ('invited_email', 'invited_user__username', 'invited_by__username')
     readonly_fields = ('token', 'created_at', 'accepted_at')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-envelope-open-text' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
 
 
 # ============================================================================
@@ -309,11 +366,15 @@ class GroupInviteAdmin(admin.ModelAdmin):
 
 @admin.register(CommunityEngagementLog)
 class CommunityEngagementLogAdmin(admin.ModelAdmin):
-    list_display = ('user', 'action_type', 'get_content_type', 'created_at')
+    list_display = ('icon', 'user', 'action_type', 'get_content_type', 'created_at')
     list_filter = ('action_type', 'created_at')
     search_fields = ('user__username', 'post__title', 'comment__content')
     readonly_fields = ('created_at', 'updated_at')
     date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-history' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     
     fieldsets = (
         ('Engagement Details', {
@@ -343,11 +404,15 @@ class CommunityEngagementLogAdmin(admin.ModelAdmin):
 
 @admin.register(MentionLog)
 class MentionLogAdmin(admin.ModelAdmin):
-    list_display = ('mentioned_user', 'mentioned_by', 'get_mention_in', 'created_at')
+    list_display = ('icon', 'mentioned_user', 'mentioned_by', 'get_mention_in', 'created_at')
     list_filter = ('created_at',)
     search_fields = ('mentioned_user__username', 'mentioned_by__username')
     readonly_fields = ('created_at',)
     date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-at' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     
     fieldsets = (
         ('Mention Details', {
@@ -377,10 +442,14 @@ class MentionLogAdmin(admin.ModelAdmin):
 
 @admin.register(UserReputation)
 class UserReputationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'reputation_score', 'activity_level', 'created_at')
+    list_display = ('icon', 'user', 'reputation_score', 'activity_level', 'created_at')
     list_filter = ('activity_level', 'created_at')
     search_fields = ('user__username',)
     readonly_fields = ('created_at',)
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-trophy' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     
     fieldsets = (
         ('User', {
@@ -402,11 +471,15 @@ class UserReputationAdmin(admin.ModelAdmin):
 
 @admin.register(EngagementNotification)
 class EngagementNotificationAdmin(admin.ModelAdmin):
-    list_display = ('user', 'notification_type', 'read', 'email_sent', 'created_at')
+    list_display = ('icon', 'user', 'notification_type', 'read', 'email_sent', 'created_at')
     list_filter = ('notification_type', 'read', 'email_sent', 'created_at')
     search_fields = ('user__username', 'triggered_by__username', 'message')
     readonly_fields = ('created_at',)
     date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-bell' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
     
     fieldsets = (
         ('Notification Details', {

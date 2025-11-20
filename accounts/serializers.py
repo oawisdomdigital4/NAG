@@ -11,8 +11,37 @@ except Exception:
 User = get_user_model()
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    avatar = serializers.ImageField(required=False, allow_null=True)
+    avatar = serializers.SerializerMethodField()
+    avatar_url = serializers.SerializerMethodField()
     verification_status = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = UserProfile
+        fields = [
+            'full_name', 'phone', 'country', 'bio',
+            'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar',
+            'verification_status', 'balance', 'total_earnings', 'portfolio_url'
+        ]
+    
+    def get_avatar(self, obj):
+        """Get avatar URL - returns full URL for image field"""
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
+    
+    def get_avatar_url(self, obj):
+        """Get avatar URL - returns avatar_url field or falls back to avatar"""
+        if obj.avatar_url:
+            return obj.avatar_url
+        if obj.avatar:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.avatar.url)
+            return obj.avatar.url
+        return None
     
     class Meta:
         model = UserProfile

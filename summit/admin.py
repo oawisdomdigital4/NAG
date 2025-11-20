@@ -154,7 +154,11 @@ class FeaturedSpeakerAdmin(admin.ModelAdmin):
 
 @admin.register(Partner)
 class PartnerAdmin(admin.ModelAdmin):
-	list_display = ("id", "logo_preview")
+	list_display = ("icon", "id", "logo_preview")
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-building' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 	def logo_preview(self, obj):
 		# If partner has an uploaded logo show thumbnail, otherwise show a Font Awesome icon
@@ -171,7 +175,7 @@ class PartnerAdmin(admin.ModelAdmin):
 class RegistrationPackageAdmin(admin.ModelAdmin):
 	"""Admin for registration packages used by the public registration page."""
 	# show description and a small color preview in the list for quicker scanning
-	list_display = ('id', 'name', 'description', 'color_preview', 'price', 'currency', 'popular', 'order')
+	list_display = ('icon', 'id', 'name', 'description', 'color_preview', 'price', 'currency', 'popular', 'order')
 	list_filter = ('popular',)
 	search_fields = ('name',)
 	# expose description so editors can edit the card subtitle shown in the frontend
@@ -184,6 +188,10 @@ class RegistrationPackageAdmin(admin.ModelAdmin):
 	readonly_fields = ('color_preview', 'created_at')
 
 	form = RegistrationPackageForm
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-ticket-alt' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 	def icon_preview(self, obj):
 		try:
@@ -241,17 +249,26 @@ class RegistrationPackageAdmin(admin.ModelAdmin):
 @admin.register(PastEdition)
 class PastEditionAdmin(admin.ModelAdmin):
 	list_display = ("icon", "year", "location", "theme")
+	readonly_fields = ()
+
 	def icon(self, obj):
 		return format_html("<i class='fas fa-history' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
-	readonly_fields = ()
 
 
 
 @admin.register(SummitHero)
 class SummitHeroAdmin(admin.ModelAdmin):
-	list_display = ('id', 'title_main', 'title_highlight', 'is_published', 'created_at')
+	list_display = ('icon', 'id', 'title_main', 'title_highlight', 'is_published', 'created_at')
 	readonly_fields = ('created_at',)
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-image' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-image' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 	fields = (
 		'title_main', 'title_highlight', 'date_text', 'location_text',
 		'subtitle', 'strapline', 'background_image',
@@ -299,8 +316,16 @@ class SummitHeroAdmin(admin.ModelAdmin):
 @admin.register(PartnerSection)
 class PartnerSectionAdmin(admin.ModelAdmin):
 	"""Simple admin for editing partners CTA/section content."""
-	list_display = ('id', 'partner_section_title', 'is_published', 'created_at')
+	list_display = ('icon', 'id', 'partner_section_title', 'is_published', 'created_at')
 	readonly_fields = ('created_at', 'updated_at')
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-users' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-link' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 	fields = (
 		'partner_section_title', 'partner_section_subtitle',
 		'partner_cta_label', 'partner_cta_url', 'is_published', 'created_at'
@@ -309,8 +334,16 @@ class PartnerSectionAdmin(admin.ModelAdmin):
 
 @admin.register(SummitAbout)
 class SummitAboutAdmin(admin.ModelAdmin):
-	list_display = ('id', 'title_main', 'title_highlight', 'created_at')
+	list_display = ('icon', 'id', 'title_main', 'title_highlight', 'created_at')
 	readonly_fields = ('created_at',)
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-info-circle' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-info-circle' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 	class SummitPillarInline(admin.TabularInline):
 		model = SummitPillar
@@ -356,8 +389,16 @@ class SummitAboutAdmin(admin.ModelAdmin):
 class SummitKeyThemesAdmin(admin.ModelAdmin):
 	# show the two-part title in the list so editors can see/adjust the highlighted
 	# portion from the admin rather than relying on a hard-coded frontend string
-	list_display = ('id', 'title_main', 'title_highlight', 'created_at')
+	list_display = ('icon', 'id', 'title_main', 'title_highlight', 'created_at')
 	readonly_fields = ('created_at',)
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-lightbulb' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-star' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 	# Allow admins to edit the section-level CTA text and URL from the same form
 	fields = ('title_main', 'title_highlight', 'subtitle', 'cta_label', 'cta_url', 'created_at')
@@ -426,9 +467,17 @@ class SummitKeyThemesAdmin(admin.ModelAdmin):
 @admin.register(SummitAgenda)
 class SummitAgendaAdmin(admin.ModelAdmin):
 	# Updated to match current SummitAgenda model
-	list_display = ('id', 'title', 'created_at')
+	list_display = ('icon', 'id', 'title', 'created_at')
 	# created_at and updated_at are non-editable auto timestamps; show as readonly
 	readonly_fields = ('created_at', 'updated_at')
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-calendar' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-calendar' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 	fields = ('title', 'description', 'created_at')
 
 	def get_changeform_initial_data(self, request):
@@ -585,5 +634,9 @@ class SummitAgendaItemInline(admin.TabularInline):
 
 @admin.register(SummitAgendaDay)
 class SummitAgendaDayAdmin(admin.ModelAdmin):
-    list_display = ('location', 'date')
+    list_display = ('icon', 'location', 'date')
     inlines = [SummitAgendaItemInline]
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-clock' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''

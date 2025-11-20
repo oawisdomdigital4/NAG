@@ -157,8 +157,9 @@ class VideoCategoryForm(forms.ModelForm):
         return inst
 
 
-@admin.register(VideoCategory)
-class VideoCategoryAdmin(admin.ModelAdmin):
+# VideoCategoryAdmin is now registered in tv/admin.py instead
+# @admin.register(VideoCategory)
+# class VideoCategoryAdmin(admin.ModelAdmin):
     form = VideoCategoryForm
     list_display = ('name', 'video_count', 'icon_preview', 'is_active', 'order')
     list_filter = ('is_active',)
@@ -176,8 +177,9 @@ class VideoCategoryAdmin(admin.ModelAdmin):
         )
     icon_preview.short_description = 'Icon'
 
-@admin.register(Video)
-class VideoAdmin(admin.ModelAdmin):
+# VideoAdmin is now registered in tv/admin.py instead
+# @admin.register(Video)
+# class VideoAdmin(admin.ModelAdmin):
     list_display = ('thumbnail_preview', 'title', 'category', 'content_type', 'duration', 'view_count', 'is_published', 'is_featured')
     list_filter = ('is_published', 'is_featured', 'category', 'content_type')
     search_fields = ('title', 'description')

@@ -173,11 +173,11 @@ if ON_PYTHONANYWHERE:
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
+
     # PythonAnywhere Media Settings
     MEDIA_ROOT = '/home/mrokaimoses/Nag/media'
     MEDIA_URL = '/media/'
-    
+
 else:
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
@@ -333,22 +333,21 @@ except Exception:
 
 
 JAZZMIN_SETTINGS = {
-    "site_title": "The New Africa Group",
-    "site_header": "NAG Admin Dashboard",
-    "site_brand": "Platform Management",
+    "site_title": "",
+    "site_header": "",
+    "site_brand": "",
     "site_logo": "admin/img/logo.png",
-    "show_sidebar_logo": True,
-    "welcome_sign": "Welcome to NAG Platform Admin",
-    "copyright": "The New Africa Group © 2025",
-    "search_model": "auth.User",
-    "user_avatar": None,
+    "show_sidebar_logo": False,  # Hide from sidebar
+    "site_brand_classes": "nag-header-logo-container",  # for positioning in navbar
+    "site_logo_classes": "nag-logo",
+    "theme": "cosmo",
+    "custom_css": "admin/css/custom-theme.css",
+
+    "navigation_expanded": True,
     "topmenu_links": [
-        {"name": "Platform", "url": "https://thenewafricagroup.com", "new_window": True},
         {"name": "Dashboard", "url": "admin:index", "permissions": ["auth.view_user"]},
     ],
-    "usersidebar_links": [
-        {"name": "See Website", "url": "https://thenewafricagroup.com", "icon": "fas fa-globe"},
-    ],
+
     "icons": {
         # app-level icons
         "auth": "fas fa-users-cog",
@@ -359,56 +358,107 @@ JAZZMIN_SETTINGS = {
         "notifications": "fas fa-bell",
         "payments": "fas fa-credit-card",
         "utils": "fas fa-cogs",
-        "magazine": "fas fa-newspaper",
-        "newsletter": "fas fa-envelope",
+        "magazine": "fas fa-book",
+        "newsletter": "fas fa-envelope-open",
         "promotions": "fas fa-bullhorn",
         "summit": "fas fa-mountain",
-        "tv": "fas fa-video",
+        "tv": "fas fa-tv",
 
         # accounts models
         "accounts.user": "fas fa-user-circle",
         "accounts.userprofile": "fas fa-id-badge",
         "accounts.usertoken": "fas fa-key",
-        "accounts.otpverification": "fas fa-shield-alt",
-        "accounts.follow": "fas fa-user-friends",
+        "accounts.otpverification": "fas fa-hourglass-half",
 
         # community models
         "community.post": "fas fa-sticky-note",
         "community.comment": "fas fa-comment",
         "community.group": "fas fa-layer-group",
-        "community.groupmembership": "fas fa-user-plus",
-        "community.postreaction": "fas fa-heart",
-        "community.commentreaction": "fas fa-thumbs-up",
-        "community.subscription": "fas fa-receipt",
+        "community.groupinvite": "fas fa-envelope-open-text",
+        "community.communitysection": "fas fa-layer-group",
+        "community.ctabanner": "fas fa-bullhorn",
+        "community.corporateconnection": "fas fa-handshake",
+        "community.corporateopportunity": "fas fa-lightbulb",
+        "community.opportunityapplication": "fas fa-file-alt",
+        "community.collaborationrequest": "fas fa-people-arrows",
         "community.corporateverification": "fas fa-building",
+        "community.communitysectionadmin": "fas fa-users",
+        "community.communityengagementlog": "fas fa-history",
+        "community.mentionlog": "fas fa-at",
+        "community.userreputation": "fas fa-trophy",
+        "community.userengagementscore": "fas fa-fire",
+        "community.subscriptiontier": "fas fa-crown",
+        "community.sponsoredpost": "fas fa-star",
+        "community.trendingtopic": "fas fa-chart-line",
+        "community.platformanalytics": "fas fa-chart-bar",
+        "community.engagementnotification": "fas fa-bell",
 
         # courses models
         "courses.course": "fas fa-book-open",
+        "courses.coursemodule": "fas fa-layer-group",
+        "courses.coursereview": "fas fa-star",
         "courses.enrollment": "fas fa-user-graduate",
-        "courses.lesson": "fas fa-file-alt",
+        "courses.lesson": "fas fa-book",
+        "courses.quizquestion": "fas fa-question-circle",
+        "courses.quizsubmission": "fas fa-check-square",
+        "courses.assignmentsubmission": "fas fa-file-alt",
+        "courses.analyticssettings": "fas fa-cog",
+        "courses.facilitatortarget": "fas fa-bullseye",
+        "courses.analyticsreport": "fas fa-file-chart-line",
 
         # notifications models
         "notifications.notification": "fas fa-envelope",
+        "notifications.notificationpreference": "fas fa-sliders-h",
 
         # payments models
-        "payments.plan": "fas fa-list",
         "payments.payment": "fas fa-credit-card",
-
-        # utils models
-        "utils.faq": "fas fa-question-circle",
-        "utils.contactmessage": "fas fa-envelope",
-
-        # magazine models
-        "magazine.article": "fas fa-newspaper",
-
-        # newsletter models
-        "newsletter.newsletter": "fas fa-envelope",
+        "payments.subscription": "fas fa-calendar-check",
+        "payments.plan": "fas fa-list-alt",
 
         # promotions models
         "promotions.sponsorcampaign": "fas fa-bullhorn",
+        "promotions.campaignanalytics": "fas fa-chart-line",
+        "promotions.promotionmetrics": "fas fa-chart-bar",
+        "promotions.withdrawalrequest": "fas fa-money-bill-wave",
+        "promotions.facilitatorearning": "fas fa-dollar-sign",
+
+        # magazine models
+        "magazine.author": "fas fa-user",
+        "magazine.category": "fas fa-folder",
+        "magazine.tag": "fas fa-tag",
+        "magazine.article": "fas fa-newspaper",
+        "magazine.magazine": "fas fa-book",
+
+        # newsletter models
+        "newsletter.newslettersubscriber": "fas fa-envelope-open",
 
         # summit models
-        "summit.summithero": "fas fa-mountain",
+        "summit.organizer": "fas fa-user-tie",
+        "summit.featuredspeaker": "fas fa-microphone",
+        "summit.partner": "fas fa-handshake",
+        "summit.pastedition": "fas fa-history",
+        "summit.summithero": "fas fa-image",
+        "summit.summitabout": "fas fa-info-circle",
+        "summit.summitkeythemes": "fas fa-lightbulb",
+        "summit.summitagenda": "fas fa-calendar",
+        "summit.summitagendaday": "fas fa-clock",
+        "summit.partnersection": "fas fa-users",
+        "summit.registrationpackage": "fas fa-ticket-alt",
+
+        # tv models
+        "tv.videocategory": "fas fa-film",
+        "tv.video": "fas fa-play-circle",
+
+        # utils models
+        "utils.abouthero": "fas fa-image",
+        "utils.faq": "fas fa-question-circle",
+        "utils.career": "fas fa-briefcase",
+        "utils.contactmessage": "fas fa-envelope",
+        "utils.contactdetails": "fas fa-address-book",
+        "utils.officelocation": "fas fa-map-marker-alt",
+        "utils.departmentcontact": "fas fa-address-card",
+        "utils.footercontent": "fas fa-shoe-prints",
+        "utils.teammember": "fas fa-user-tie",
     },
 }
 

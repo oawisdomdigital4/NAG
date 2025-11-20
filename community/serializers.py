@@ -409,11 +409,36 @@ class PostSerializer(serializers.ModelSerializer):
     def get_author_avatar(self, obj):
         try:
             user = getattr(obj, 'author', None)
+            avatar_url = None
+            avatar_obj = None
+            
+            # Try to get avatar from profile
             for attr in ('community_profile', 'profile', 'userprofile'):
                 profile = getattr(user, attr, None)
                 if profile:
-                    return getattr(profile, 'avatar_url', None) or getattr(profile, 'avatar', None) or None
-            return getattr(user, 'avatar_url', None) or getattr(user, 'avatar', None) or None
+                    avatar_url = getattr(profile, 'avatar_url', None)
+                    if avatar_url:
+                        return avatar_url
+                    avatar_obj = getattr(profile, 'avatar', None)
+                    if avatar_obj:
+                        break
+            
+            # Try to get avatar directly from user
+            if not avatar_obj:
+                avatar_url = getattr(user, 'avatar_url', None)
+                if avatar_url:
+                    return avatar_url
+                avatar_obj = getattr(user, 'avatar', None)
+            
+            # Build URL from avatar object if available
+            if avatar_obj and hasattr(avatar_obj, 'url'):
+                url = avatar_obj.url
+                request = self.context.get('request')
+                if request and isinstance(url, str) and url.startswith('/'):
+                    return request.build_absolute_uri(url)
+                return url
+            
+            return None
         except Exception:
             return None
 
@@ -514,14 +539,36 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_author_avatar(self, obj):
         try:
             user = getattr(obj, 'author', None)
-            # Prefer an avatar/url on the community_profile, then other common profile attrs
+            avatar_url = None
+            avatar_obj = None
+            
+            # Try to get avatar from profile
             for attr in ('community_profile', 'profile', 'userprofile'):
                 profile = getattr(user, attr, None)
                 if profile:
-                    # common names used across projects
-                    return getattr(profile, 'avatar_url', None) or getattr(profile, 'avatar', None) or None
-            # fallback to common attributes on the user model
-            return getattr(user, 'avatar_url', None) or getattr(user, 'avatar', None) or None
+                    avatar_url = getattr(profile, 'avatar_url', None)
+                    if avatar_url:
+                        return avatar_url
+                    avatar_obj = getattr(profile, 'avatar', None)
+                    if avatar_obj:
+                        break
+            
+            # Try to get avatar directly from user
+            if not avatar_obj:
+                avatar_url = getattr(user, 'avatar_url', None)
+                if avatar_url:
+                    return avatar_url
+                avatar_obj = getattr(user, 'avatar', None)
+            
+            # Build URL from avatar object if available
+            if avatar_obj and hasattr(avatar_obj, 'url'):
+                url = avatar_obj.url
+                request = self.context.get('request')
+                if request and isinstance(url, str) and url.startswith('/'):
+                    return request.build_absolute_uri(url)
+                return url
+            
+            return None
         except Exception:
             return None
 
@@ -978,7 +1025,7 @@ except Exception:
 
 class CorporatePartnerSerializer(serializers.Serializer):
     """Serializer for corporate partners directory"""
-    id = serializers.IntegerField(source='user.id')
+    id = serializers.SerializerMethodField()
     name = serializers.CharField(source='company_name')
     sector = serializers.CharField(source='industry')
     country = serializers.SerializerMethodField()
@@ -992,6 +1039,12 @@ class CorporatePartnerSerializer(serializers.Serializer):
     # Expose a normalized verification timestamp for frontend use
     verification_date = serializers.SerializerMethodField()
     registration_number = serializers.CharField(allow_blank=True)
+    
+    def get_id(self, obj):
+        """Get ID - prefer user.id if available, otherwise use pk"""
+        if obj.user:
+            return obj.user.id
+        return obj.pk
     
     def get_country(self, obj):
         """Get country from user profile"""

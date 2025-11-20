@@ -166,31 +166,10 @@ class AssignmentSubmissionAdmin(admin.ModelAdmin):
 class AnalyticsSettingsAdmin(admin.ModelAdmin):
     """Admin interface for global analytics settings."""
     
-    fieldsets = (
-        ('Revenue Settings', {
-            'fields': ('monthly_revenue_target',)
-        }),
-        ('Student Settings', {
-            'fields': ('student_target',)
-        }),
-        ('Rating Settings', {
-            'fields': ('minimum_rating_target', 'ideal_rating_target')
-        }),
-        ('Engagement Settings', {
-            'fields': ('lesson_completion_target',)
-        }),
-        ('Display Settings', {
-            'fields': (
-                'analytics_time_period',
-                'progress_warning_threshold',
-                'progress_success_threshold',
-                'dashboard_refresh_interval'
-            )
-        }),
-    )
+    list_display = ('icon', 'monthly_revenue_target')
 
     def icon(self, obj):
-        return format_html("<i class='fas fa-chart-line' style='font-size:14px;color:#0D1B52;'></i>")
+        return format_html("<i class='fas fa-cog' style='font-size:14px;color:#0D1B52;'></i>")
     icon.short_description = ''
     
     def has_add_permission(self, request):
