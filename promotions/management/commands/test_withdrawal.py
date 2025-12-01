@@ -28,9 +28,9 @@ class Command(BaseCommand):
 
             profile = getattr(withdrawal.facilitator, 'profile', None)
             if profile:
-                self.stdout.write(f"Current balance before: {profile.balance}")
-                self.stdout.write(f"Current total_earnings: {profile.total_earnings}")
-                self.stdout.write(f"Available balance: {profile.balance + profile.total_earnings}")
+                self.stdout.write(f"Current earning_balance: {profile.earning_balance}")
+                self.stdout.write(f"Current pending_balance: {profile.pending_balance}")
+                self.stdout.write(f"Current available_balance: {profile.available_balance}")
             else:
                 self.stdout.write(self.style.ERROR("No profile found"))
                 return
@@ -49,9 +49,9 @@ class Command(BaseCommand):
             # Refresh the profile to see changes
             profile.refresh_from_db()
             self.stdout.write(f"\nAfter approval:")
-            self.stdout.write(f"Current balance after: {profile.balance}")
-            self.stdout.write(f"Current total_earnings: {profile.total_earnings}")
-            self.stdout.write(f"Available balance: {profile.balance + profile.total_earnings}")
+            self.stdout.write(f"Current earning_balance: {profile.earning_balance}")
+            self.stdout.write(f"Current pending_balance: {profile.pending_balance}")
+            self.stdout.write(f"Current available_balance: {profile.available_balance}")
 
             # Refresh the withdrawal
             withdrawal.refresh_from_db()

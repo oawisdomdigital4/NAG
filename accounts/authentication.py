@@ -19,12 +19,17 @@ class DatabaseTokenAuthentication(BaseAuthentication):
         auth_header = request.headers.get("Authorization")
         token_value = None
 
+        print(f"[DatabaseTokenAuthentication] authenticate() called")
+        print(f"  Authorization header: {auth_header[:50] if auth_header else 'None'}...")
+
         if auth_header:
             # Accept any scheme; take the last space-separated part as the token
             parts = auth_header.split()
             if len(parts) == 0:
+                print(f"  No parts found in Authorization header")
                 return None
             token_value = parts[-1]
+            print(f"  Extracted token: {token_value[:20]}...")
         else:
             # Development-friendly fallback: allow token via query param or X-Auth-Token
             # This is only enabled when DEBUG=True to aid debugging missing/early header races.
@@ -37,21 +42,28 @@ class DatabaseTokenAuthentication(BaseAuthentication):
                 if not token_value:
                     token_value = request.headers.get('X-Auth-Token')
             else:
+                print(f"  No Authorization header and not DEBUG mode")
                 return None
 
         # If no token was provided, do not authenticate here; allow other
         # authentication backends to run or allow anonymous access for read-only endpoints.
         if not token_value:
+            print(f"  No token value found")
             return None
 
+        print(f"  Looking up token in database...")
         try:
             user_token = UserToken.objects.get(token=token_value)
+            print(f"  [OK] Token found! User: {user_token.user}")
         except UserToken.DoesNotExist:
+            print(f"  [ERROR] Token not found in database")
             raise exceptions.AuthenticationFailed("Invalid token")
 
         if user_token.expires_at < timezone.now():
             # Remove expired token and reject
+            print(f"  [ERROR] Token expired")
             user_token.delete()
             raise exceptions.AuthenticationFailed("Token expired")
 
+        print(f"  [OK] Authentication successful!")
         return (user_token.user, user_token)

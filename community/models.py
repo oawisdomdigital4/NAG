@@ -100,7 +100,11 @@ class Group(models.Model):
     is_corporate_group = models.BooleanField(default=False)
     # Whether the group is private (requires invitation) - optional feature
     is_private = models.BooleanField(default=False)
-    banner_url = models.URLField(blank=True)
+    # Image fields for profile picture and banner
+    profile_picture = models.ImageField(upload_to='community/group_profiles/', blank=True, null=True)
+    profile_picture_url = models.URLField(blank=True, null=True)
+    banner = models.ImageField(upload_to='community/group_banners/', blank=True, null=True)
+    banner_url = models.URLField(blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='community_created_groups')
     # Moderators are selected from existing group members
     moderators = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='moderated_groups', blank=True)
@@ -108,6 +112,28 @@ class Group(models.Model):
     # Using string reference to avoid circular imports with courses app
     courses = models.ManyToManyField('courses.Course', related_name='community_groups', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    def delete(self, *args, **kwargs):
+        """Override delete to properly handle relationships (SQLite limitation).
+        
+        SQLite is strict about FK constraints even within transactions, so we need to
+        explicitly delete all related objects BEFORE deleting the Group itself.
+        """
+        from django.db import transaction
+        
+        with transaction.atomic():
+            # Delete all related objects explicitly first
+            # (CASCADE would handle this but SQLite enforces it strictly)
+            self.posts.all().delete()  # Post has FK to Group with CASCADE
+            self.invites.all().delete()  # GroupInvite has FK to Group with CASCADE
+            self.memberships.all().delete()  # GroupMembership has FK to Group with CASCADE
+            
+            # Clear M2M relationships (SQLite doesn't cascade M2M deletes)
+            self.moderators.clear()
+            self.courses.clear()
+            
+            # Now delete the group itself
+            super().delete(*args, **kwargs)
 
 class GroupMembership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='community_group_memberships')

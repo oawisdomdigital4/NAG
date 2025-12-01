@@ -1,42 +1,554 @@
-"""Admin package initializer.
+from django.contrib import admin
+from django.utils.html import format_html
+from django import forms
+import datetime
+import json
+from django.utils.safestring import mark_safe
+from ..models import (
+    CommunitySection,
+    CTABanner,
+    Group,
+    GroupMembership,
+    CorporateConnection,
+    PartnerDirectory,
+    WithdrawalRequest,
+    UserEngagementScore,
+    SubscriptionTier,
+    SponsoredPost,
+    TrendingTopic,
+    CorporateOpportunity,
+    OpportunityApplication,
+    CollaborationRequest,
+    PlatformAnalytics,
+    CorporateVerification,
+    GroupInvite,
+)
+from ..engagement import (
+    CommunityEngagementLog,
+    MentionLog,
+    UserReputation,
+    EngagementNotification,
+)
 
-When Django imports `community.admin` it will import this package `__init__`.
-This file ensures two things:
+# ============================================================================
+# COMMUNITY SECTION & CTA BANNER
+# ============================================================================
 
-- Import the package-scoped submodule `videos` (if present).
-- Load the legacy top-level `community/admin.py` file (if it exists) by
-  executing it under a safe module name so its admin registrations are
-  preserved. This keeps backward compatibility with the repository layout
-  where `community/admin.py` was used.
+@admin.register(CommunitySection)
+class CommunitySectionAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'title_main', 'title_highlight', 'is_published', 'created_at')
+	readonly_fields = ('created_at', 'updated_at')
+	fields = (
+		'badge', 'title_main', 'title_highlight', 'description', 'image',
+		'stat1_value', 'stat1_label', 'stat2_value', 'stat2_label', 'stat3_value', 'stat3_label',
+		'card1_title', 'card1_description', 'card1_feature_1', 'card1_feature_2',
+		'card2_title', 'card2_description', 'card2_feature_1', 'card2_feature_2',
+		'cta_label', 'cta_url', 'is_published', 'created_at'
+	)
 
-We avoid raising at import time and instead log warnings to stderr so
-the admin app still loads even if one piece fails.
-"""
+	def icon(self, obj):
+		return format_html("<i class='fas fa-layer-group' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
-import os
-import sys
-import importlib.util
 
-# 1) Import package submodules (e.g. videos.py)
-try:
-    from . import videos  # noqa: F401
-except Exception:
-    sys.stderr.write('Warning: failed to import community.admin.videos\n')
+@admin.register(CTABanner)
+class CTABannerAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'title_main', 'title_highlight', 'is_published', 'created_at')
+	readonly_fields = ('created_at',)
+	fields = (
+		'badge', 'title_main', 'title_highlight', 'description',
+		'primary_cta_label', 'primary_cta_url', 'secondary_cta_label', 'secondary_cta_url',
+		'feature1_title', 'feature1_subtitle', 'feature2_title', 'feature2_subtitle', 'feature3_title', 'feature3_subtitle',
+		'is_published', 'created_at'
+	)
 
-# 2) Backwards-compat: if a top-level `community/admin.py` file exists (the
-# module used before `community/admin/` became a package), load it by path
-# under a non-conflicting module name so its registrations run.
-try:
-    pkg_dir = os.path.dirname(__file__)
-    legacy_admin_path = os.path.abspath(os.path.join(pkg_dir, '..', 'admin.py'))
-    if os.path.exists(legacy_admin_path):
-        spec = importlib.util.spec_from_file_location('community._legacy_admin', legacy_admin_path)
-        if spec and spec.loader:
-            legacy_mod = importlib.util.module_from_spec(spec)
-            try:
-                spec.loader.exec_module(legacy_mod)
-            except Exception:
-                sys.stderr.write('Warning: failed to execute legacy community/admin.py\n')
-except Exception:
-    # Be tolerant of any path/import issues at import time
-    sys.stderr.write('Warning: error while attempting to load legacy admin module\n')
+	def icon(self, obj):
+		return format_html("<i class='fas fa-bullhorn' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+
+# ============================================================================
+# GROUP ADMIN
+# ============================================================================
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'name', 'category', 'created_by', 'is_corporate_group', 'is_private', 'members_count', 'posts_count', 'created_at')
+	list_filter = ('category', 'is_corporate_group', 'is_private', 'created_at')
+	search_fields = ('name', 'description', 'created_by__username')
+	readonly_fields = ('created_at', 'posts_count', 'members_count')
+	filter_horizontal = ('moderators', 'courses')
+	
+	fieldsets = (
+		('Basic Information', {
+			'fields': ('name', 'description', 'category')
+		}),
+		('Images', {
+			'fields': ('profile_picture', 'profile_picture_url', 'banner', 'banner_url')
+		}),
+		('Access Control', {
+			'fields': ('is_private', 'is_corporate_group', 'created_by', 'moderators')
+		}),
+		('Relationships', {
+			'fields': ('courses',),
+			'classes': ('collapse',)
+		}),
+		('Statistics', {
+			'fields': ('members_count', 'posts_count', 'created_at'),
+			'classes': ('collapse',)
+		}),
+	)
+	
+	def icon(self, obj):
+		if obj.is_corporate_group:
+			return format_html("<i class='fas fa-building' style='font-size:14px;color:#0D1B52;'></i>")
+		return format_html("<i class='fas fa-users' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+	
+	def members_count(self, obj):
+		return obj.memberships.count()
+	members_count.short_description = 'Members'
+	
+	def posts_count(self, obj):
+		return obj.posts.count()
+	posts_count.short_description = 'Posts'
+
+	def delete_queryset(self, request, queryset):
+		"""Override delete_queryset to use our custom delete() method that handles M2M cascades.
+		
+		This is necessary because Django's bulk queryset.delete() doesn't call the model's
+		custom delete() method, and SQLite doesn't cascade M2M deletes automatically.
+		"""
+		from django.db import transaction
+		with transaction.atomic():
+			for obj in queryset:
+				obj.delete()  # This calls our custom Group.delete() with M2M clearing
+
+
+@admin.register(GroupMembership)
+class GroupMembershipAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'user', 'group', 'joined_at')
+	list_filter = ('group', 'joined_at')
+	search_fields = ('user__username', 'group__name')
+	readonly_fields = ('joined_at',)
+	
+	fieldsets = (
+		('Membership Details', {
+			'fields': ('user', 'group')
+		}),
+		('Timeline', {
+			'fields': ('joined_at',)
+		}),
+	)
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-user-plus' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+
+@admin.register(GroupInvite)
+class GroupInviteAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'group', 'invited_by', 'invited_user', 'invited_email', 'status', 'created_at', 'expires_at')
+	list_filter = ('status', 'created_at')
+	search_fields = ('invited_email', 'invited_user__username', 'invited_by__username')
+	readonly_fields = ('token', 'created_at', 'accepted_at')
+
+	def icon(self, obj):
+		return format_html("<i class='fas fa-envelope-open-text' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+
+
+# ============================================================================
+# CORPORATE ADMIN
+# ============================================================================
+
+@admin.register(CorporateConnection)
+class CorporateConnectionAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'sender', 'receiver', 'status', 'created_at')
+    list_filter = ('status',)
+    search_fields = ('sender__username', 'receiver__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-handshake' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
+
+@admin.register(CorporateVerification)
+class CorporateVerificationAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'company_name', 'user', 'status', 'submitted_at', 'reviewed_at')
+    list_filter = ('status', 'submitted_at')
+    search_fields = ('company_name', 'user__username', 'registration_number')
+    readonly_fields = ('submitted_at', 'reviewed_at')
+    fields = (
+        'user', 'company_name', 'registration_number', 'official_website', 'industry',
+        'contact_person_title', 'contact_phone', 'business_description',
+        'status', 'review_reason', 'submitted_at', 'reviewed_at'
+    )
+
+    def icon(self, obj):
+        status_icons = {
+            'approved': "<i class='fas fa-check-circle' style='font-size:14px;color:#27ae60;'></i>",
+            'rejected': "<i class='fas fa-times-circle' style='font-size:14px;color:#e74c3c;'></i>",
+            'pending': "<i class='fas fa-hourglass-half' style='font-size:14px;color:#f39c12;'></i>",
+        }
+        return format_html(status_icons.get(obj.status, "<i class='fas fa-building' style='font-size:14px;color:#0D1B52;'></i>"))
+    icon.short_description = ''
+
+    def save_model(self, request, obj, form, change):
+        """Override save to timestamp reviews and notify the user when status changes."""
+        from django.utils import timezone
+        try:
+            old_status = None
+            if obj.pk:
+                old_obj = type(obj).objects.get(pk=obj.pk)
+                old_status = old_obj.status
+        except Exception:
+            old_status = None
+
+        super().save_model(request, obj, form, change)
+
+        try:
+            if old_status != obj.status:
+                obj.reviewed_at = timezone.now()
+                obj.save(update_fields=['reviewed_at'])
+
+                if obj.user and obj.user.profile:
+                    if obj.status == 'approved':
+                        obj.user.profile.community_approved = True
+                    elif obj.status in ['rejected', 'pending']:
+                        obj.user.profile.community_approved = False
+                    obj.user.profile.save()
+
+                try:
+                    from notifications.utils import send_notification
+                    if obj.user:
+                        title = f"Verification {obj.status.capitalize()}"
+                        message = f"Your verification status is now {obj.status}."
+                        if obj.review_reason:
+                            message = message + f" Reason: {obj.review_reason}"
+                        send_notification(obj.user, 'corporate_verification', title, message, action_url='/dashboard/verification', metadata={'status': obj.status})
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+
+# ============================================================================
+# COMMUNITY SYSTEM ADMIN
+# ============================================================================
+
+@admin.register(UserEngagementScore)
+class UserEngagementScoreAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'user', 'engagement_score', 'facilitator_authority_score', 'corporate_campaign_score', 'updated_at')
+    list_filter = ('updated_at',)
+    search_fields = ('user__username', 'user__email')
+    readonly_fields = ('user', 'last_activity', 'updated_at')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-fire' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
+
+@admin.register(SubscriptionTier)
+class SubscriptionTierAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'name', 'tier_type', 'price', 'can_sponsor_posts', 'can_post_opportunities', 'priority_feed_ranking')
+    list_filter = ('can_sponsor_posts', 'can_post_opportunities')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-crown' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('tier_type', 'name', 'price', 'duration_days')
+        }),
+        ('Feature Permissions', {
+            'fields': ('max_posts_per_day', 'can_create_groups', 'can_sponsor_posts', 
+                      'can_post_opportunities', 'can_collaborate')
+        }),
+        ('Ranking', {
+            'fields': ('priority_feed_ranking',)
+        }),
+    )
+
+
+@admin.register(SponsoredPost)
+class SponsoredPostAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'title', 'creator', 'status', 'budget', 'spent', 'ctr', 'start_date')
+    list_filter = ('status', 'start_date')
+    search_fields = ('title', 'creator__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-star' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    readonly_fields = ('created_at', 'updated_at', 'ctr')
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('creator', 'title', 'description', 'status')
+        }),
+        ('Budget & Metrics', {
+            'fields': ('budget', 'daily_budget', 'spent', 'impressions', 'clicks', 'ctr')
+        }),
+        ('Campaign Details', {
+            'fields': ('promotion_level', 'start_date', 'end_date')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(TrendingTopic)
+class TrendingTopicAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'topic', 'mention_count', 'engagement_score', 'last_mentioned')
+    list_filter = ('created_at',)
+    search_fields = ('topic',)
+    readonly_fields = ('created_at',)
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-line' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+
+
+@admin.register(CorporateOpportunity)
+class CorporateOpportunityAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'title', 'creator', 'opportunity_type', 'status', 'view_count', 'application_count')
+    list_filter = ('opportunity_type', 'status', 'remote_friendly')
+    search_fields = ('title', 'creator__username')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-lightbulb' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    readonly_fields = ('view_count', 'application_count', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('creator', 'title', 'description', 'opportunity_type', 'status')
+        }),
+        ('Location & Details', {
+            'fields': ('location', 'remote_friendly', 'start_date', 'deadline')
+        }),
+        ('Compensation', {
+            'fields': ('salary_min', 'salary_max', 'salary_currency')
+        }),
+        ('Metrics', {
+            'fields': ('view_count', 'application_count')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(OpportunityApplication)
+class OpportunityApplicationAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'applicant', 'opportunity', 'status', 'applied_at')
+    list_filter = ('status', 'applied_at')
+    search_fields = ('applicant__username', 'opportunity__title')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-file-alt' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    readonly_fields = ('applied_at', 'status_updated_at')
+    fieldsets = (
+        ('Application Info', {
+            'fields': ('applicant', 'opportunity', 'status')
+        }),
+        ('Application Details', {
+            'fields': ('cover_letter', 'resume_url')
+        }),
+        ('Timestamps', {
+            'fields': ('applied_at', 'status_updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(CollaborationRequest)
+class CollaborationRequestAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'requester', 'recipient', 'collaboration_type', 'status', 'created_at')
+    list_filter = ('collaboration_type', 'status', 'created_at')
+    search_fields = ('requester__username', 'recipient__username', 'title')
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-people-arrows' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    readonly_fields = ('created_at', 'responded_at')
+    fieldsets = (
+        ('Participants', {
+            'fields': ('requester', 'recipient')
+        }),
+        ('Collaboration Info', {
+            'fields': ('collaboration_type', 'title', 'description', 'status')
+        }),
+        ('Timeline', {
+            'fields': ('proposed_start', 'proposed_end')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'responded_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(PlatformAnalytics)
+class PlatformAnalyticsAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'date', 'total_users', 'active_users_today', 'posts_created', 'subscriptions_active', 'mrr')
+    list_filter = ('date',)
+    readonly_fields = ('date',)
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-chart-bar' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    fieldsets = (
+        ('Date', {
+            'fields': ('date',)
+        }),
+        ('Users', {
+            'fields': ('total_users', 'active_users_today', 'new_users_today')
+        }),
+        ('Content', {
+            'fields': ('posts_created', 'comments_created', 'likes_count', 'mentions_count')
+        }),
+        ('Monetization', {
+            'fields': ('subscriptions_active', 'mrr')
+        }),
+    )
+
+
+# ============================================================================
+# ENGAGEMENT SYSTEM ADMIN
+# ============================================================================
+
+@admin.register(CommunityEngagementLog)
+class CommunityEngagementLogAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'user', 'action_type', 'get_content_type', 'created_at')
+    list_filter = ('action_type', 'created_at')
+    search_fields = ('user__username', 'post__title', 'comment__content')
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-history' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    
+    fieldsets = (
+        ('Engagement Details', {
+            'fields': ('user', 'action_type', 'post', 'comment', 'group', 'mentioned_user')
+        }),
+        ('Metadata', {
+            'fields': ('metadata',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_content_type(self, obj):
+        """Display what was engaged with."""
+        if obj.post:
+            return f"Post: {obj.post.title[:50]}"
+        elif obj.comment:
+            return f"Comment: {obj.comment.content[:50]}"
+        elif obj.group:
+            return f"Group: {obj.group.name}"
+        return "Unknown"
+    get_content_type.short_description = "Content"
+
+
+@admin.register(MentionLog)
+class MentionLogAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'mentioned_user', 'mentioned_by', 'get_mention_in', 'created_at')
+    list_filter = ('created_at',)
+    search_fields = ('mentioned_user__username', 'mentioned_by__username')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-at' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    
+    fieldsets = (
+        ('Mention Details', {
+            'fields': ('mentioned_user', 'mentioned_by', 'post', 'comment')
+        }),
+        ('Context', {
+            'fields': ('mention_context',)
+        }),
+        ('Notification', {
+            'fields': ('notification_sent',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def get_mention_in(self, obj):
+        """Display where the mention occurred."""
+        if obj.post:
+            return f"Post: {obj.post.title[:50]}"
+        elif obj.comment:
+            return f"Comment: {obj.comment.content[:50]}"
+        return "Unknown"
+    get_mention_in.short_description = "Mentioned In"
+
+
+@admin.register(UserReputation)
+class UserReputationAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'user', 'reputation_score', 'activity_level', 'created_at')
+    list_filter = ('activity_level', 'created_at')
+    search_fields = ('user__username',)
+    readonly_fields = ('created_at',)
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-trophy' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    
+    fieldsets = (
+        ('User', {
+            'fields': ('user',)
+        }),
+        ('Reputation', {
+            'fields': ('reputation_score', 'total_engagements', 'activity_level')
+        }),
+        ('Badges', {
+            'fields': ('badges',),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('last_updated',),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(EngagementNotification)
+class EngagementNotificationAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'user', 'notification_type', 'read', 'email_sent', 'created_at')
+    list_filter = ('notification_type', 'read', 'email_sent', 'created_at')
+    search_fields = ('user__username', 'triggered_by__username', 'message')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        return format_html("<i class='fas fa-bell' style='font-size:14px;color:#0D1B52;'></i>")
+    icon.short_description = ''
+    
+    fieldsets = (
+        ('Notification Details', {
+            'fields': ('user', 'triggered_by', 'notification_type', 'message')
+        }),
+        ('Engagement Context', {
+            'fields': ('engagement',)
+        }),
+        ('Delivery Status', {
+            'fields': ('email_sent', 'email_delivered', 'in_app_sent', 'read')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )

@@ -311,44 +311,84 @@ class WithdrawalRequest(models.Model):
         self.save()
         logger.info(f"Withdrawal {self.id} saved with status {status}")
         
-        # If approved or completed, deduct from user's balance
+        # If approved or completed, deduct from user's available_balance
         if status in ['approved', 'completed']:
             logger.info(f"Attempting to deduct balance for withdrawal {self.id}")
             profile = getattr(self.facilitator, 'profile', None)
             if profile:
-                logger.info(f"Found profile for {self.facilitator.username}. Current balance: {profile.balance}, total_earnings: {profile.total_earnings}")
+                logger.info(f"Found profile for {self.facilitator.username}. Current available_balance: {profile.available_balance}")
                 
-                # Deduct the withdrawal amount from the available balance (balance + total_earnings)
-                # First deduct from total_earnings, then from balance
+                # Deduct the withdrawal amount from available_balance only
                 withdrawal_amount = Decimal(str(self.amount))
-                total_earnings = Decimal(str(profile.total_earnings or 0))
-                balance = Decimal(str(profile.balance or 0))
+                available_balance = Decimal(str(profile.available_balance or 0))
                 
-                # Deduct from total_earnings first
-                if total_earnings >= withdrawal_amount:
-                    new_total_earnings = total_earnings - withdrawal_amount
-                    new_balance = balance
-                    logger.info(f"Deducting {withdrawal_amount} from total_earnings: {total_earnings} -> {new_total_earnings}")
+                # Deduct from available_balance
+                if available_balance >= withdrawal_amount:
+                    new_available = available_balance - withdrawal_amount
+                    logger.info(f"Deducting {withdrawal_amount} from available_balance: {available_balance} -> {new_available}")
                 else:
-                    # If not enough in total_earnings, deduct the rest from balance
-                    amount_to_deduct_from_balance = withdrawal_amount - total_earnings
-                    new_total_earnings = Decimal('0')
-                    new_balance = max(balance - amount_to_deduct_from_balance, Decimal('0'))
-                    logger.info(f"Deducting {total_earnings} from total_earnings and {amount_to_deduct_from_balance} from balance: balance {balance} -> {new_balance}")
+                    new_available = Decimal('0')
+                    logger.warning(f"Insufficient available balance. Requested: {withdrawal_amount}, Available: {available_balance}")
                 
-                profile.total_earnings = new_total_earnings
-                profile.balance = new_balance
+                profile.available_balance = new_available
                 profile.save()
-                logger.info(f"Profile saved. New balance: {profile.balance}, new total_earnings: {profile.total_earnings}")
+                logger.info(f"Profile saved. New available_balance: {profile.available_balance}")
             else:
                 logger.error(f"No profile found for user {self.facilitator.id}")
-            
-            # Mark related earnings as paid
-            updated = FacilitatorEarning.objects.filter(
-                facilitator=self.facilitator,
-                is_paid=False,
-                amount__lte=self.amount
-            ).update(is_paid=True)
-            logger.info(f"Marked {updated} earnings as paid for withdrawal {self.id}")
         else:
             logger.info(f"Status {status} is not approved or completed, skipping balance deduction")
+
+
+class WalletTopUp(models.Model):
+    """Track wallet top-up transactions for promotions budget"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('cancelled', 'Cancelled')
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='wallet_topups')
+    amount = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.01'))])
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    payment_method = models.CharField(max_length=50, blank=True)  # e.g., 'credit_card', 'bank_transfer', 'paypal'
+    transaction_id = models.CharField(max_length=255, unique=True, blank=True)
+    payment_reference = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} - ${self.amount} ({self.status})"
+
+    def mark_completed(self):
+        """Mark the top-up as completed and add funds to user wallet"""
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Marking wallet top-up {self.id} as completed")
+        
+        self.status = 'completed'
+        self.completed_at = timezone.now()
+        self.save()
+        
+        # Add amount directly to available_balance (top-ups go straight to available balance)
+        profile = getattr(self.user, 'profile', None)
+        if profile:
+            profile.available_balance = (profile.available_balance or Decimal('0')) + Decimal(str(self.amount))
+            profile.save()
+            logger.info(f"Added ${self.amount} top-up to {self.user.username}'s available balance. New available: ${profile.available_balance}")
+        else:
+            logger.error(f"No profile found for user {self.user.id}")
+
+    def mark_failed(self, error_message=''):
+        """Mark the top-up as failed"""
+        self.status = 'failed'
+        if error_message:
+            self.notes = error_message
+        self.save()

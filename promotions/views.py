@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.renderers import JSONRenderer, BaseRenderer
 from django.db.models import Q, F, Sum, Avg, Count
-from .models import SponsorCampaign, EngagementLog, WithdrawalRequest
+from .models import SponsorCampaign, EngagementLog, WithdrawalRequest, WalletTopUp
 from community.models import (
     CorporateOpportunity,
     CorporateConnection,
@@ -17,6 +17,7 @@ from .serializers import (
     OpportunityListSerializer,
     ConnectionListSerializer,
     EngagementLogSerializer,
+    WalletTopUpSerializer,
 )
 from django.utils import timezone
 from .analytics_service import AnalyticsService
@@ -126,6 +127,131 @@ class WithdrawalRequestViewSet(viewsets.ModelViewSet):
         except Exception:
             return Response({'detail': 'failed to record impression'}, status=500)
         return Response({'status': 'impression recorded'})
+
+
+class WalletTopUpViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing wallet top-ups"""
+    serializer_class = WalletTopUpSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        user = self.request.user
+        # Admin/staff can see all top-ups, regular users can only see their own
+        if user.is_staff or user.is_superuser:
+            return WalletTopUp.objects.all()
+        return WalletTopUp.objects.filter(user=user)
+
+    def perform_create(self, serializer):
+        """Create a new wallet top-up request"""
+        serializer.save(user=self.request.user)
+
+    @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def initiate_payment(self, request):
+        """Initiate a wallet top-up payment
+        
+        Expected POST data:
+        {
+            "amount": 100.00,
+            "payment_method": "credit_card"
+        }
+        """
+        amount = request.data.get('amount')
+        payment_method = request.data.get('payment_method', 'credit_card')
+        
+        if not amount:
+            return Response(
+                {'detail': 'Amount is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            amount = Decimal(str(amount))
+            if amount <= 0:
+                return Response(
+                    {'detail': 'Amount must be positive'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            if amount > Decimal('10000.00'):
+                return Response(
+                    {'detail': 'Maximum top-up amount is $10,000'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except (ValueError, TypeError):
+            return Response(
+                {'detail': 'Invalid amount format'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Create the top-up record in pending status
+        topup = WalletTopUp.objects.create(
+            user=request.user,
+            amount=amount,
+            payment_method=payment_method,
+            status='processing'
+        )
+        
+        serializer = self.get_serializer(topup)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def complete(self, request, pk=None):
+        """Admin action to mark a top-up as completed and add funds to wallet"""
+        topup = self.get_object()
+        try:
+            topup.mark_completed()
+            serializer = self.get_serializer(topup)
+            return Response(
+                {
+                    'detail': f'Top-up of ${topup.amount} completed successfully',
+                    'topup': serializer.data,
+                    'new_balance': float(topup.user.profile.available_balance) if hasattr(topup.user, 'profile') else 0
+                },
+                status=status.HTTP_200_OK
+            )
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error completing top-up {pk}: {str(e)}")
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    def fail(self, request, pk=None):
+        """Admin action to mark a top-up as failed"""
+        topup = self.get_object()
+        error_message = request.data.get('error_message', '')
+        try:
+            topup.mark_failed(error_message)
+            serializer = self.get_serializer(topup)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error failing top-up {pk}: {str(e)}")
+            return Response(
+                {'detail': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    def current_balance(self, request):
+        """Get the current wallet balance for the user (three-balance system)"""
+        profile = getattr(request.user, 'profile', None)
+        if not profile:
+            return Response(
+                {'detail': 'User profile not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        return Response({
+            'earning_balance': float(profile.earning_balance or 0),
+            'pending_balance': float(profile.pending_balance or 0),
+            'available_balance': float(profile.available_balance or 0)
+        }, status=status.HTTP_200_OK)
+
+
 
 class SponsorAnalyticsView(APIView):
     """Return simple aggregated analytics for a sponsor campaign.
@@ -244,15 +370,15 @@ class SponsorCampaignViewSet(viewsets.ModelViewSet):
             if status not in allowed_statuses:
                 status = 'draft'
 
-            # If status is not draft, attempt to deduct from user's profile balance
+            # If status is not draft, attempt to deduct from user's profile available_balance
             budget = Decimal(str(request.data.get('budget', 0)))
 
             with transaction.atomic():
                 if status != 'draft' and budget > 0:
-                    # Attempt to atomically decrement user profile balance
-                    updated = UserProfile.objects.filter(user=user, balance__gte=budget).update(balance=F('balance') - budget)
+                    # Attempt to atomically decrement user profile available_balance
+                    updated = UserProfile.objects.filter(user=user, available_balance__gte=budget).update(available_balance=F('available_balance') - budget)
                     if updated == 0:
-                        return Response({'error': 'Insufficient balance'}, status=402)
+                        return Response({'error': 'Insufficient available balance'}, status=402)
 
                 # Create campaign linked to the post
                 campaign = SponsorCampaign.objects.create(

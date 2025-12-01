@@ -2,13 +2,13 @@ from django.db import models
 
 # --- Per-hero stat items to simplify admin editing ---
 ICON_CHOICES = [
-    ('👥', 'People (👥)'),
-    ('🌍', 'Globe (🌍)'),
-    ('🎤', 'Microphone (🎤)'),
-    ('📅', 'Calendar (📅)'),
-    ('⭐', 'Star (⭐)'),
-    ('💼', 'Briefcase (💼)'),
-    ('📈', 'Chart (📈)'),
+    ('👥', 'People'),
+    ('🌍', 'Globe'),
+    ('🎤', 'Microphone'),
+    ('📅', 'Calendar'),
+    ('⭐', 'Star'),
+    ('💼', 'Briefcase'),
+    ('📈', 'Chart'),
 ]
 
 # --- Registration package visual choices ---

@@ -7,6 +7,7 @@ from community.models import (
 from .models import (
     WithdrawalRequest, FacilitatorEarning,
     CampaignAnalytics, PromotionMetrics, SponsorCampaign, EngagementLog,
+    WalletTopUp,
 )
 
 
@@ -46,7 +47,8 @@ class WithdrawalRequestSerializer(serializers.ModelSerializer):
         if request and request.user:
             profile = getattr(request.user, 'profile', None)
             if profile:
-                available_balance = float(profile.balance or 0) + float(profile.total_earnings or 0)
+                # Use the new available_balance field from the three-balance wallet system
+                available_balance = float(profile.available_balance or 0)
                 if value > available_balance:
                     raise serializers.ValidationError(
                         f"Insufficient available balance. Available: ${available_balance:.2f}"
@@ -209,4 +211,35 @@ class SponsorCampaignSerializer(serializers.ModelSerializer):
             return obj.get_performance_metrics()
         except Exception:
             return {}
+
+
+class WalletTopUpSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(read_only=True)
+    
+    class Meta:
+        model = WalletTopUp
+        fields = [
+            'id', 'user_id', 'amount', 'status', 'payment_method',
+            'transaction_id', 'payment_reference', 'notes',
+            'created_at', 'updated_at', 'completed_at'
+        ]
+        read_only_fields = ('id', 'user_id', 'status', 'transaction_id', 
+                           'created_at', 'updated_at', 'completed_at')
+
+    def validate_amount(self, value):
+        """Validate that top-up amount is reasonable"""
+        from decimal import Decimal
+        if value <= 0:
+            raise serializers.ValidationError("Top-up amount must be positive")
+        if value < Decimal('1.00'):
+            raise serializers.ValidationError("Minimum top-up amount is $1.00")
+        if value > Decimal('10000.00'):
+            raise serializers.ValidationError("Maximum top-up amount is $10,000")
+        return value
+
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and request.user:
+            validated_data['user'] = request.user
+        return super().create(validated_data)
 

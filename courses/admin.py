@@ -71,7 +71,7 @@ class LessonAdmin(admin.ModelAdmin):
             'fields': ('module', 'title', 'description', 'lesson_type', 'order')
         }),
         ('Video Lesson', {
-            'fields': ('video_url', 'duration_minutes'),
+            'fields': ('video_url', 'video_file', 'duration_minutes'),
             'classes': ('collapse',)
         }),
         ('Article Lesson', {

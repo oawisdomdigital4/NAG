@@ -6,6 +6,7 @@ class Enrollment(models.Model):
 	user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='enrollments')
 	course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='enrollments')
 	progress = models.IntegerField(default=0)
+	completed_lessons = models.TextField(default='[]')  # JSON array of completed lesson IDs
 	enrolled_at = models.DateTimeField(auto_now_add=True)
 
 
@@ -74,8 +75,10 @@ class Lesson(models.Model):
 	description = models.TextField(blank=True)
 	lesson_type = models.CharField(max_length=20, choices=LESSON_TYPE_CHOICES)
 	order = models.PositiveIntegerField(default=0)
-	# Video fields
+	availability_date = models.DateTimeField(blank=True, null=True, help_text="Date and time when this lesson becomes available to students")
+	# Video fields - supports both URL embedding and file upload
 	video_url = models.URLField(blank=True, null=True)
+	video_file = models.FileField(upload_to='course_videos/', blank=True, null=True)
 	duration_minutes = models.PositiveIntegerField(blank=True, null=True)
 	# Article fields
 	article_content = models.TextField(blank=True, null=True)
@@ -87,6 +90,16 @@ class Lesson(models.Model):
 	assignment_title = models.CharField(max_length=255, blank=True, null=True)
 	due_date = models.DateField(blank=True, null=True)
 	estimated_hours = models.DecimalField(max_digits=4, decimal_places=1, blank=True, null=True)
+	instructions = models.TextField(blank=True, null=True)  # Detailed assignment instructions
+	rubric = models.TextField(blank=True, null=True)  # Grading rubric
+	points_total = models.PositiveIntegerField(default=100, blank=True, null=True)  # Total points for assignment
+	auto_grade_on_submit = models.BooleanField(default=True)  # Auto-grade when submitted
+	late_submission_allowed = models.BooleanField(default=False)  # Allow late submissions
+	late_submission_days = models.PositiveIntegerField(default=3, blank=True, null=True)  # Days allowed for late submission
+	attachments_required = models.BooleanField(default=False)  # Require file attachments
+	file_types_allowed = models.JSONField(default=list, blank=True, null=True)  # Allowed file types ['pdf', 'docx', etc]
+	min_word_count = models.PositiveIntegerField(default=0, blank=True, null=True)  # Minimum word count
+	max_word_count = models.PositiveIntegerField(default=5000, blank=True, null=True)  # Maximum word count
 
 class QuizQuestion(models.Model):
 	lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='questions')
@@ -110,9 +123,11 @@ class AssignmentSubmission(models.Model):
 	lesson = models.ForeignKey(Lesson, on_delete=models.CASCADE, related_name='assignment_submissions')
 	submitted_at = models.DateTimeField(auto_now_add=True)
 	content = models.TextField(blank=True)
-	score = models.PositiveIntegerField(default=0)
+	score = models.PositiveIntegerField(default=0, null=True, blank=True)
+	feedback = models.TextField(blank=True)
 	graded = models.BooleanField(default=False)
 	auto_graded = models.BooleanField(default=True)
+	attachments = models.JSONField(default=list, blank=True)  # Stores file metadata: [{'name': 'file.pdf', 'url': 'url/to/file.pdf', 'size': 12345}]
 
 class CourseReview(models.Model):
 	course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reviews')
@@ -120,3 +135,8 @@ class CourseReview(models.Model):
 	rating = models.PositiveIntegerField()
 	comment = models.TextField(blank=True)
 	created_at = models.DateTimeField(auto_now_add=True)
+	updated_at = models.DateTimeField(auto_now=True)
+	
+	class Meta:
+		unique_together = ('course', 'user')  # One review per student per course
+		ordering = ['-created_at']

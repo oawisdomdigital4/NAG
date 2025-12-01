@@ -1,6 +1,6 @@
 
 
-from rest_framework import viewsets, permissions, filters, status
+from rest_framework import viewsets, permissions, filters, status, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -11,8 +11,9 @@ from .models import (
 )
 from .serializers import (
     CourseSerializer, CourseModuleSerializer, CourseReviewSerializer, EnrollmentSerializer,
-    LessonSerializer, QuizQuestionSerializer, QuizQuestionFullSerializer,
-    QuizSubmissionSerializer, AssignmentSubmissionSerializer
+    LessonSerializer, LessonInstructorSerializer, QuizQuestionSerializer, QuizQuestionFullSerializer,
+    QuizSubmissionSerializer, AssignmentSubmissionSerializer, CourseInstructorSerializer,
+    CourseModuleInstructorSerializer
 )
 from .permissions import IsFacilitator
 from .grading import QuizAutoGrader, AssignmentAutoGrader, ProgressTracker
@@ -25,9 +26,22 @@ class CourseViewSet(viewsets.ModelViewSet):
 	# Default: allow read-only to everyone, require auth for unsafe methods
 	permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 	filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
-	filterset_fields = ["is_featured", "category", "level", "format"]
+	filterset_fields = ["is_featured", "category", "level", "format", "status"]
 	ordering_fields = ["created_at", "price", "enrollments_count"]
 	search_fields = ["title", "short_description", "full_description"]
+
+	def get_serializer_class(self):
+		"""Use CourseInstructorSerializer for instructors viewing their own course"""
+		# Check if this is a retrieve action and the user is the facilitator
+		if self.action == 'retrieve' and self.request.user.is_authenticated:
+			try:
+				course = self.get_object()
+				if course.facilitator == self.request.user:
+					from .serializers import CourseInstructorSerializer
+					return CourseInstructorSerializer
+			except Exception:
+				pass
+		return self.serializer_class
 
 	def get_parsers(self):
 		"""Override to support both JSON and multipart form data"""
@@ -37,8 +51,22 @@ class CourseViewSet(viewsets.ModelViewSet):
 		return [JSONParser()]
 
 	def get_queryset(self):
-		from django.db.models import Count
+		from django.db.models import Count, Q
 		qs = Course.objects.all().annotate(enrollments_count=Count('enrollments'))
+		
+		# If no explicit status filter is provided, apply default filtering:
+		# - Show published courses to everyone (public listing)
+		# - Show draft courses only to the facilitator who created them (private listing)
+		status_param = self.request.query_params.get('status')
+		if not status_param:
+			# Default behavior: show published courses + user's own draft courses
+			if self.request.user.is_authenticated:
+				# Show published courses + this user's draft courses
+				qs = qs.filter(Q(status='published') | Q(status='draft', facilitator=self.request.user))
+			else:
+				# Show only published courses to anonymous users
+				qs = qs.filter(status='published')
+		
 		ordering = self.request.query_params.get('ordering')
 		if ordering:
 			# Support ordering by enrollments_count
@@ -49,7 +77,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 		# (or intermediate tools) may reserve the 'format' query param for
 		# content-negotiation which can lead to unexpected routing issues. To be
 		# robust, support 'course_format' as an alias and also apply the normal
-		# 'format' filter if present.
+		# 'filter' if present.
 		course_format = self.request.query_params.get('course_format') or self.request.query_params.get('format')
 		if course_format:
 			qs = qs.filter(format=course_format)
@@ -57,8 +85,37 @@ class CourseViewSet(viewsets.ModelViewSet):
 		return qs
 
 	def perform_create(self, serializer):
+		from django.utils.text import slugify
+		import uuid
+		
+		# Auto-generate slug if not provided
+		title = serializer.validated_data.get('title', '')
+		slug = serializer.validated_data.get('slug', '')
+		
+		if not slug and title:
+			# Generate slug from title with a unique suffix to avoid conflicts
+			base_slug = slugify(title)
+			slug = f"{base_slug}-{uuid.uuid4().hex[:6]}"
+		elif not slug:
+			# Fallback if no title either
+			slug = f"course-{uuid.uuid4().hex[:6]}"
+		
+		# Set defaults for optional fields
+		short_description = serializer.validated_data.get('short_description', '')
+		if not short_description:
+			short_description = title[:100] if title else 'Untitled Course'
+		
+		full_description = serializer.validated_data.get('full_description', '')
+		if not full_description:
+			full_description = short_description
+		
 		# Set the facilitator to the authenticated user when creating a course
-		instance = serializer.save(facilitator=self.request.user)
+		instance = serializer.save(
+			facilitator=self.request.user,
+			slug=slug,
+			short_description=short_description,
+			full_description=full_description
+		)
 		
 		# Attach files if provided
 		thumbnail_file = self.request.FILES.get('thumbnail')
@@ -181,7 +238,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 			user_balance = 0
 			if request.user.is_authenticated:
 				try:
-					user_balance = float(request.user.userprofile.balance)
+					user_balance = float(request.user.userprofile.available_balance)
 				except:
 					user_balance = 0
 			
@@ -363,13 +420,20 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 	@action(detail=False, methods=['post'])
 	def update_progress(self, request):
-		"""Update enrollment progress."""
+		"""Update enrollment progress and completed lessons."""
 		try:
+			import json
 			course_id = request.data.get('course_id')
 			progress = request.data.get('progress', 0)
+			completed_lessons = request.data.get('completed_lessons')  # Array of lesson IDs
 			
 			enrollment = Enrollment.objects.get(user=request.user, course_id=course_id)
 			enrollment.progress = min(max(progress, 0), 100)  # Clamp between 0-100
+			
+			# Update completed lessons if provided
+			if completed_lessons is not None:
+				enrollment.completed_lessons = json.dumps(completed_lessons)
+			
 			enrollment.save()
 			
 			serializer = EnrollmentSerializer(enrollment)
@@ -473,6 +537,23 @@ class CourseModuleViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.AllowAny]
 	filter_backends = [DjangoFilterBackend]
 	filterset_fields = ["course"]
+	
+	def perform_create(self, serializer):
+		"""Handle course assignment - support both direct field and query param"""
+		# Check if course is in validated_data
+		if 'course' not in serializer.validated_data or not serializer.validated_data['course']:
+			# Try to get course from query params
+			course_id = self.request.query_params.get('course')
+			if course_id:
+				try:
+					course = Course.objects.get(id=course_id)
+					serializer.validated_data['course'] = course
+				except Course.DoesNotExist:
+					raise serializers.ValidationError({'course': 'Course not found'})
+			else:
+				raise serializers.ValidationError({'course': 'Course is required'})
+		
+		serializer.save()
 
 class CourseReviewViewSet(viewsets.ModelViewSet):
 	queryset = CourseReview.objects.all()
@@ -480,6 +561,37 @@ class CourseReviewViewSet(viewsets.ModelViewSet):
 	permission_classes = [permissions.AllowAny]
 	filter_backends = [DjangoFilterBackend]
 	filterset_fields = ["course"]
+	
+	def get_permissions(self):
+		"""
+		Allow everyone to read reviews.
+		Only authenticated, enrolled students can create/update reviews.
+		Only review author or facilitator can delete reviews.
+		"""
+		if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
+			return [permissions.AllowAny()]
+		if self.request.method in ['POST', 'PUT', 'PATCH']:
+			return [permissions.IsAuthenticated()]
+		if self.request.method == 'DELETE':
+			return [permissions.IsAuthenticated()]
+		return [permissions.AllowAny()]
+	
+	def perform_create(self, serializer):
+		"""Automatically set the user to the authenticated user"""
+		serializer.save(user=self.request.user)
+	
+	def perform_update(self, serializer):
+		"""Only allow user to update their own review"""
+		review = self.get_object()
+		if review.user != self.request.user:
+			return Response({'error': 'You can only edit your own reviews'}, status=status.HTTP_403_FORBIDDEN)
+		serializer.save()
+	
+	def perform_destroy(self, instance):
+		"""Only allow user to delete their own review or facilitator can delete"""
+		if instance.user != self.request.user and instance.course.facilitator != self.request.user:
+			return Response({'error': 'You can only delete your own reviews'}, status=status.HTTP_403_FORBIDDEN)
+		instance.delete()
 
 
 class LessonViewSet(viewsets.ModelViewSet):
@@ -491,11 +603,25 @@ class LessonViewSet(viewsets.ModelViewSet):
 	filterset_fields = ["module", "lesson_type"]
 	ordering_fields = ["order", "created_at"]
 	ordering = ["order"]
+	parser_classes = [MultiPartParser, FormParser, JSONParser]
+	
+	def _encode_attachment_urls(self, attachments):
+		"""Return attachment URLs as-is"""
+		if not attachments:
+			return []
+		return attachments
 	
 	def get_permissions(self):
-		"""Allow read-only for everyone, require facilitator for create/update"""
+		"""Allow read-only for everyone, require facilitator for create/update, but allow students for quiz actions"""
 		if self.request.method in ['GET', 'HEAD', 'OPTIONS']:
 			return [permissions.AllowAny()]
+		# Allow students to take quizzes and assignments
+		if self.action in ['get_questions', 'submit_quiz', 'assignment_status', 'submit_assignment']:
+			return [permissions.IsAuthenticated()]
+		# Allow facilitators to view analytics and grade assignments (check permission in method)
+		if self.action in ['quiz_analytics', 'quiz_submissions', 'assignment_submissions', 'assignment_submission_detail', 'assignment_submission_grade']:
+			return [permissions.IsAuthenticated()]
+		# Require facilitator for create/update/delete
 		return [permissions.IsAuthenticated(), IsFacilitator()]
 	
 	def perform_create(self, serializer):
@@ -505,6 +631,43 @@ class LessonViewSet(viewsets.ModelViewSet):
 		if module.course.facilitator != self.request.user:
 			lesson.delete()
 			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+	
+	def perform_update(self, serializer):
+		"""Handle video file deletion when video fields are cleared"""
+		# Get the existing lesson instance
+		instance = self.get_object()
+		
+		# Check if video_file is being explicitly set to None/empty (deletion request)
+		if 'video_file' in self.request.data and not self.request.FILES.get('video_file'):
+			# User is clearing the video_file field
+			data_video_file = self.request.data.get('video_file')
+			if data_video_file is None or data_video_file == '' or data_video_file == 'null':
+				# Delete the existing video file from storage
+				if instance.video_file:
+					try:
+						instance.video_file.delete(save=False)
+					except Exception as e:
+						print(f"Warning: Failed to delete video file: {str(e)}")
+		
+		# Check if video_url is being cleared
+		if 'video_url' in self.request.data:
+			data_video_url = self.request.data.get('video_url')
+			if data_video_url is None or data_video_url == '':
+				# Just update the field, no file to delete for URLs
+				pass
+		
+		# Save the updated lesson
+		serializer.save()
+	
+	def update(self, request, *args, **kwargs):
+		"""Override update to provide better error logging"""
+		try:
+			return super().update(request, *args, **kwargs)
+		except Exception as e:
+			print(f'[LessonViewSet] Update error: {str(e)}')
+			print(f'[LessonViewSet] Request data: {request.data}')
+			print(f'[LessonViewSet] Lesson ID: {kwargs.get("pk")}')
+			raise
 	
 	@action(detail=True, methods=['post'])
 	def add_question(self, request, pk=None):
@@ -542,6 +705,618 @@ class LessonViewSet(viewsets.ModelViewSet):
 			serializer = QuizQuestionSerializer(questions, many=True)
 		
 		return Response(serializer.data)
+
+	@action(detail=True, methods=['post'], url_path='get-questions')
+	def get_questions(self, request, pk=None):
+		"""Get all quiz questions for frontend (without showing answers)"""
+		print(f'[get_questions] ENDPOINT CALLED!')
+		print(f'[get_questions] User: {request.user}, Authenticated: {request.user.is_authenticated}')
+		print(f'[get_questions] Auth: {request.auth}')
+		print(f'[get_questions] Headers: Authorization={request.headers.get("Authorization")}')
+		
+		lesson = self.get_object()
+		
+		if lesson.lesson_type != 'quiz':
+			return Response({'error': 'Can only get questions from quiz lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		questions = lesson.questions.all()
+		serializer = QuizQuestionSerializer(questions, many=True)
+		print(f'[get_questions] Returning {questions.count()} questions')
+		return Response({
+			'_ok': True,
+			'questions': serializer.data,
+			'total_questions': questions.count(),
+			'passing_score': lesson.passing_score or 70,
+		})
+
+	@action(detail=True, methods=['post'], url_path='submit-quiz')
+	def submit_quiz(self, request, pk=None):
+		"""Submit quiz answers and get score"""
+		print(f'[submit_quiz] ENDPOINT CALLED!')
+		print(f'[submit_quiz] User: {request.user}, Authenticated: {request.user.is_authenticated}')
+		print(f'[submit_quiz] Lesson ID: {pk}')
+		print(f'[submit_quiz] Request data: {request.data}')
+		
+		lesson = self.get_object()
+		print(f'[submit_quiz] Lesson type: {lesson.lesson_type}, Lesson title: {lesson.title}')
+		
+		if lesson.lesson_type != 'quiz':
+			return Response({'error': 'Can only submit quiz for quiz lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		# Get user's enrollment
+		try:
+			enrollment = Enrollment.objects.get(user=request.user, course=lesson.module.course)
+			print(f'[submit_quiz] Enrollment found: {enrollment.id}')
+		except Enrollment.DoesNotExist:
+			print(f'[submit_quiz] Enrollment not found for user {request.user.id} and course {lesson.module.course.id}')
+			return Response({'error': 'Not enrolled in this course'}, status=status.HTTP_403_FORBIDDEN)
+		
+		# Get answers from request
+		answers = request.data.get('answers', {})
+		print(f'[submit_quiz] Answers received: {answers}')
+		
+		if not answers:
+			return Response({'error': 'No answers provided'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		# Calculate score
+		questions = lesson.questions.all()
+		print(f'[submit_quiz] Total questions: {questions.count()}')
+		
+		correct_count = 0
+		total_count = questions.count()
+		
+		for question in questions:
+			user_answer = answers.get(str(question.id), '').lower()
+			correct_answer = question.correct_option.lower()
+			is_correct = user_answer == correct_answer
+			if is_correct:
+				correct_count += 1
+			print(f'[submit_quiz] Q{question.id}: user={user_answer}, correct={correct_answer}, match={is_correct}')
+		
+		score = int((correct_count / total_count) * 100) if total_count > 0 else 0
+		is_passing = score >= (lesson.passing_score or 70)
+		
+		print(f'[submit_quiz] Score calculated: {score}% (Correct: {correct_count}/{total_count}), Passing: {is_passing}')
+		
+		# Create quiz submission record
+		submission = QuizSubmission.objects.create(
+			enrollment=enrollment,
+			lesson=lesson,
+			score=score,
+			answers=answers,
+			graded=True
+		)
+		
+		print(f'[submit_quiz] Submission saved: {submission.id}')
+		
+		return Response({
+			'_ok': True,
+			'submission_id': submission.id,
+			'score': score,
+			'correct_answers': correct_count,
+			'total_questions': total_count,
+			'is_passing': is_passing,
+			'passing_score': lesson.passing_score or 70,
+			'message': 'Quiz submitted successfully'
+		}, status=status.HTTP_201_CREATED)
+
+	@action(detail=True, methods=['get'], url_path='assignment-status')
+	def assignment_status(self, request, pk=None):
+		"""Get student's assignment submission status"""
+		lesson = self.get_object()
+		
+		if lesson.lesson_type != 'assignment':
+			return Response({'error': 'Can only get status for assignment lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		try:
+			enrollment = Enrollment.objects.get(user=request.user, course=lesson.module.course)
+		except Enrollment.DoesNotExist:
+			return Response({'error': 'Not enrolled in this course'}, status=status.HTTP_403_FORBIDDEN)
+		
+		# Check if student has submitted this assignment - get the LATEST submission
+		submission = AssignmentSubmission.objects.filter(
+			enrollment=enrollment,
+			lesson=lesson
+		).order_by('-submitted_at').first()
+		
+		if submission:
+			return Response({
+				'_ok': True,
+				'status': {
+					'submitted': True,
+					'submittedAt': submission.submitted_at.isoformat(),
+					'content': submission.content,
+					'score': submission.score if submission.graded else None,
+					'feedback': getattr(submission, 'feedback', None),
+					'graded': submission.graded,
+					'attachments': self._encode_attachment_urls(submission.attachments or []),
+				}
+			})
+		
+		return Response({
+			'_ok': True,
+			'status': {
+				'submitted': False,
+				'graded': False,
+				'attachments': [],
+			}
+		})
+
+	@action(detail=True, methods=['post'], url_path='submit-assignment')
+	def submit_assignment(self, request, pk=None):
+		"""Submit assignment with text content and file attachments"""
+		lesson = self.get_object()
+		
+		if lesson.lesson_type != 'assignment':
+			return Response({'error': 'Can only submit assignment for assignment lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		# Get user's enrollment
+		try:
+			enrollment = Enrollment.objects.get(user=request.user, course=lesson.module.course)
+		except Enrollment.DoesNotExist:
+			return Response({'error': 'Not enrolled in this course'}, status=status.HTTP_403_FORBIDDEN)
+		
+		# Get content - try both request.data and request.POST
+		content = request.data.get('content', '') or request.POST.get('content', '')
+		
+		if not content or not content.strip():
+			# Debug: log what we're receiving
+			import logging
+			logger = logging.getLogger(__name__)
+			logger.debug(f"Content field missing. request.data keys: {request.data.keys()}")
+			logger.debug(f"request.POST keys: {request.POST.keys()}")
+			logger.debug(f"request.FILES keys: {request.FILES.keys()}")
+			return Response({'error': 'Assignment content is required'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		# Validate word count if specified
+		word_count = len(content.split())
+		min_words = lesson.min_word_count or 0
+		max_words = lesson.max_word_count or 5000
+		
+		if word_count < min_words:
+			return Response(
+				{'error': f'Assignment must be at least {min_words} words. Current: {word_count} words'},
+				status=status.HTTP_400_BAD_REQUEST
+			)
+		
+		if word_count > max_words:
+			return Response(
+				{'error': f'Assignment cannot exceed {max_words} words. Current: {word_count} words'},
+				status=status.HTTP_400_BAD_REQUEST
+			)
+		
+		# Check file attachments if required
+		files = request.FILES.getlist('attachments')
+		if lesson.attachments_required and not files:
+			return Response(
+				{'error': 'This assignment requires file attachments'},
+				status=status.HTTP_400_BAD_REQUEST
+			)
+		
+		# Validate file types
+		if files and lesson.file_types_allowed:
+			allowed_types = lesson.file_types_allowed
+			for file in files:
+				ext = file.name.split('.')[-1].lower()
+				if ext not in allowed_types:
+					return Response(
+						{'error': f'File type .{ext} not allowed. Allowed types: {", ".join(allowed_types)}'},
+						status=status.HTTP_400_BAD_REQUEST
+					)
+		
+		# Create submission
+		submission = AssignmentSubmission.objects.create(
+			enrollment=enrollment,
+			lesson=lesson,
+			content=content,
+			auto_graded=lesson.auto_grade_on_submit,
+			graded=False
+		)
+		
+		# Store file attachments metadata
+		attachments_data = []
+		if files:
+			for file in files:
+				# Generate a file path and URL for storage
+				from django.core.files.storage import default_storage
+				import os
+				
+				# Create unique file path - preserve original extension
+				import uuid
+				file_ext = os.path.splitext(file.name)[1]
+				unique_filename = f"{uuid.uuid4().hex}{file_ext}"
+				file_path = f"assignments/{lesson.module.course.id}/{lesson.id}/{submission.id}/{unique_filename}"
+				
+				# Save file to storage in binary mode to preserve file integrity
+				file.seek(0)
+				saved_path = default_storage.save(file_path, file)
+				
+				# Get the full URL using MEDIA_URL
+				full_url = f"{settings.MEDIA_URL}{saved_path}"
+				
+				# Store metadata with original filename for display
+				attachments_data.append({
+					'name': file.name,  # Keep original filename for display
+					'url': full_url,
+					'size': file.size,
+					'type': file.content_type or 'application/octet-stream'
+				})
+		
+		# Update submission with attachments
+		if attachments_data:
+			submission.attachments = attachments_data
+			submission.save(update_fields=['attachments'])
+		
+		return Response({
+			'_ok': True,
+			'submission_id': submission.id,
+			'message': 'Assignment submitted successfully',
+			'attachments': attachments_data
+		}, status=status.HTTP_201_CREATED)
+
+	@action(detail=True, methods=['get'], url_path='quiz-analytics')
+	def quiz_analytics(self, request, pk=None):
+		"""Get quiz analytics for facilitators"""
+		lesson = self.get_object()
+		
+		# Check if facilitator
+		if lesson.module.course.facilitator != request.user:
+			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+		
+		if lesson.lesson_type != 'quiz':
+			return Response({'error': 'Can only get analytics for quiz lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		# Get all submissions
+		submissions = QuizSubmission.objects.filter(lesson=lesson)
+		questions = lesson.questions.all()
+		
+		if submissions.count() == 0:
+			return Response({
+				'_ok': True,
+				'analytics': {
+					'total_submissions': 0,
+					'average_score': 0,
+					'pass_rate': 0,
+					'fail_rate': 0,
+					'highest_score': 0,
+					'lowest_score': 0,
+					'questions_data': []
+				}
+			})
+		
+		# Calculate basic stats
+		scores = list(submissions.values_list('score', flat=True))
+		passing_score = lesson.passing_score or 70
+		pass_count = sum(1 for s in scores if s >= passing_score)
+		
+		# Calculate question statistics
+		questions_data = []
+		for question in questions:
+			correct_count = 0
+			wrong_answers = {}
+			
+			for submission in submissions:
+				user_answer = submission.answers.get(str(question.id), '').lower()
+				correct_answer = question.correct_option.lower()
+				
+				if user_answer == correct_answer:
+					correct_count += 1
+				else:
+					# Track wrong answers
+					wrong_answers[user_answer] = wrong_answers.get(user_answer, 0) + 1
+			
+			correct_percentage = (correct_count / submissions.count() * 100) if submissions.count() > 0 else 0
+			most_common_wrong = max(wrong_answers.items(), key=lambda x: x[1])[0] if wrong_answers else None
+			
+			questions_data.append({
+				'question_id': question.id,
+				'question_text': question.question_text,
+				'correct_percentage': correct_percentage,
+				'most_common_wrong_answer': most_common_wrong
+			})
+		
+		analytics = {
+			'total_submissions': submissions.count(),
+			'average_score': sum(scores) / len(scores) if scores else 0,
+			'pass_rate': (pass_count / submissions.count() * 100) if submissions.count() > 0 else 0,
+			'fail_rate': ((submissions.count() - pass_count) / submissions.count() * 100) if submissions.count() > 0 else 0,
+			'highest_score': max(scores) if scores else 0,
+			'lowest_score': min(scores) if scores else 0,
+			'questions_data': questions_data
+		}
+		
+		return Response({'_ok': True, 'analytics': analytics})
+
+	@action(detail=True, methods=['get'], url_path='quiz-submissions')
+	def quiz_submissions(self, request, pk=None):
+		"""Get all quiz submissions for a quiz lesson"""
+		lesson = self.get_object()
+		
+		# Check if facilitator
+		if lesson.module.course.facilitator != request.user:
+			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+		
+		if lesson.lesson_type != 'quiz':
+			return Response({'error': 'Can only get submissions for quiz lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		submissions = QuizSubmission.objects.filter(lesson=lesson).select_related('enrollment__user')
+		
+		submissions_data = []
+		for submission in submissions:
+			user = submission.enrollment.user
+			submissions_data.append({
+				'student_name': f'{user.first_name} {user.last_name}'.strip() or user.username,
+				'student_email': user.email,
+				'submission_date': submission.submitted_at,
+				'score': submission.score,
+				'is_passing': submission.score >= (lesson.passing_score or 70),
+				'answers': submission.answers,
+				'time_taken': 5  # Placeholder - would need to track this separately
+			})
+		
+		return Response({'_ok': True, 'submissions': submissions_data})
+
+	@action(detail=True, methods=['get'], url_path='assignment-submissions')
+	def assignment_submissions(self, request, pk=None):
+		"""Get all assignment submissions for an assignment lesson"""
+		lesson = self.get_object()
+		
+		# Check if facilitator
+		if lesson.module.course.facilitator != request.user:
+			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+		
+		if lesson.lesson_type != 'assignment':
+			return Response({'error': 'Can only get submissions for assignment lessons'}, status=status.HTTP_400_BAD_REQUEST)
+		
+		submissions = AssignmentSubmission.objects.filter(lesson=lesson).select_related('enrollment__user')
+		
+		submissions_data = []
+		for submission in submissions:
+			user = submission.enrollment.user
+			submissions_data.append({
+				'id': submission.id,
+				'student_id': user.id,
+				'student_name': f'{user.first_name} {user.last_name}'.strip() or user.username,
+				'student_email': user.email,
+				'content': submission.content[:100] + '...' if len(submission.content) > 100 else submission.content,
+				'attachments': self._encode_attachment_urls(submission.attachments or []),
+				'submitted_at': submission.submitted_at,
+				'score': submission.score,
+				'feedback': getattr(submission, 'feedback', ''),
+				'graded': submission.graded,
+				'word_count': len(submission.content.split()),
+				'late_submission': False  # Would need to check against due date
+			})
+		
+		return Response({'_ok': True, 'submissions': submissions_data})
+
+	@action(detail=True, methods=['get', 'put'], url_path='assignment-submissions/(?P<submission_id>[0-9]+)/grade')
+	def assignment_submission_grade(self, request, pk=None, submission_id=None):
+		"""Get or grade a specific assignment submission"""
+		lesson = self.get_object()
+		
+		# Check if facilitator
+		if lesson.module.course.facilitator != request.user:
+			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+		
+		try:
+			submission = AssignmentSubmission.objects.get(id=submission_id, lesson=lesson)
+		except AssignmentSubmission.DoesNotExist:
+			return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
+		
+		if request.method == 'GET':
+			user = submission.enrollment.user
+			return Response({
+				'_ok': True,
+				'submission': {
+					'id': submission.id,
+					'student_id': user.id,
+					'student_name': f'{user.first_name} {user.last_name}'.strip() or user.username,
+					'student_email': user.email,
+					'content': submission.content,
+					'attachments': self._encode_attachment_urls(submission.attachments or []),
+					'submitted_at': submission.submitted_at,
+					'score': submission.score,
+					'feedback': getattr(submission, 'feedback', ''),
+					'graded': submission.graded,
+					'word_count': len(submission.content.split()),
+					'late_submission': False
+				}
+			})
+		
+		elif request.method == 'PUT':
+			# Grade the submission
+			score = request.data.get('score')
+			feedback = request.data.get('feedback', '')
+			
+			if score is None:
+				return Response({'error': 'Score is required'}, status=status.HTTP_400_BAD_REQUEST)
+			
+			submission.score = score
+			submission.feedback = feedback
+			submission.graded = True
+			submission.save()
+			
+			# Send in-app and email notifications to student
+			self._send_grading_notifications(submission, score, feedback, lesson)
+			
+			return Response({'_ok': True, 'message': 'Assignment graded successfully'})
+
+	@action(detail=True, methods=['get', 'put'], url_path='assignment-submissions/(?P<submission_id>[0-9]+)')
+	def assignment_submission_detail(self, request, pk=None, submission_id=None):
+		"""Get or update a specific assignment submission"""
+		lesson = self.get_object()
+		
+		# Check if facilitator
+		if lesson.module.course.facilitator != request.user:
+			return Response({'error': 'Unauthorized'}, status=status.HTTP_403_FORBIDDEN)
+		
+		try:
+			submission = AssignmentSubmission.objects.get(id=submission_id, lesson=lesson)
+		except AssignmentSubmission.DoesNotExist:
+			return Response({'error': 'Submission not found'}, status=status.HTTP_404_NOT_FOUND)
+		
+		if request.method == 'GET':
+			user = submission.enrollment.user
+			return Response({
+				'_ok': True,
+				'submission': {
+					'id': submission.id,
+					'student_id': user.id,
+					'student_name': f'{user.first_name} {user.last_name}'.strip() or user.username,
+					'student_email': user.email,
+					'content': submission.content,
+					'attachments': self._encode_attachment_urls(submission.attachments or []),
+					'submitted_at': submission.submitted_at,
+					'score': submission.score,
+					'feedback': getattr(submission, 'feedback', ''),
+					'graded': submission.graded,
+					'word_count': len(submission.content.split()),
+					'late_submission': False
+				}
+			})
+		
+		elif request.method == 'PUT':
+			# Grade the submission
+			score = request.data.get('score')
+			feedback = request.data.get('feedback', '')
+			
+			if score is None:
+				return Response({'error': 'Score is required'}, status=status.HTTP_400_BAD_REQUEST)
+			
+			submission.score = score
+			submission.feedback = feedback
+			submission.graded = True
+			submission.save()
+			
+			# Send in-app and email notifications to student
+			self._send_grading_notifications(submission, score, feedback, lesson)
+			
+			return Response({'_ok': True, 'message': 'Assignment graded successfully'})
+
+	def _send_grading_notifications(self, submission, score, feedback, lesson):
+		"""Send in-app and email notifications to student when assignment is graded"""
+		try:
+			from notifications.utils import send_notification
+			from notifications.models import NotificationPreference
+			from utils.mailjet_service import send_email
+			
+			student = submission.enrollment.user
+			course = lesson.module.course
+			
+			# Create in-app notification
+			title = f"Assignment Graded: {lesson.assignment_title or lesson.title}"
+			message = f"Your assignment has been graded with a score of {score}/{lesson.points_total or 100}."
+			if feedback:
+				message += f" Feedback: {feedback[:100]}..." if len(feedback) > 100 else f" Feedback: {feedback}"
+			
+			action_url = f"/courses/{course.id}/lessons/{lesson.id}"
+			
+			# Send in-app notification
+			send_notification(
+				user=student,
+				category='course',
+				title=title,
+				message=message,
+				action_url=action_url,
+				metadata={
+					'lesson_id': lesson.id,
+					'score': score,
+					'max_points': lesson.points_total or 100
+				}
+			)
+			
+			# Send email notification if user has email enabled
+			try:
+				pref = NotificationPreference.objects.filter(
+					user=student,
+					notification_type='course'
+				).first()
+				
+				email_enabled = pref.email_enabled if pref else True
+				
+				if email_enabled:
+					percentage = (score / (lesson.points_total or 100)) * 100
+					email_subject = f"Your Assignment Has Been Graded: {lesson.assignment_title or lesson.title}"
+					
+					email_body = f"""
+Hello {student.first_name or 'Student'},
+
+Your assignment has been graded!
+
+Assignment: {lesson.assignment_title or lesson.title}
+Course: {course.title}
+Your Score: {score}/{lesson.points_total or 100} ({percentage:.1f}%)
+"""
+					
+					if feedback:
+						email_body += f"\nFeedback from Instructor:\n{feedback}\n"
+					
+					email_body += f"\n\nView your assignment: {course.id}/lessons/{lesson.id}\n"
+					email_body += "\nBest regards,\nThe Learning Platform Team"
+					
+					send_email(
+						recipient_email=student.email,
+						subject=email_subject,
+						text_body=email_body,
+						html_body=None
+					)
+			except Exception as e:
+				print(f"Error sending email notification: {str(e)}")
+		
+		except Exception as e:
+			print(f"Error sending grading notifications: {str(e)}")
+
+
+class QuizQuestionViewSet(viewsets.ModelViewSet):
+	"""API endpoints for quiz questions"""
+	queryset = QuizQuestion.objects.all()
+	serializer_class = QuizQuestionFullSerializer
+	permission_classes = [permissions.IsAuthenticated]
+	filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
+	filterset_fields = ["lesson"]
+	ordering = ["id"]
+	
+	def get_serializer_class(self):
+		"""Use full serializer for instructors, hide answers for students"""
+		lesson_id = self.request.query_params.get('lesson') or self.request.data.get('lesson')
+		if lesson_id:
+			try:
+				lesson = Lesson.objects.get(id=lesson_id)
+				is_instructor = lesson.module.course.facilitator == self.request.user
+				if is_instructor:
+					return QuizQuestionFullSerializer
+				else:
+					return QuizQuestionSerializer
+			except Lesson.DoesNotExist:
+				return QuizQuestionFullSerializer
+		return QuizQuestionFullSerializer
+	
+	def get_queryset(self):
+		"""Filter by lesson if provided"""
+		qs = QuizQuestion.objects.all()
+		lesson_id = self.request.query_params.get('lesson')
+		if lesson_id:
+			qs = qs.filter(lesson_id=lesson_id)
+		return qs
+	
+	def perform_create(self, serializer):
+		"""Create quiz question and validate lesson ownership"""
+		lesson = serializer.validated_data.get('lesson')
+		# Verify user is the course facilitator
+		if lesson and lesson.module.course.facilitator != self.request.user:
+			raise permissions.PermissionDenied("You must be the course facilitator to add questions.")
+		serializer.save()
+	
+	def create(self, request, *args, **kwargs):
+		"""Override create to provide better error messages"""
+		try:
+			return super().create(request, *args, **kwargs)
+		except Exception as e:
+			print(f'[QuizQuestionViewSet] Create error: {str(e)}')
+			print(f'[QuizQuestionViewSet] Request data: {request.data}')
+			print(f'[QuizQuestionViewSet] Request user: {request.user}')
+			raise
 
 
 class QuizSubmissionViewSet(viewsets.ModelViewSet):

@@ -45,13 +45,14 @@ urlpatterns = router.urls
 
 from .views import community_search
 from .api.link_preview import fetch_link_preview
-from .api.user_activity import update_user_activity, get_user_activity
+from .api.user_activity import update_user_activity, get_user_activity, get_recent_activities
 
 urlpatterns += [
     path('search/', community_search, name='community-search'),
     path('link-preview/', fetch_link_preview, name='link-preview'),
     path('activity/update/', update_user_activity, name='update-activity'),
     path('activity/user/<int:user_id>/', get_user_activity, name='get-user-activity'),
+    path('activities/', get_recent_activities, name='get-recent-activities'),
 ]
 
 # Add verification submission endpoint

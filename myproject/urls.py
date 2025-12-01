@@ -23,18 +23,55 @@ from myproject.admin import admin_site
 
 # Serve media files without requiring authentication
 from django.views.static import serve
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
 from django.views.decorators.csrf import csrf_exempt
+import os
+import re
 
 @csrf_exempt
 def serve_media(request, path):
-    """Serve media files directly without requiring authentication"""
+    """Serve media files directly from disk without requiring authentication"""
     try:
-        response = serve(request, path, document_root=settings.MEDIA_ROOT, show_indexes=False)
-        response['Access-Control-Allow-Origin'] = '*'  # Allow CORS for media files
-        response['Cache-Control'] = 'public, max-age=31536000'  # Cache for 1 year
+        import mimetypes
+        from django.http import FileResponse
+        
+        file_path = os.path.join(settings.MEDIA_ROOT, path)
+        
+        # Security: prevent directory traversal
+        if not os.path.abspath(file_path).startswith(os.path.abspath(settings.MEDIA_ROOT)):
+            return HttpResponse('Access Denied', status=403)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            return HttpResponse('File not found', status=404)
+        
+        # Verify it's a file and not a directory
+        if not os.path.isfile(file_path):
+            return HttpResponse('Not a file', status=400)
+        
+        # Get file size
+        file_size = os.path.getsize(file_path)
+        
+        # Determine correct MIME type
+        mime_type, _ = mimetypes.guess_type(file_path)
+        if not mime_type:
+            mime_type = 'application/octet-stream'
+        
+        # Open file in binary mode and serve directly from disk
+        # FileResponse streams the file without loading it entirely into memory
+        file_obj = open(file_path, 'rb')
+        response = FileResponse(file_obj, content_type=mime_type)
+        
+        # Get original filename for download
+        filename = os.path.basename(file_path)
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+        response['Content-Length'] = str(file_size)
+        response['Access-Control-Allow-Origin'] = '*'
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        
         return response
     except Exception as e:
+        print(f'[serve_media] Error: {str(e)}')
         return HttpResponse(f'File not found: {path}', status=404)
 
 urlpatterns = [
@@ -47,6 +84,7 @@ urlpatterns = [
     # Backwards-compatible endpoint used by frontend for member lookup
     path('api/accounts/', include('accounts.urls')),
     path('api/community/', include('community.urls')),
+    path('api/homepagecommunity/', include('homepagecommunity.urls')),
     path('api/magazine/', include('magazine.api_urls')),
     path('api/utils/', include('utils.urls')),
     path('api/courses/', include('courses.urls')),

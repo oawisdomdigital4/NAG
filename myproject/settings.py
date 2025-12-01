@@ -91,6 +91,7 @@ INSTALLED_APPS = [
     'accounts',
     'community',
     'courses',
+    'homepagecommunity',
     'notifications',
     'payments',
     'utils',
@@ -110,6 +111,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'myproject.middleware.TokenAuthCsrfMiddleware',  # ← bypass CSRF for token auth
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -358,6 +360,7 @@ JAZZMIN_SETTINGS = {
         "auth.group": "fas fa-users",
         "accounts": "fas fa-user",
         "community": "fas fa-users",
+        "homepagecommunity": "fas fa-globe",
         "courses": "fas fa-book",
         "notifications": "fas fa-bell",
         "payments": "fas fa-credit-card",
@@ -373,6 +376,16 @@ JAZZMIN_SETTINGS = {
         "accounts.userprofile": "fas fa-id-badge",
         "accounts.usertoken": "fas fa-key",
         "accounts.otpverification": "fas fa-hourglass-half",
+
+        # homepagecommunity models
+        "homepagecommunity.herosection": "fas fa-image",
+        "homepagecommunity.aboutcommunitymission": "fas fa-lightbulb",
+        "homepagecommunity.communityfeature": "fas fa-star",
+        "homepagecommunity.subscriptiontier": "fas fa-crown",
+        "homepagecommunity.subscriptionbenefit": "fas fa-gift",
+        "homepagecommunity.testimonial": "fas fa-quote-left",
+        "homepagecommunity.finalcta": "fas fa-rocket",
+        "homepagecommunity.communitymetrics": "fas fa-chart-bar",
 
         # community models
         "community.post": "fas fa-sticky-note",
@@ -469,14 +482,15 @@ JAZZMIN_SETTINGS = {
 # ============================================================================
 # EMAIL CONFIGURATION - Mailjet
 # ============================================================================
-EMAIL_BACKEND = 'django_mailjet.backends.MailjetBackend'
+# Use Django's built-in SMTP backend with Mailjet credentials
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Use provided Mailjet credentials directly (should be stored in environment in production)
 MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', 'f378fb1358a57d5e6aba848d75f4a38c')
 MAILJET_SECRET_KEY = os.environ.get('MAILJET_SECRET_KEY', '10284f167f05d41129ff7b6d27a00056')
 MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL', 'no-reply@thenewafricagroup.com')
 MAILJET_FROM_NAME = 'The New Africa Group'
 
-# Django email settings (backup for non-Mailjet emails)
+# Django email settings (Mailjet SMTP configuration)
 EMAIL_HOST = 'in-v3.mailjet.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True

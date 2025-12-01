@@ -1,0 +1,58 @@
+/* Styling for SummitAgendaDay icon and color dropdowns */
+
+/* Make icon dropdown options more readable */
+#id_icon option,
+.inline-group select[name*='icon'] option {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Make color dropdown options more readable */
+#id_color option,
+.inline-group select[name*='color'] option {
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+/* Style the select elements themselves */
+#id_icon,
+#id_color,
+.inline-group select[name*='icon'],
+.inline-group select[name*='color'] {
+    min-width: 250px;
+    padding: 8px;
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+/* Better visual separation in inline forms */
+.inline-related.tabular-inline-related .inline-group select {
+    width: 100%;
+}
+
+/* Improve readonly field display for previews */
+.readonly {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    min-height: 38px;
+}
+
+/* Icon preview styling */
+.icon-preview {
+    font-size: 24px;
+    margin-right: 8px;
+    min-width: 30px;
+    text-align: center;
+}
+
+/* Color preview styling */
+.color-preview {
+    display: inline-block;
+    width: 40px;
+    height: 20px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-right: 8px;
+    border: 1px solid #ddd;
+}

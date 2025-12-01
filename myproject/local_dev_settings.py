@@ -38,6 +38,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",  # Required for CSRF
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "myproject.middleware.TokenAuthCsrfMiddleware",  # ← bypass CSRF for token auth
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

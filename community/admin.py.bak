@@ -7,6 +7,8 @@ from django.utils.safestring import mark_safe
 from .models import (
     CommunitySection,
     CTABanner,
+    Group,
+    GroupMembership,
     # New models
     CorporateConnection,
     PartnerDirectory,
@@ -78,6 +80,73 @@ class CTABannerAdmin(admin.ModelAdmin):
 		return format_html("<i class='fas fa-bullhorn' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
 
+
+# ============================================================================
+# GROUP ADMIN
+# ============================================================================
+
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'name', 'category', 'created_by', 'is_corporate_group', 'is_private', 'members_count', 'posts_count', 'created_at')
+	list_filter = ('category', 'is_corporate_group', 'is_private', 'created_at')
+	search_fields = ('name', 'description', 'created_by__username')
+	readonly_fields = ('created_at', 'posts_count', 'members_count')
+	filter_horizontal = ('moderators', 'courses')
+	
+	fieldsets = (
+		('Basic Information', {
+			'fields': ('name', 'description', 'category')
+		}),
+		('Images', {
+			'fields': ('profile_picture', 'profile_picture_url', 'banner', 'banner_url')
+		}),
+		('Access Control', {
+			'fields': ('is_private', 'is_corporate_group', 'created_by', 'moderators')
+		}),
+		('Relationships', {
+			'fields': ('courses',),
+			'classes': ('collapse',)
+		}),
+		('Statistics', {
+			'fields': ('members_count', 'posts_count', 'created_at'),
+			'classes': ('collapse',)
+		}),
+	)
+	
+	def icon(self, obj):
+		if obj.is_corporate_group:
+			return format_html("<i class='fas fa-building' style='font-size:14px;color:#0D1B52;'></i>")
+		return format_html("<i class='fas fa-users' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
+	
+	def members_count(self, obj):
+		return obj.memberships.count()
+	members_count.short_description = 'Members'
+	
+	def posts_count(self, obj):
+		return obj.posts.count()
+	posts_count.short_description = 'Posts'
+
+
+@admin.register(GroupMembership)
+class GroupMembershipAdmin(admin.ModelAdmin):
+	list_display = ('icon', 'user', 'group', 'joined_at')
+	list_filter = ('group', 'joined_at')
+	search_fields = ('user__username', 'group__name')
+	readonly_fields = ('joined_at',)
+	
+	fieldsets = (
+		('Membership Details', {
+			'fields': ('user', 'group')
+		}),
+		('Timeline', {
+			'fields': ('joined_at',)
+		}),
+	)
+	
+	def icon(self, obj):
+		return format_html("<i class='fas fa-user-plus' style='font-size:14px;color:#0D1B52;'></i>")
+	icon.short_description = ''
 
 
 @admin.register(CorporateConnection)

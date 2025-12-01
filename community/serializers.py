@@ -55,11 +55,21 @@ class GroupSerializer(serializers.ModelSerializer):
     created_by = serializers.PrimaryKeyRelatedField(read_only=True)
 
     # Accept null/None from frontend for optional text/url fields
-    logo_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    banner_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    logo_url = serializers.SerializerMethodField()
+    banner_url = serializers.SerializerMethodField()
+    profile_picture_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     tagline = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     website_url = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     company_bio = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
+    # Image file fields for uploads
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    banner = serializers.ImageField(required=False, allow_null=True)
+    
+    # Computed fields for absolute image URLs (keep for backward compatibility)
+    profile_picture_absolute_url = serializers.SerializerMethodField()
+    banner_absolute_url = serializers.SerializerMethodField()
+    
     # whether the requesting user is a member of this group
     is_member = serializers.SerializerMethodField()
     members_count = serializers.SerializerMethodField()
@@ -67,6 +77,11 @@ class GroupSerializer(serializers.ModelSerializer):
     is_moderator = serializers.SerializerMethodField()
     # expose moderators list (ids) for management UIs
     moderators = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    
+    # Admin info
+    is_creator = serializers.SerializerMethodField()
+    creator_email = serializers.SerializerMethodField()
+    creator_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Group
@@ -80,6 +95,7 @@ class GroupSerializer(serializers.ModelSerializer):
         optional_string_fields = [
             'logo_url',
             'banner_url',
+            'profile_picture_url',
             'tagline',
             'website_url',
             'company_bio',
@@ -95,6 +111,27 @@ class GroupSerializer(serializers.ModelSerializer):
         # Return concrete model field names for the Group model
         model = self.Meta.model
         return {f.name for f in model._meta.get_fields() if getattr(f, 'concrete', True) and not f.many_to_many}
+
+    def _get_absolute_url(self, file_obj):
+        """Convert relative file URL to absolute URL"""
+        if not file_obj:
+            return None
+        try:
+            from django.conf import settings
+            request = self.context.get('request')
+            file_url = file_obj.url if hasattr(file_obj, 'url') else str(file_obj)
+            
+            if file_url.startswith('http://') or file_url.startswith('https://'):
+                return file_url
+            
+            if request:
+                return request.build_absolute_uri(file_url)
+            elif hasattr(settings, 'SITE_URL'):
+                return f"{settings.SITE_URL.rstrip('/')}{file_url}"
+            else:
+                return f"http://localhost:8000{file_url}"
+        except Exception:
+            return None
 
     def create(self, validated_data):
         # Remove any keys not present on the model (frontend may send extra UI-only fields)
@@ -131,34 +168,85 @@ class GroupSerializer(serializers.ModelSerializer):
         except Exception:
             return False
 
+    def get_is_creator(self, obj):
+        """Check if requesting user is the group creator"""
+        try:
+            request = self.context.get('request')
+            if not request or not getattr(request, 'user', None) or not request.user.is_authenticated:
+                return False
+            return obj.created_by_id == request.user.id
+        except Exception:
+            return False
+
+    def get_creator_email(self, obj):
+        """Get creator's email address"""
+        try:
+            return obj.created_by.email if obj.created_by else None
+        except Exception:
+            return None
+
+    def get_creator_name(self, obj):
+        """Get creator's full name"""
+        try:
+            if not obj.created_by:
+                return None
+            creator = obj.created_by
+            # Try to get full name from profile
+            name = None
+            for attr in ('profile', 'community_profile', 'userprofile'):
+                profile = getattr(creator, attr, None)
+                if profile:
+                    name = getattr(profile, 'full_name', None)
+                    if name:
+                        break
+            if not name:
+                name = (getattr(creator, 'first_name', '') + ' ' + getattr(creator, 'last_name', '')).strip()
+            return name or creator.email or str(creator)
+        except Exception:
+            return None
+
+    def get_profile_picture_absolute_url(self, obj):
+        """Get absolute URL for profile picture"""
+        if obj.profile_picture:
+            return self._get_absolute_url(obj.profile_picture)
+        return obj.profile_picture_url or None
+
+    def get_banner_absolute_url(self, obj):
+        """Get absolute URL for banner"""
+        if obj.banner:
+            return self._get_absolute_url(obj.banner)
+        return obj.banner_url or None
+
+    def get_logo_url(self, obj):
+        """Get logo URL (alias for profile_picture absolute URL for frontend compatibility)"""
+        # Frontend expects 'logo_url' - provide absolute URL for profile picture
+        if obj.profile_picture:
+            return self._get_absolute_url(obj.profile_picture)
+        return obj.profile_picture_url or None
+
+    def get_banner_url(self, obj):
+        """Get banner URL (ensure it's absolute for frontend)"""
+        # Frontend expects 'banner_url' - provide absolute URL for banner
+        if obj.banner:
+            return self._get_absolute_url(obj.banner)
+        return obj.banner_url or None
+
     def to_representation(self, obj):
         data = super().to_representation(obj)
-        try:
-            # Attach creator name for frontend convenience
-            if obj.created_by:
-                creator = obj.created_by
-                name = None
-                for attr in ('profile', 'community_profile', 'userprofile'):
-                    profile = getattr(creator, attr, None)
-                    if profile:
-                        name = getattr(profile, 'full_name', None)
-                        if name:
-                            break
-                if not name:
-                    name = getattr(creator, 'first_name', '') + ' ' + getattr(creator, 'last_name', '')
-                data['creator_name'] = (name or getattr(creator, 'email', None) or str(creator)).strip()
-            else:
-                data['creator_name'] = ''
-        except Exception:
-            data['creator_name'] = ''
+        # Clean up null values for images
+        if not data.get('profile_picture_absolute_url'):
+            data['profile_picture_absolute_url'] = None
+        if not data.get('banner_absolute_url'):
+            data['banner_absolute_url'] = None
         return data
 
 class SimpleUserSerializer(serializers.ModelSerializer):
     profile = serializers.SerializerMethodField()
+    is_staff = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = None  # set at runtime
-        fields = ['id', 'email', 'first_name', 'last_name', 'profile']
+        fields = ['id', 'email', 'first_name', 'last_name', 'profile', 'is_staff']
 
     def get_profile(self, obj):
         try:
@@ -246,6 +334,17 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = '__all__'
         read_only_fields = ('author', 'is_sponsored', 'sponsored_campaign')
+
+    def to_internal_value(self, data):
+        """
+        Handle both 'group' and 'group_id' parameter names for backward compatibility.
+        Frontend sends 'group_id', but serializer field is named 'group'.
+        """
+        # If frontend sent 'group_id', rename it to 'group' for the serializer
+        if 'group_id' in data and 'group' not in data:
+            data = dict(data)  # Make a copy to avoid modifying original
+            data['group'] = data.pop('group_id')
+        return super().to_internal_value(data)
 
     def to_representation(self, obj):
         # Get the standard representation then normalize any relative URLs to absolute

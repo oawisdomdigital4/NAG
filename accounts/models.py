@@ -54,10 +54,17 @@ class UserProfile(models.Model):
     expertise_areas = models.JSONField(default=list, blank=True, null=True)
     company_name = models.CharField(max_length=255, blank=True)
     industry = models.CharField(max_length=255, blank=True)
-    # Track available balance for payouts (editable via admin)
-    balance = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    # Track total earnings for facilitators (editable via admin for manual adjustments)
-    total_earnings = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    
+    # --- Facilitator Wallet System (3-Balance Model) ---
+    # earning_balance: Total amount earned from course sales (non-spendable, record-keeping)
+    earning_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text='Total earned from course sales')
+    
+    # pending_balance: Earned money under processing (escrow, held temporarily)
+    pending_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text='Earned but not yet cleared (processing period)')
+    
+    # available_balance: Spendable money (cleared earnings + top-ups + admin credits)
+    available_balance = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text='Usable balance for withdrawals/campaigns/promotions')
+    
     # Flag set when a user is approved to access community features
     community_approved = models.BooleanField(default=False)
     # Public avatar URL for the user (can be blank). Use a URL field to avoid

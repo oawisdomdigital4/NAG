@@ -79,8 +79,8 @@ class UserAdmin(BaseUserAdmin):
 # -----------------------------
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("icon", "user", "full_name", "phone", "country", "company_name", "balance", "total_earnings", "community_approved", "has_avatar")
-    list_editable = ("balance", "total_earnings")
+    list_display = ("icon", "user", "full_name", "phone", "country", "company_name", "earning_balance", "pending_balance", "available_balance", "community_approved", "has_avatar")
+    list_editable = ("earning_balance", "pending_balance", "available_balance")
     search_fields = ("user__email", "full_name", "phone", "country", "company_name")
     actions = ("approve_community_access", "revoke_community_access")
     readonly_fields = ("avatar_preview",)

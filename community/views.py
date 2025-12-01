@@ -22,6 +22,7 @@ from django.core.files.base import ContentFile
 from django.db import models
 from django.db.models import F, Q
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
 from rest_framework import permissions, status, viewsets, parsers, serializers
 from rest_framework.decorators import action, api_view, permission_classes
@@ -116,17 +117,48 @@ class GroupViewSet(viewsets.ModelViewSet):
     authentication_classes = [DatabaseTokenAuthentication, SessionAuthentication]
     permission_classes = [IsAuthenticated, IsCommunityMember]
 
+    def get_parsers(self):
+        """Override to support both JSON and multipart form data for file uploads"""
+        if self.request.method in ['POST', 'PUT', 'PATCH']:
+            from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+            return [MultiPartParser(), FormParser(), JSONParser()]
+        from rest_framework.parsers import JSONParser
+        return [JSONParser()]
+
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def create(self, request, *args, **kwargs):
         return super().create(request, *args, **kwargs)
 
+    def update(self, request, *args, **kwargs):
+        """Override update to check permissions - only creator or moderators can update"""
+        group = self.get_object()
+        user = request.user
+        # Only creator, moderators, or staff can update group
+        is_creator = user == group.created_by
+        is_moderator = group.moderators.filter(id=user.id).exists()
+        is_staff = user.is_staff
+        
+        if not (is_creator or is_moderator or is_staff):
+            from rest_framework.response import Response
+            return Response({'detail': 'Permission denied. Only group creator or moderators can update.'}, status=403)
+        
+        return super().update(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         try:
-            serializer.save(created_by=self.request.user)
+            group = serializer.save(created_by=self.request.user)
+            # Auto-assign creator as a member and moderator so they can manage the group immediately
+            from .models import GroupMembership
+            GroupMembership.objects.get_or_create(user=self.request.user, group=group)
+            group.moderators.add(self.request.user)
         except Exception:
-            serializer.save()
+            group = serializer.save()
+            # Retry assignment even if first save failed
+            from .models import GroupMembership
+            GroupMembership.objects.get_or_create(user=self.request.user, group=group)
+            group.moderators.add(self.request.user)
 
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
@@ -222,6 +254,46 @@ class GroupViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Moderator removed'}, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'detail': 'Failed to remove moderator', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'])
+    def remove_member(self, request, pk=None):
+        """Remove a member from the group. Only group creator can remove members.
+        
+        Note: CSRF is exempted here since this endpoint uses token authentication.
+        """
+        group = self.get_object()
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response({'detail': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Only creator or staff can remove members
+        if not (request.user == group.created_by or request.user.is_staff):
+            return Response({'detail': 'Permission denied. Only group creator can remove members.'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            from django.contrib.auth import get_user_model
+            from .models import GroupMembership
+            
+            User = get_user_model()
+            member_user = User.objects.filter(id=user_id).first()
+            if not member_user:
+                return Response({'detail': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Prevent removing the group creator
+            if member_user == group.created_by:
+                return Response({'detail': 'Cannot remove group creator'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Delete the membership
+            deleted_count, _ = GroupMembership.objects.filter(user=member_user, group=group).delete()
+            if deleted_count == 0:
+                return Response({'detail': 'User is not a member of this group'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Also remove from moderators if they were a moderator
+            group.moderators.remove(member_user)
+            
+            return Response({'detail': 'Member removed successfully'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'detail': 'Failed to remove member', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=True, methods=['post'])
     def create_invite(self, request, pk=None):
@@ -357,6 +429,44 @@ class GroupViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'detail': 'Failed to revoke invite', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def destroy(self, request, *args, **kwargs):
+        """Delete a group. Only creator or staff can delete.
+        
+        Manually handles deletion to ensure all related objects (memberships, invites, posts)
+        are properly deleted to avoid SQLite FK constraint issues.
+        """
+        group = self.get_object()
+        
+        # Check permissions - only creator or staff can delete
+        is_creator = request.user == group.created_by
+        if not (is_creator or request.user.is_staff):
+            return Response({'detail': 'Permission denied'}, status=status.HTTP_403_FORBIDDEN)
+        
+        try:
+            from django.db import transaction
+            from .models import GroupMembership, GroupInvite, Post
+            
+            with transaction.atomic():
+                # Delete all posts in the group first (cascade will handle their dependencies)
+                Post.objects.filter(group=group).delete()
+                
+                # Delete all invites
+                GroupInvite.objects.filter(group=group).delete()
+                
+                # Delete all memberships
+                GroupMembership.objects.filter(group=group).delete()
+                
+                # Finally delete the group itself
+                group_id = group.id
+                group.delete()
+                
+            return Response({'detail': 'Group deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response(
+                {'detail': 'Failed to delete group', 'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
 
 class GroupMembershipViewSet(viewsets.ModelViewSet):
     queryset = GroupMembership.objects.all()
@@ -365,14 +475,25 @@ class GroupMembershipViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated, IsCommunityMember]
 
     def get_queryset(self):
-        """Filter memberships by user if user parameter is provided."""
+        """Filter memberships by group and/or user if parameters are provided."""
         qs = super().get_queryset()
+        
+        # Filter by group if group parameter is provided
+        group_id = self.request.query_params.get('group')
+        if group_id:
+            try:
+                qs = qs.filter(group_id=int(group_id))
+            except (ValueError, TypeError):
+                pass
+        
+        # Filter by user if user parameter is provided
         user_id = self.request.query_params.get('user')
         if user_id:
             try:
                 qs = qs.filter(user_id=int(user_id))
             except (ValueError, TypeError):
                 pass
+        
         return qs
 
 
@@ -393,6 +514,9 @@ class PostViewSet(viewsets.ModelViewSet):
 
         # Apply visibility filters
         request_user = getattr(self.request, 'user', None)
+        import logging
+        logger = logging.getLogger(__name__)
+        
         # If the requester is staff allow full access (no visibility filtering)
         if not (request_user and getattr(request_user, 'is_staff', False)):
             # Base filter: only approved posts
@@ -409,8 +533,20 @@ class PostViewSet(viewsets.ModelViewSet):
                     | Q(feed_visibility='group_only', group__memberships__user=request_user)
                     | Q(author=request_user)
                 )
+                logger.info(f'[PostViewSet.get_queryset] User {request_user.id} authenticated - including own posts and group posts')
 
             qs = qs.filter(base_q & visibility_q).distinct()
+            
+            # Debug logging
+            logger.info(f'[PostViewSet.get_queryset] After visibility filter - user={request_user}, is_auth={getattr(request_user, "is_authenticated", False) if request_user else False}')
+            logger.info(f'[PostViewSet.get_queryset] Total posts after visibility: {qs.count()}')
+            if request_user and getattr(request_user, 'is_authenticated', False):
+                user_groups = Group.objects.filter(memberships__user=request_user)
+                logger.info(f'[PostViewSet.get_queryset] User groups: {list(user_groups.values_list("id", "name"))}')
+                
+                # Check author posts
+                author_posts = qs.filter(author=request_user)
+                logger.info(f'[PostViewSet.get_queryset] Author posts visible to user: {author_posts.count()}')
 
         return qs
 
@@ -431,7 +567,7 @@ class PostViewSet(viewsets.ModelViewSet):
         Get feed posts with ranking and filtering.
 
         Query params:
-        - feed_type: 'global' (default), 'following', 'trending'
+        - feed_type: 'global' (default), 'following', 'trending', 'joined_groups'
         - author_id: filter by author
         - group_id: filter by group
         - page: page number (default 1)
@@ -442,11 +578,17 @@ class PostViewSet(viewsets.ModelViewSet):
         feed_type = request.query_params.get('feed_type', 'global')
         page_size = int(request.query_params.get('page_size', 20))
         author_id = request.query_params.get('author_id')
-        group_id = request.query_params.get('group_id')
+        group_id = request.query_params.get('group_id') or request.query_params.get('group')
         include_campaigns = request.query_params.get('include_campaigns', 'true').lower() == 'true'
 
-        # Get base queryset
+        # Debug logging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'[PostViewSet.list] Filtering posts - group_id={group_id}, author_id={author_id}, feed_type={feed_type}')
+
+        # Get base queryset (applies visibility filters)
         qs = self.get_queryset()
+        logger.info(f'[PostViewSet.list] Initial queryset count after visibility filter: {qs.count()}')
 
         # Apply author/group filters if provided
         if author_id:
@@ -456,7 +598,22 @@ class PostViewSet(viewsets.ModelViewSet):
                 qs = qs.filter(Q(author__username=author_id) | Q(author__email=author_id))
 
         if group_id:
+            # Filter by specific group
             qs = qs.filter(group__id=group_id)
+            logger.info(f'[PostViewSet.list] After group filter: {qs.count()} posts in group {group_id}')
+            # Also log sample posts with details
+            sample = qs.values_list('id', 'group_id', 'feed_visibility', 'is_approved', 'author_id')[:5]
+            logger.info(f'[PostViewSet.list] Sample posts in group {group_id}: {list(sample)}')
+            
+            # Check if any posts exist for this group at all (before visibility filter)
+            all_group_posts = Post.objects.filter(group__id=group_id)
+            logger.info(f'[PostViewSet.list] ALL posts in group {group_id} (no visibility filter): {all_group_posts.count()}')
+            logger.info(f'[PostViewSet.list] Sample all posts: {list(all_group_posts.values_list("id", "group_id", "feed_visibility", "is_approved")[:5])}')
+        elif feed_type == 'global':
+            # When viewing global feed, exclude group-only posts
+            # Group-only posts should only appear when explicitly viewing that group or joined_groups tab
+            qs = qs.exclude(feed_visibility='group_only')
+            logger.info(f'[PostViewSet.list] Excluded group_only posts from global feed. Remaining: {qs.count()} posts')
 
         # Apply feed-type specific logic
         if feed_type == 'following' and request.user.is_authenticated:
@@ -468,6 +625,12 @@ class PostViewSet(viewsets.ModelViewSet):
             # Get posts with high engagement in last 24 hours
             yesterday = timezone.now() - timedelta(days=1)
             qs = qs.filter(created_at__gte=yesterday)
+
+        elif feed_type == 'joined_groups' and request.user.is_authenticated:
+            # Get posts from groups the user is a member of
+            user_group_ids = GroupMembership.objects.filter(user=request.user).values_list('group_id', flat=True)
+            qs = qs.filter(group_id__in=user_group_ids)
+            logger.info(f'[PostViewSet.list] Joined groups feed - user {request.user.id} is member of groups: {list(user_group_ids)}, found {qs.count()} posts')
 
         # Apply ranking
         try:
@@ -644,9 +807,42 @@ class PostViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         # Allow file uploads under 'media' key as multiple files
         # We'll create the Post first, then attach uploaded files and update media_urls
+        
+        # Debug logging for group_id handling
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f'[PostViewSet.create] Request data keys: {list(request.data.keys())}')
+        logger.info(f'[PostViewSet.create] group in request.data: {"group" in request.data}')
+        logger.info(f'[PostViewSet.create] group_id in request.data: {"group_id" in request.data}')
+        if "group_id" in request.data:
+            logger.info(f'[PostViewSet.create] Received group_id={request.data.get("group_id")}')
+        if "group" in request.data:
+            logger.info(f'[PostViewSet.create] Received group={request.data.get("group")}')
+        
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         post = serializer.save(author=request.user)
+        
+        # Debug logging
+        logger.info(f'[PostViewSet.create] Post created: id={post.id}, group_id={post.group_id}, feed_visibility={post.feed_visibility}, is_approved={post.is_approved}, author_id={post.author_id}')
+        
+        # Auto-add author to group membership when creating a post in a group
+        # This ensures they can see their own group posts via visibility filter
+        if post.group_id:
+            try:
+                group = Group.objects.get(id=post.group_id)
+                membership, created = GroupMembership.objects.get_or_create(
+                    user=request.user,
+                    group=group
+                )
+                if created:
+                    logger.info(f'[PostViewSet.create] Author {request.user.id} auto-added to group {post.group_id}')
+                else:
+                    logger.info(f'[PostViewSet.create] Author {request.user.id} already member of group {post.group_id}')
+            except Group.DoesNotExist:
+                logger.warning(f'[PostViewSet.create] Group {post.group_id} not found')
+            except Exception as e:
+                logger.warning(f'[PostViewSet.create] Error adding user to group: {str(e)}')
 
         # Normalize media_urls in case the client sent them as a JSON string
         # (common when using multipart/form-data). Ensure post.media_urls is a list.

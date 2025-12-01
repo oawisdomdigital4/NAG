@@ -27,7 +27,8 @@ class CoursePaymentService:
             
             user_profile = user.profile
             course_price = Decimal(str(course.price))
-            user_balance = Decimal(str(user_profile.balance))
+            # Use available_balance from three-balance system
+            user_balance = Decimal(str(user_profile.available_balance))
             
             can_afford = user_balance >= course_price
             
@@ -49,7 +50,8 @@ class CoursePaymentService:
     def process_enrollment_payment(user: User, course: Course) -> dict:
         """
         Process payment for course enrollment.
-        Deducts from student wallet and adds to instructor wallet.
+        Deducts from student wallet (available_balance) and adds to instructor's pending balance.
+        Instructor funds will move from pending to available after 2-5 day processing period.
         """
         try:
             # Check if user can afford
@@ -68,14 +70,15 @@ class CoursePaymentService:
                 
                 course_price = Decimal(str(course.price))
                 
-                # Deduct from student wallet
-                user_profile.balance -= course_price
-                user_profile.save(update_fields=['balance'])
+                # Deduct from student wallet (available_balance)
+                user_profile.available_balance -= course_price
+                user_profile.save(update_fields=['available_balance'])
                 
-                # Add to instructor wallet
-                facilitator_profile.balance += course_price
-                facilitator_profile.total_earnings += course_price
-                facilitator_profile.save(update_fields=['balance', 'total_earnings'])
+                # Add to instructor's pending balance (will move to available after 2-5 days)
+                facilitator_profile.pending_balance += course_price
+                # Also track in earning_balance for record keeping
+                facilitator_profile.earning_balance += course_price
+                facilitator_profile.save(update_fields=['pending_balance', 'earning_balance'])
                 
                 # Create payment record for student
                 payment = Payment.objects.create(
@@ -98,14 +101,15 @@ class CoursePaymentService:
                     user=course.facilitator,
                     amount=course_price,
                     provider='wallet',
-                    status='completed',
+                    status='pending',
                     transaction_type='course_revenue',
                     currency='USD',
                     metadata={
                         'course_id': course.id,
                         'course_title': course.title,
                         'student_id': user.id,
-                        'student_name': user.get_full_name()
+                        'student_name': user.get_full_name(),
+                        'processing_until': (timezone.now() + timezone.timedelta(days=2)).isoformat()
                     }
                 )
                 
@@ -114,8 +118,9 @@ class CoursePaymentService:
                     'reason': 'Payment processed successfully',
                     'payment_id': payment.id,
                     'amount_charged': float(course_price),
-                    'student_new_balance': float(user_profile.balance),
-                    'instructor_new_balance': float(facilitator_profile.balance)
+                    'student_new_balance': float(user_profile.available_balance),
+                    'instructor_pending_balance': float(facilitator_profile.pending_balance),
+                    'processing_note': 'Instructor funds will be available in 2-5 business days'
                 }
         
         except Exception as e:
@@ -130,6 +135,8 @@ class CoursePaymentService:
         """
         Refund course payment and remove enrollment.
         Used when student unenrolls.
+        Refunds go back to student's available_balance.
+        Deducts from instructor's pending or available balance depending on status.
         """
         try:
             with transaction.atomic():
@@ -141,14 +148,19 @@ class CoursePaymentService:
                 
                 course_price = Decimal(str(course.price))
                 
-                # Refund to student wallet
-                user_profile.balance += course_price
-                user_profile.save(update_fields=['balance'])
+                # Refund to student wallet (available_balance)
+                user_profile.available_balance += course_price
+                user_profile.save(update_fields=['available_balance'])
                 
                 # Deduct from instructor wallet
-                facilitator_profile.balance -= course_price
-                facilitator_profile.total_earnings -= course_price
-                facilitator_profile.save(update_fields=['balance', 'total_earnings'])
+                # If funds are still pending, deduct from pending_balance
+                if facilitator_profile.pending_balance >= course_price:
+                    facilitator_profile.pending_balance -= course_price
+                else:
+                    # Otherwise deduct from available_balance
+                    facilitator_profile.available_balance -= course_price
+                
+                facilitator_profile.save(update_fields=['pending_balance', 'available_balance'])
                 
                 # Create refund payment records
                 Payment.objects.create(
@@ -169,7 +181,7 @@ class CoursePaymentService:
                     'success': True,
                     'reason': 'Refund processed successfully',
                     'amount_refunded': float(course_price),
-                    'new_balance': float(user_profile.balance)
+                    'new_balance': float(user_profile.available_balance)
                 }
         
         except Exception as e:

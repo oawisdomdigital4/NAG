@@ -24,8 +24,10 @@ if not user:
 try:
     profile = user.profile
     print(f'User: {user.username}')
-    print(f'Balance: {profile.balance}')
+    print(f'Earning Balance: {profile.earning_balance}')
+    print(f'Pending Balance: {profile.pending_balance}')
+    print(f'Available Balance: {profile.available_balance}')
     print(f'Course price: {course.price}')
-    print(f'Can afford: {profile.balance >= float(course.price)}')
+    print(f'Can afford: {profile.available_balance >= float(course.price)}')
 except UserProfile.DoesNotExist:
     print(f"User {user.username} has no profile")

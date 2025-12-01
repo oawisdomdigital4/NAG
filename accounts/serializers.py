@@ -20,7 +20,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'phone', 'country', 'bio',
             'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar',
-            'verification_status', 'balance', 'total_earnings', 'portfolio_url'
+            'verification_status', 'earning_balance', 'pending_balance', 'available_balance', 'portfolio_url'
         ]
     
     def get_avatar(self, obj):
@@ -48,7 +48,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = [
             'full_name', 'phone', 'country', 'bio',
             'expertise_areas', 'company_name', 'industry', 'community_approved', 'avatar_url', 'avatar',
-            'verification_status', 'balance', 'total_earnings', 'portfolio_url'
+            'verification_status', 'earning_balance', 'pending_balance', 'available_balance', 'portfolio_url'
         ]
     
     def get_verification_status(self, obj):

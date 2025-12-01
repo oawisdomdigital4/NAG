@@ -3,6 +3,7 @@ from django.urls import path, include
 from .views import (
     SponsorCampaignViewSet,
     WithdrawalRequestViewSet,
+    WalletTopUpViewSet,
     SponsorAnalyticsView,
 )
 from .dashboard_analytics import DashboardAnalyticsView, FacilitatorAnalyticsView
@@ -12,6 +13,7 @@ from .extended_views import OpportunityViewSet, OpportunityStats
 router = DefaultRouter()
 router.register(r'sponsor-campaigns', SponsorCampaignViewSet, basename='sponsor-campaign')
 router.register(r'withdrawals', WithdrawalRequestViewSet, basename='withdrawal')
+router.register(r'wallet-topups', WalletTopUpViewSet, basename='wallet-topup')
 router.register(r'opportunities', OpportunityViewSet, basename='opportunity')
 urlpatterns = [
     # Specific paths must come BEFORE the router to avoid conflicts

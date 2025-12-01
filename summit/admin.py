@@ -48,11 +48,11 @@ DAY_COLOR_CHOICES = [
 # Helpful choices for SummitAgendaDay visuals
 DAY_ICON_CHOICES = [
 	('', '— None —'),
-	('🎤', 'Microphone 🎤'),
-	('👥', 'People 👥'),
-	('🏆', 'Award 🏆'),
-	('🌍', 'Globe 🌍'),
-	('⭐', 'Star ⭐'),
+	('🎤', 'Microphone'),
+	('👥', 'People'),
+	('🏆', 'Award'),
+	('🌍', 'Globe'),
+	('⭐', 'Star'),
 ]
 
 
@@ -80,17 +80,26 @@ THEME_ICON_EMOJI = {
 }
 
 class RegistrationPackageForm(forms.ModelForm):
+	# Custom field for features input as textarea (one per line)
+	features_text = forms.CharField(
+		widget=forms.Textarea(attrs={'rows': 8, 'placeholder': 'Enter each feature on a new line'}),
+		required=False,
+		help_text='Enter each feature on a new line. Will be converted to JSON on save.'
+	)
+	
 	class Meta:
 		model = RegistrationPackage
-		fields = '__all__'
+		fields = ('name', 'description', 'price', 'currency', 'popular', 'color', 'order')
 		widgets = {
 			'color': forms.RadioSelect,
 		}
 
 	def __init__(self, *args, **kwargs):
 		super().__init__(*args, **kwargs)
-		# No icon choices; icons removed for registration packages
-
+		# If editing an existing object, populate features_text from the features JSON
+		if self.instance.pk and self.instance.features:
+			self.fields['features_text'].initial = '\n'.join(self.instance.features)
+		
 		# Build color choices with a small preview similar to SummitTheme
 		if 'color' in self.fields:
 			try:
@@ -111,6 +120,22 @@ class RegistrationPackageForm(forms.ModelForm):
 				self.fields['color'].choices = color_choices
 			except Exception:
 				pass
+
+	def save(self, commit=True):
+		"""Convert features_text (textarea input) to features (JSON list)"""
+		instance = super().save(commit=False)
+		
+		# Convert newline-separated features into a JSON list
+		features_text = self.cleaned_data.get('features_text', '').strip()
+		if features_text:
+			features_list = [line.strip() for line in features_text.split('\n') if line.strip()]
+			instance.features = features_list
+		else:
+			instance.features = []
+		
+		if commit:
+			instance.save()
+		return instance
 
 
 
@@ -178,15 +203,19 @@ class RegistrationPackageAdmin(admin.ModelAdmin):
 	list_display = ('icon', 'id', 'name', 'description', 'color_preview', 'price', 'currency', 'popular', 'order')
 	list_filter = ('popular',)
 	search_fields = ('name',)
-	# expose description so editors can edit the card subtitle shown in the frontend
-	# Keep editable fields simple; put non-editable previews and timestamps in readonly_fields
-	fields = (
-		'name', 'description', 'price', 'currency', 'features', 'popular', 'order',
-		'color_preview', 'color'
+	
+	# Organize fields into tabs: General and Features
+	fieldsets = (
+		('General', {
+			'fields': ('name', 'description', 'price', 'currency', 'popular', 'order', 'color_preview', 'color', 'created_at')
+		}),
+		('Features', {
+			'fields': ('features_text',),
+			'description': 'Enter each feature on a new line. They will be automatically converted to a list.'
+		}),
 	)
 
 	readonly_fields = ('color_preview', 'created_at')
-
 	form = RegistrationPackageForm
 
 	def icon(self, obj):
@@ -199,7 +228,6 @@ class RegistrationPackageAdmin(admin.ModelAdmin):
 			return ''
 		except Exception:
 			return ''
-
 
 	def color_preview(self, obj):
 		try:
@@ -265,10 +293,7 @@ class SummitHeroAdmin(admin.ModelAdmin):
 	def icon(self, obj):
 		return format_html("<i class='fas fa-image' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
-
-	def icon(self, obj):
-		return format_html("<i class='fas fa-image' style='font-size:14px;color:#0D1B52;'></i>")
-	icon.short_description = ''
+	
 	fields = (
 		'title_main', 'title_highlight', 'date_text', 'location_text',
 		'subtitle', 'strapline', 'background_image',
@@ -307,6 +332,8 @@ class SummitHeroAdmin(admin.ModelAdmin):
 					display = f"{val} {lab}"
 					choices.append((val, mark_safe(display)))
 				self.fields['icon'].choices = choices
+				# IMPORTANT: Also set choices on the widget itself for RadioSelect to render
+				self.fields['icon'].widget.choices = choices
 
 		form = SummitStatForm
 
@@ -322,10 +349,7 @@ class PartnerSectionAdmin(admin.ModelAdmin):
 	def icon(self, obj):
 		return format_html("<i class='fas fa-users' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
-
-	def icon(self, obj):
-		return format_html("<i class='fas fa-link' style='font-size:14px;color:#0D1B52;'></i>")
-	icon.short_description = ''
+	
 	fields = (
 		'partner_section_title', 'partner_section_subtitle',
 		'partner_cta_label', 'partner_cta_url', 'is_published', 'created_at'
@@ -337,10 +361,6 @@ class SummitAboutAdmin(admin.ModelAdmin):
 	list_display = ('icon', 'id', 'title_main', 'title_highlight', 'created_at')
 	readonly_fields = ('created_at',)
 	
-	def icon(self, obj):
-		return format_html("<i class='fas fa-info-circle' style='font-size:14px;color:#0D1B52;'></i>")
-	icon.short_description = ''
-
 	def icon(self, obj):
 		return format_html("<i class='fas fa-info-circle' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
@@ -394,10 +414,6 @@ class SummitKeyThemesAdmin(admin.ModelAdmin):
 	
 	def icon(self, obj):
 		return format_html("<i class='fas fa-lightbulb' style='font-size:14px;color:#0D1B52;'></i>")
-	icon.short_description = ''
-
-	def icon(self, obj):
-		return format_html("<i class='fas fa-star' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
 
 	# Allow admins to edit the section-level CTA text and URL from the same form
@@ -464,6 +480,100 @@ class SummitKeyThemesAdmin(admin.ModelAdmin):
 	inlines = [SummitThemeInline]
 
 
+# Define SummitAgendaDayForm at module level so it can be used by both inline and admin classes
+class SummitAgendaDayForm(forms.ModelForm):
+	class Meta:
+		model = SummitAgendaDay
+		fields = ('agenda', 'title', 'location', 'date', 'icon', 'color', 'order')
+		widgets = {
+			'icon': forms.RadioSelect,
+			'color': forms.RadioSelect,
+		}
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+
+		# Build icon choices with visible emoji + label
+		if 'icon' in self.fields:
+			icon_choices = []
+			for val, lab in DAY_ICON_CHOICES:
+				display = f"{val} {lab}" if val else lab
+				icon_choices.append((val, mark_safe(display)))
+			self.fields['icon'].choices = icon_choices
+			# IMPORTANT: Also set choices on the widget itself for RadioSelect to render
+			self.fields['icon'].widget.choices = icon_choices
+
+		# Build color choices with preview
+		if 'color' in self.fields:
+			color_choices = []
+			for val, lab in DAY_COLOR_CHOICES:
+				if not val:
+					color_choices.append((val, lab))
+				else:
+					preview = f"<div class='{val.replace('from-', 'bg-').replace('to-', '')}' style='display:inline-block;width:20px;height:20px;border-radius:4px;margin-right:8px;vertical-align:middle'></div>"
+					display = f"{preview} {lab}"
+					color_choices.append((val, mark_safe(display)))
+			self.fields['color'].choices = color_choices
+			# IMPORTANT: Also set choices on the widget itself for RadioSelect to render
+			self.fields['color'].widget.choices = color_choices
+
+		# If creating a new inline (no instance.pk) prefill friendly defaults
+		if not getattr(self.instance, 'pk', None):
+			if 'icon' in self.fields:
+				self.fields['icon'].initial = DEFAULT_DAY_ICON
+			if 'color' in self.fields:
+				self.fields['color'].initial = DEFAULT_DAY_COLOR
+			if 'date' in self.fields:
+				self.fields['date'].initial = datetime.date.today()
+
+
+class SummitAgendaDayInline(admin.TabularInline):
+	model = SummitAgendaDay
+	extra = 1
+	# Use fields that exist on the current SummitAgendaDay model
+	fields = ('icon_preview', 'icon', 'title', 'date', 'location', 'color_preview', 'color', 'order')
+	readonly_fields = ('icon_preview', 'color_preview')
+	exclude = ()
+	form = SummitAgendaDayForm
+
+	def icon_preview(self, obj):
+		try:
+			return format_html("<span style='font-size:20px;line-height:1'>{}</span>", obj.icon or '')
+		except Exception:
+			return ''
+	icon_preview.short_description = 'Icon'
+
+	def color_preview(self, obj):
+		try:
+			if obj and getattr(obj, 'color', None):
+				cls = obj.color
+				preview_style = ''
+				if 'gray' in cls:
+					preview_style = 'background:linear-gradient(90deg,#4b5563,#374151)'
+				elif 'gold' in cls or 'amber' in cls:
+					preview_style = 'background:linear-gradient(90deg,#f6e05e,#f59e0b)'
+				elif 'red' in cls:
+					preview_style = 'background:linear-gradient(90deg,#ef4444,#b91c1c)'
+				elif 'blue' in cls:
+					preview_style = 'background:linear-gradient(90deg,#3b82f6,#2563eb)'
+				elif 'purple' in cls or 'pink' in cls:
+					preview_style = 'background:linear-gradient(90deg,#a855f7,#ec4899)'
+				elif 'green' in cls or 'emerald' in cls:
+					preview_style = 'background:linear-gradient(90deg,#22c55e,#10b981)'
+				elif 'indigo' in cls:
+					preview_style = 'background:linear-gradient(90deg,#6366f1,#3b82f6)'
+				else:
+					preview_style = ''
+				return format_html(
+					"<div style='width:40px;height:20px;border-radius:4px;{}'></div>",
+					preview_style
+				)
+			return ''
+		except Exception:
+			return ''
+	color_preview.short_description = 'Preview'
+
+
 @admin.register(SummitAgenda)
 class SummitAgendaAdmin(admin.ModelAdmin):
 	# Updated to match current SummitAgenda model
@@ -474,10 +584,7 @@ class SummitAgendaAdmin(admin.ModelAdmin):
 	def icon(self, obj):
 		return format_html("<i class='fas fa-calendar' style='font-size:14px;color:#0D1B52;'></i>")
 	icon.short_description = ''
-
-	def icon(self, obj):
-		return format_html("<i class='fas fa-calendar' style='font-size:14px;color:#0D1B52;'></i>")
-	icon.short_description = ''
+	
 	fields = ('title', 'description', 'created_at')
 
 	def get_changeform_initial_data(self, request):
@@ -490,140 +597,12 @@ class SummitAgendaAdmin(admin.ModelAdmin):
 			pass
 		return {'title': 'Summit', 'description': 'Two transformative days of dialogue, partnership, and recognition'}
 
-	class SummitAgendaDayInline(admin.TabularInline):
-		model = SummitAgendaDay
-		extra = 1
-		# Use fields that exist on the current SummitAgendaDay model
-		fields = ('title', 'date', 'location', 'activities_table', 'order')
-		readonly_fields = ()
-		exclude = ()
-
-		class SummitAgendaDayForm(forms.ModelForm):
-			activities_table = forms.CharField(widget=forms.HiddenInput(), required=False)
-
-			class Meta:
-				model = SummitAgendaDay
-				fields = '__all__'
-
-			def __init__(self, *args, **kwargs):
-				super().__init__(*args, **kwargs)
-				initial = getattr(self.instance, "activities", [])
-				try:
-					self.fields["activities_table"].initial = json.dumps(initial, indent=2)
-				except Exception:
-					self.fields["activities_table"].initial = "[]"
-
-				# Provide friendly widgets/choices for icon and color fields
-				if 'icon' in self.fields:
-					self.fields['icon'].widget = forms.Select(choices=DAY_ICON_CHOICES)
-				if 'color' in self.fields:
-					self.fields['color'].widget = forms.Select(choices=DAY_COLOR_CHOICES)
-
-				# If creating a new inline (no instance.pk) prefill friendly defaults
-				if not getattr(self.instance, 'pk', None):
-					if 'icon' in self.fields:
-						self.fields['icon'].initial = DEFAULT_DAY_ICON
-					if 'color' in self.fields:
-						self.fields['color'].initial = DEFAULT_DAY_COLOR
-					if 'date' in self.fields:
-						# default to today's date for easier entry
-						self.fields['date'].initial = datetime.date.today()
-
-			def clean(self):
-				cleaned = super().clean()
-				raw = cleaned.get("activities_table", "")
-				try:
-					cleaned["activities"] = json.loads(raw) if raw else []
-				except Exception:
-					cleaned["activities"] = []
-				return cleaned
-
-		form = SummitAgendaDayForm
-
-		def activities_table(self, obj):
-			activities = getattr(obj, "activities", [])
-			rows = ""
-			for act in activities:
-				time = act.get("time", "")
-				title = act.get("title", "")
-				rows += f"""
-				<tr>
-					<td><input type='text' value='{time}' class='activity-time' placeholder='08:00 - 09:00'></td>
-					<td><input type='text' value='{title}' class='activity-title' placeholder='Session Title'></td>
-					<td><button type='button' class='remove-row'>×</button></td>
-				</tr>
-				"""
-
-			if not rows:
-				rows = "<tr><td colspan='3' style='text-align:center;color:#777;'>No activities yet</td></tr>"
-
-			return mark_safe(f"""
-				<div class='activities-editor'>
-					<table class='activity-table' style='width:100%;border-collapse:collapse;margin-bottom:8px;'>
-						<thead>
-							<tr style='background:#f3f3f3;'>
-								<th style='width:25%;text-align:left;padding:6px;'>Time</th>
-								<th style='width:65%;text-align:left;padding:6px;'>Title</th>
-								<th style='width:10%;'></th>
-							</tr>
-						</thead>
-						<tbody>{rows}</tbody>
-					</table>
-					<button type='button' class='add-row'>➕ Add Activity</button>
-					<input type='hidden' name='activities_table' class='activities-hidden'>
-				</div>
-
-				<script>
-				(function() {{
-					const container = document.currentScript.closest('.activities-editor');
-					const addBtn = container.querySelector('.add-row');
-					const table = container.querySelector('tbody');
-					const hidden = container.querySelector('.activities-hidden');
-
-					function syncHidden() {{
-						const activities = Array.from(table.querySelectorAll('tr')).map(tr => {{
-							const time = tr.querySelector('.activity-time')?.value || '';
-							const title = tr.querySelector('.activity-title')?.value || '';
-							return {{time, title}};
-						}}).filter(a => a.time || a.title);
-						hidden.value = JSON.stringify(activities);
-					}}
-
-					addBtn.onclick = function() {{
-						const row = document.createElement('tr');
-						row.innerHTML = `
-							<td><input type='text' class='activity-time' placeholder='08:00 - 09:00'></td>
-							<td><input type='text' class='activity-title' placeholder='Session Title'></td>
-							<td><button type='button' class='remove-row'>×</button></td>
-						`;
-						table.appendChild(row);
-						syncHidden();
-					}};
-
-					table.addEventListener('click', e => {{
-						if(e.target.classList.contains('remove-row')) {{
-							e.target.closest('tr').remove();
-							syncHidden();
-						}}
-					}});
-
-					table.addEventListener('input', syncHidden);
-					addBtn.addEventListener('click', syncHidden);
-					syncHidden();
-				}})();
-				</script>
-			""")
-
-		activities_table.short_description = "Activities (Editable List)"
-
-		def activities_display(self, obj):
-			acts = getattr(obj, 'activities', None)
-			if isinstance(acts, list) and acts:
-				return ", ".join(a.get('title', '') for a in acts[:3])
-			return ''
-		activities_display.short_description = "Activities"
-
 	inlines = [SummitAgendaDayInline]
+
+	class Media:
+		css = {
+			'all': ('admin/css/agenda_day_select.css',)
+		}
     
     
 class SummitAgendaItemInline(admin.TabularInline):
@@ -636,7 +615,52 @@ class SummitAgendaItemInline(admin.TabularInline):
 class SummitAgendaDayAdmin(admin.ModelAdmin):
     list_display = ('icon', 'location', 'date')
     inlines = [SummitAgendaItemInline]
+    fields = ('icon_preview', 'icon', 'title', 'date', 'location', 'color_preview', 'color', 'order', 'agenda')
+    readonly_fields = ('icon_preview', 'color_preview')
+    form = SummitAgendaDayForm
 
     def icon(self, obj):
         return format_html("<i class='fas fa-clock' style='font-size:14px;color:#0D1B52;'></i>")
     icon.short_description = ''
+
+    def icon_preview(self, obj):
+        try:
+            return format_html("<span style='font-size:20px;line-height:1'>{}</span>", obj.icon or '')
+        except Exception:
+            return ''
+    icon_preview.short_description = 'Icon'
+
+    def color_preview(self, obj):
+        try:
+            if obj and getattr(obj, 'color', None):
+                cls = obj.color
+                preview_style = ''
+                if 'gray' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#4b5563,#374151)'
+                elif 'gold' in cls or 'amber' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#f6e05e,#f59e0b)'
+                elif 'red' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#ef4444,#b91c1c)'
+                elif 'blue' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#3b82f6,#2563eb)'
+                elif 'purple' in cls or 'pink' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#a855f7,#ec4899)'
+                elif 'green' in cls or 'emerald' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#22c55e,#10b981)'
+                elif 'indigo' in cls:
+                    preview_style = 'background:linear-gradient(90deg,#6366f1,#3b82f6)'
+                else:
+                    preview_style = ''
+                return format_html(
+                    "<div style='width:40px;height:20px;border-radius:4px;{}'></div>",
+                    preview_style
+                )
+            return ''
+        except Exception:
+            return ''
+    color_preview.short_description = 'Preview'
+
+    class Media:
+        css = {
+            'all': ('admin/css/agenda_day_select.css',)
+        }

@@ -165,12 +165,23 @@ class FacilitatorAnalyticsView(APIView):
 
         # Build a normalized payload matching frontend expectations
         profile = getattr(user, 'profile', None)
-        profile_total_earnings = None
-        if profile and hasattr(profile, 'total_earnings') and profile.total_earnings is not None:
-            profile_total_earnings = float(profile.total_earnings)
+        profile_earning_balance = None
+        profile_pending_balance = None
+        profile_available_balance = None
+        if profile and hasattr(profile, 'earning_balance') and profile.earning_balance is not None:
+            profile_earning_balance = float(profile.earning_balance)
+        if profile and hasattr(profile, 'pending_balance') and profile.pending_balance is not None:
+            profile_pending_balance = float(profile.pending_balance)
+        if profile and hasattr(profile, 'available_balance') and profile.available_balance is not None:
+            profile_available_balance = float(profile.available_balance)
         payload = {
+            # Three-balance wallet system
+            'earning_balance': profile_earning_balance if profile_earning_balance is not None else float(earnings.get('total_earnings') or 0),
+            'pending_balance': profile_pending_balance if profile_pending_balance is not None else 0.0,
+            'available_balance': profile_available_balance if profile_available_balance is not None else 0.0,
+            
             # Scalars
-            'total_earnings': profile_total_earnings if profile_total_earnings is not None else float(earnings.get('total_earnings') or 0),
+            'total_earnings': profile_earning_balance if profile_earning_balance is not None else float(earnings.get('total_earnings') or 0),
             'total_students': 0,
             'avg_rating': 0.0,
             'total_courses': 0,
@@ -209,20 +220,8 @@ class FacilitatorAnalyticsView(APIView):
                 })
             payload['course_performance'] = courses
 
-        # Try to set some scalar values if present in earnings summary, but prefer profile override
-        if profile_total_earnings is not None:
-            payload['total_earnings'] = profile_total_earnings
-        elif earnings.get('total_earnings') is not None:
-            payload['total_earnings'] = float(earnings.get('total_earnings') or 0)
-
-        # Expose available balance: sum of balance and total_earnings (total_earnings is part of available balance)
-        try:
-            profile = getattr(user, 'profile', None)
-            balance = float(getattr(profile, 'balance', 0) or 0) if profile and getattr(profile, 'balance', None) is not None else 0.0
-            total_earnings = float(getattr(profile, 'total_earnings', 0) or 0) if profile and getattr(profile, 'total_earnings', None) is not None else float(earnings.get('total_earnings') or 0)
-            payload['available_balance'] = balance + total_earnings
-        except Exception:
-            payload['available_balance'] = float(earnings.get('total_earnings') or 0)
+        # Total earnings is already set in payload from profile_earning_balance
+        # Three-balance system is already fully set above
 
         # Enrich payload with course/enrollment/review/earnings data when possible
         try:

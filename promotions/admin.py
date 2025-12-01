@@ -11,6 +11,7 @@ from .models import (
     PromotionMetrics,
     WithdrawalRequest,
     FacilitatorEarning,
+    WalletTopUp,
 )
 
 
@@ -324,5 +325,59 @@ class FacilitatorEarningAdmin(admin.ModelAdmin):
         return format_html("<i class='fas fa-dollar-sign' style='font-size:14px;color:#0D1B52;'></i>")
     icon.short_description = ''
 
+
+@admin.register(WalletTopUp)
+class WalletTopUpAdmin(admin.ModelAdmin):
+    list_display = ('icon', 'user', 'amount', 'status', 'payment_method', 'created_at', 'completed_at')
+    list_filter = ('status', 'payment_method', 'created_at')
+    search_fields = ('user__username', 'user__email', 'transaction_id')
+    readonly_fields = ('user', 'transaction_id', 'created_at', 'updated_at')
+    actions = ['mark_completed', 'mark_failed']
+    fieldsets = (
+        ('Top-Up Information', {
+            'fields': ('user', 'amount', 'status')
+        }),
+        ('Payment Details', {
+            'fields': ('payment_method', 'transaction_id', 'payment_reference')
+        }),
+        ('Notes', {
+            'fields': ('notes',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'completed_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    date_hierarchy = 'created_at'
+
+    def icon(self, obj):
+        status_colors = {
+            'completed': '#10b981',
+            'processing': '#f59e0b',
+            'pending': '#6b7280',
+            'failed': '#ef4444',
+            'cancelled': '#9ca3af',
+        }
+        color = status_colors.get(obj.status, '#6b7280')
+        return format_html(f"<i class='fas fa-wallet' style='font-size:14px;color:{color};'></i>")
+    icon.short_description = ''
+
+    def mark_completed(self, request, queryset):
+        """Mark selected top-ups as completed and add funds to wallets"""
+        count = 0
+        for topup in queryset.filter(status__in=['pending', 'processing']):
+            try:
+                topup.mark_completed()
+                count += 1
+            except Exception as e:
+                self.message_user(request, f'Error completing {topup.id}: {str(e)}', level='error')
+        self.message_user(request, f'{count} wallet top-ups completed successfully.')
+    mark_completed.short_description = "Mark selected as completed and add funds to wallets"
+
+    def mark_failed(self, request, queryset):
+        """Mark selected top-ups as failed"""
+        count = queryset.filter(status__in=['pending', 'processing']).update(status='failed')
+        self.message_user(request, f'{count} wallet top-ups marked as failed.')
+    mark_failed.short_description = "Mark selected as failed"
 
 
