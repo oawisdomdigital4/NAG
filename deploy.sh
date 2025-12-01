@@ -31,14 +31,5 @@ else
     exit 1
 fi
 
-# Step 6: Collect static files
-echo -e "${YELLOW}🎨 Collecting static files...${NC}"
-if python manage.py collectstatic --noinput; then
-    echo -e "${GREEN}✅ Static files collected.${NC}"
-else
-    echo -e "${RED}❌ Failed to collect static files.${NC}"
-    exit 1
-fi
-
 
 echo -e "${GREEN}🎉 Deployment complete!${NC}"
