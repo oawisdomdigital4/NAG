@@ -146,6 +146,10 @@ class GroupViewSet(viewsets.ModelViewSet):
         
         return super().update(request, *args, **kwargs)
 
+    def retrieve(self, request, *args, **kwargs):
+        """Get a single group by ID"""
+        return super().retrieve(request, *args, **kwargs)
+
     def perform_create(self, serializer):
         try:
             group = serializer.save(created_by=self.request.user)
