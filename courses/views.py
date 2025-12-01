@@ -215,13 +215,23 @@ class CourseViewSet(viewsets.ModelViewSet):
 	@action(detail=False, methods=['get'])
 	def mine(self, request):
 		"""Return courses owned by the authenticated user (facilitator)."""
-		qs = self.get_queryset().filter(facilitator=request.user)
-		page = self.paginate_queryset(qs)
-		if page is not None:
-			serializer = self.get_serializer(page, many=True)
-			return self.get_paginated_response(serializer.data)
-		serializer = self.get_serializer(qs, many=True)
-		return Response(serializer.data)
+		try:
+			qs = self.get_queryset().filter(facilitator=request.user)
+			page = self.paginate_queryset(qs)
+			if page is not None:
+				serializer = self.get_serializer(page, many=True)
+				return self.get_paginated_response(serializer.data)
+			serializer = self.get_serializer(qs, many=True)
+			return Response(serializer.data)
+		except Exception as e:
+			import traceback
+			error_trace = traceback.format_exc()
+			print(f"[CourseViewSet.mine] ERROR: {str(e)}")
+			print(error_trace)
+			return Response(
+				{'error': str(e), 'detail': error_trace},
+				status=status.HTTP_500_INTERNAL_SERVER_ERROR
+			)
 	
 	@action(detail=True, methods=['get'])
 	def validate_enrollment(self, request, slug=None):
@@ -340,15 +350,25 @@ class CourseViewSet(viewsets.ModelViewSet):
 	@action(detail=False, methods=['get'])
 	def my_enrollments(self, request):
 		"""Return all courses the authenticated user is enrolled in."""
-		enrollments = Enrollment.objects.filter(user=request.user).select_related('course', 'course__facilitator')
-		
-		page = self.paginate_queryset(enrollments)
-		if page is not None:
-			serializer = EnrollmentSerializer(page, many=True)
-			return self.get_paginated_response(serializer.data)
-		
-		serializer = EnrollmentSerializer(enrollments, many=True)
-		return Response(serializer.data)
+		try:
+			enrollments = Enrollment.objects.filter(user=request.user).select_related('course', 'course__facilitator')
+			
+			page = self.paginate_queryset(enrollments)
+			if page is not None:
+				serializer = EnrollmentSerializer(page, many=True)
+				return self.get_paginated_response(serializer.data)
+			
+			serializer = EnrollmentSerializer(enrollments, many=True)
+			return Response(serializer.data)
+		except Exception as e:
+			import traceback
+			error_trace = traceback.format_exc()
+			print(f"[CourseViewSet.my_enrollments] ERROR: {str(e)}")
+			print(error_trace)
+			return Response(
+				{'error': str(e), 'detail': error_trace},
+				status=status.HTTP_500_INTERNAL_SERVER_ERROR
+			)
 	
 	@action(detail=True, methods=['post'])
 	def unenroll(self, request, slug=None):
@@ -396,27 +416,37 @@ class CourseViewSet(viewsets.ModelViewSet):
 	@action(detail=False, methods=['get'])
 	def my_students(self, request):
 		"""Return all students enrolled in the facilitator's courses."""
-		if not hasattr(request.user, 'profile') or request.user.role != 'facilitator':
+		try:
+			if not hasattr(request.user, 'profile') or request.user.role != 'facilitator':
+				return Response(
+					{'error': 'Only facilitators can view their students'},
+					status=status.HTTP_403_FORBIDDEN
+				)
+			
+			# Get all enrollments in courses owned by this facilitator
+			# Use values_list to get unique users, then fetch their enrollments
+			from django.db.models import OuterRef, Exists
+			
+			enrollments = Enrollment.objects.filter(
+				course__facilitator=request.user
+			).select_related('user', 'course')
+			
+			page = self.paginate_queryset(enrollments)
+			if page is not None:
+				serializer = EnrollmentSerializer(page, many=True)
+				return self.get_paginated_response(serializer.data)
+			
+			serializer = EnrollmentSerializer(enrollments, many=True)
+			return Response(serializer.data)
+		except Exception as e:
+			import traceback
+			error_trace = traceback.format_exc()
+			print(f"[CourseViewSet.my_students] ERROR: {str(e)}")
+			print(error_trace)
 			return Response(
-				{'error': 'Only facilitators can view their students'},
-				status=status.HTTP_403_FORBIDDEN
+				{'error': str(e), 'detail': error_trace},
+				status=status.HTTP_500_INTERNAL_SERVER_ERROR
 			)
-		
-		# Get all enrollments in courses owned by this facilitator
-		# Use values_list to get unique users, then fetch their enrollments
-		from django.db.models import OuterRef, Exists
-		
-		enrollments = Enrollment.objects.filter(
-			course__facilitator=request.user
-		).select_related('user', 'course')
-		
-		page = self.paginate_queryset(enrollments)
-		if page is not None:
-			serializer = EnrollmentSerializer(page, many=True)
-			return self.get_paginated_response(serializer.data)
-		
-		serializer = EnrollmentSerializer(enrollments, many=True)
-		return Response(serializer.data)
 
 	@action(detail=False, methods=['post'])
 	def update_progress(self, request):

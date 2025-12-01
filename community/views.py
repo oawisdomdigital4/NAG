@@ -146,69 +146,6 @@ class GroupViewSet(viewsets.ModelViewSet):
         
         return super().update(request, *args, **kwargs)
 
-    def partial_update(self, request, *args, **kwargs):
-        """Handle PATCH requests for partial updates"""
-        group = self.get_object()
-        user = request.user
-        # Only creator, moderators, or staff can update group
-        is_creator = user == group.created_by
-        is_moderator = group.moderators.filter(id=user.id).exists()
-        is_staff = user.is_staff
-        
-        if not (is_creator or is_moderator or is_staff):
-            from rest_framework.response import Response
-            return Response({'detail': 'Permission denied. Only group creator or moderators can update.'}, status=403)
-        
-        return super().partial_update(request, *args, **kwargs)
-
-    def retrieve(self, request, *args, **kwargs):
-        """Get a single group by ID"""
-        return super().retrieve(request, *args, **kwargs)
-
-    def destroy(self, request, *args, **kwargs):
-        """Delete a group - only creator or staff can delete"""
-        group = self.get_object()
-        user = request.user
-        
-        # Only creator or staff can delete
-        if not (user == group.created_by or user.is_staff):
-            from rest_framework.response import Response
-            return Response({'detail': 'Permission denied. Only group creator can delete.'}, status=403)
-        
-        return super().destroy(request, *args, **kwargs)
-
-    @action(detail=True, methods=['post'])
-    def update_group(self, request, pk=None):
-        """
-        LiteSpeed Workaround: POST-based group update for production servers that block PUT.
-        
-        Usage: POST /api/community/groups/{id}/update_group/
-        Content-Type: multipart/form-data or application/json
-        
-        This endpoint mirrors the PUT/PATCH behavior but uses POST to bypass
-        LiteSpeed restrictions on PUT requests.
-        """
-        group = self.get_object()
-        user = request.user
-        
-        # Same permission checks as update() and partial_update()
-        is_creator = user == group.created_by
-        is_moderator = group.moderators.filter(id=user.id).exists()
-        is_staff = user.is_staff
-        
-        if not (is_creator or is_moderator or is_staff):
-            return Response(
-                {'detail': 'Permission denied. Only group creator or moderators can update.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        
-        # Use the serializer to validate and update
-        serializer = self.get_serializer(group, data=request.data, partial=True)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
     def perform_create(self, serializer):
         try:
             group = serializer.save(created_by=self.request.user)
