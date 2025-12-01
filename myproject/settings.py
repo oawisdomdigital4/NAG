@@ -486,7 +486,7 @@ JAZZMIN_SETTINGS = {
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 # Use provided Mailjet credentials directly (should be stored in environment in production)
 MAILJET_API_KEY = os.environ.get('MAILJET_API_KEY', 'f378fb1358a57d5e6aba848d75f4a38c')
-MAILJET_SECRET_KEY = os.environ.get('MAILJET_SECRET_KEY', '10284f167f05d41129ff7b6d27a00056')
+MAILJET_SECRET_KEY = os.environ.get('MAILJET_SECRET_KEY', '8dd1624c61c9cc168773252797cc8793')
 MAILJET_FROM_EMAIL = os.environ.get('MAILJET_FROM_EMAIL', 'no-reply@thenewafricagroup.com')
 MAILJET_FROM_NAME = 'The New Africa Group'
 
