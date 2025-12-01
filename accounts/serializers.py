@@ -74,13 +74,15 @@ class SignupSerializer(serializers.ModelSerializer):
     expertise_areas = serializers.ListField(child=serializers.CharField(), required=False)
     company_name = serializers.CharField(required=False)
     industry = serializers.CharField(required=False)
+    portfolio_url = serializers.CharField(required=False)
+    accepted_terms = serializers.BooleanField(required=False)
     password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
         fields = [
             'email', 'password', 'role', 'full_name', 'phone', 'country',
-            'bio', 'expertise_areas', 'company_name', 'industry'
+            'bio', 'expertise_areas', 'company_name', 'industry', 'portfolio_url', 'accepted_terms'
         ]
 
     def create(self, validated_data):
@@ -92,7 +94,11 @@ class SignupSerializer(serializers.ModelSerializer):
             'expertise_areas': validated_data.pop('expertise_areas', []),
             'company_name': validated_data.pop('company_name', ''),
             'industry': validated_data.pop('industry', ''),
+            'portfolio_url': validated_data.pop('portfolio_url', ''),
         }
+        # Pop accepted_terms so it doesn't interfere with User creation
+        validated_data.pop('accepted_terms', False)
+        
         password = validated_data.pop('password')
         # Ensure username is unique by setting it to email
         validated_data['username'] = validated_data['email']
