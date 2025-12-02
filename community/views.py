@@ -2677,8 +2677,8 @@ class CorporateVerificationSubmitView(APIView):
 
     def get(self, request, *args, **kwargs):
         """Get the current user's verification status and documents."""
+        from .models import CorporateVerification
         try:
-            from .models import CorporateVerification
             cv = CorporateVerification.objects.get(user=request.user)
             doc_urls = {}
             if cv.business_registration_doc:
@@ -2701,8 +2701,10 @@ class CorporateVerificationSubmitView(APIView):
                 'documents': doc_urls,
             }
             return Response(data, status=status.HTTP_200_OK)
+        except CorporateVerification.DoesNotExist:
+            return Response({'detail': 'No verification record found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({'detail': 'No verification record found', 'error': str(e)}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'Error retrieving verification', 'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 # ============================================================================

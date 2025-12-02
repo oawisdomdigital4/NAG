@@ -58,7 +58,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             verification = CorporateVerification.objects.get(user=obj.user)
             return verification.status
         except:
-            return 'pending'
+            return 'not_submitted'
 
 class UserSerializer(serializers.ModelSerializer):
     profile = UserProfileSerializer()
